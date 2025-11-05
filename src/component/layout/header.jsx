@@ -28,6 +28,64 @@ const Header = () => {
         checkAuthStatus();
     }, []);
 
+    // Update page title with college name
+    useEffect(() => {
+        const pageName = getPageName(currentPath);
+
+        if (user && user.college_details && user.college_details.name) {
+            const collegeName = user.college_details.name;
+            const newTitle = `${collegeName} - ${pageName}`;
+            console.log('📄 Setting page title:', newTitle);
+            document.title = newTitle;
+        } else if (user && user.college_name) {
+            const collegeName = user.college_name;
+            const newTitle = `${collegeName} - ${pageName}`;
+            console.log('📄 Setting page title:', newTitle);
+            document.title = newTitle;
+        } else {
+            const newTitle = `Edukon - ${pageName}`;
+            console.log('📄 Setting page title (default):', newTitle);
+            document.title = newTitle;
+        }
+    }, [user, currentPath]);
+
+    const getPageName = (path) => {
+        // Remove college slug from path if present
+        const pathWithoutSlug = path.replace(/^\/[^\/]+/, '');
+
+        if (path === '/') return 'Home';
+        if (pathWithoutSlug === '/course' || path === '/course') return 'Courses';
+        if (pathWithoutSlug.startsWith('/course-view/') || path.startsWith('/course-view/')) return 'Course Details';
+        if (pathWithoutSlug === '/challenges' || path === '/challenges') return 'Coding Challenges';
+        if (pathWithoutSlug === '/companies' || path === '/companies') return 'Company Challenges';
+        if (pathWithoutSlug === '/jobs' || path === '/jobs') return 'Job Listings';
+        if (pathWithoutSlug === '/leaderboard' || path === '/leaderboard') return 'Leaderboard';
+        if (pathWithoutSlug === '/profile' || path === '/profile') return 'My Profile';
+        if (pathWithoutSlug.startsWith('/profile/') || path.startsWith('/profile/')) return 'User Profile';
+        if (path === '/login') return 'Login';
+        if (path === '/signup') return 'Sign Up';
+
+        // Default: capitalize first letter of path
+        return path.substring(1).charAt(0).toUpperCase() + path.substring(2).replace(/-/g, ' ');
+    };
+
+    // Helper function to create college slug
+    const createCollegeSlug = (name) => {
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    };
+
+    // Helper function to get college-specific path
+    const getCollegePath = (path) => {
+        if (!user || !user.college_details || !user.college_details.name) {
+            return path;
+        }
+        const slug = createCollegeSlug(user.college_details.name);
+        return `/${slug}${path}`;
+    };
+
     const checkAuthStatus = async () => {
         const token = localStorage.getItem("student_access_token") || localStorage.getItem("token");
         if (!token) {
@@ -40,7 +98,11 @@ const Header = () => {
             setLoading(true);
             const response = await api.get("/auth/me");
             if (response.data) {
-                setUser(response.data.user || response.data);
+                // Handle different response formats - check for nested data object
+                const userData = response.data.data || response.data.user || response.data;
+                console.log("🔍 User data from /auth/me:", userData);
+                console.log("🏫 College details:", userData.college_details);
+                setUser(userData);
             }
         } catch (error) {
             console.log("User not logged in or token expired");
@@ -123,7 +185,15 @@ const Header = () => {
                             {/* Logo */}
                             <div className="logo">
                                 <Link to="/">
-                                    <img src="assets/images/logo/01.png" alt="logo" />
+                                    {user && ((user.college_details && user.college_details.logo) || user.college_logo) ? (
+                                        <img
+                                            src={user.college_details?.logo || user.college_logo}
+                                            alt={(user.college_details?.name || user.college_name) || "College Logo"}
+                                            style={{ maxHeight: '60px', objectFit: 'contain' }}
+                                        />
+                                    ) : (
+                                        <img src="assets/images/logo/01.png" alt="logo" />
+                                    )}
                                 </Link>
                             </div>
 
@@ -157,7 +227,7 @@ const Header = () => {
                                             <ul className="lab-ul dropdown-menu">
                                                 <li>
                                                     <NavLink
-                                                        to="/challenges"
+                                                        to={getCollegePath("/challenges")}
                                                         className={({ isActive }) =>
                                                             isActive ? "active-link" : ""
                                                         }
@@ -167,7 +237,7 @@ const Header = () => {
                                                 </li>
                                                 <li>
                                                     <NavLink
-                                                        to="/companies"
+                                                        to={getCollegePath("/companies")}
                                                         className={({ isActive }) =>
                                                             isActive ? "active-link" : ""
                                                         }
@@ -177,7 +247,7 @@ const Header = () => {
                                                 </li>
                                                 <li>
                                                     <NavLink
-                                                        to="/jobs"
+                                                        to={getCollegePath("/jobs")}
                                                         className={({ isActive }) =>
                                                             isActive ? "active-link" : ""
                                                         }
@@ -202,7 +272,7 @@ const Header = () => {
                                             <ul className="lab-ul dropdown-menu">
                                                 <li>
                                                     <NavLink
-                                                        to="/course"
+                                                        to={getCollegePath("/course")}
                                                         className={({ isActive }) =>
                                                             isActive ? "active-link" : ""
                                                         }
@@ -227,7 +297,7 @@ const Header = () => {
                                             <ul className="lab-ul dropdown-menu">
                                                 <li>
                                                     <NavLink
-                                                        to="/profile"
+                                                        to={getCollegePath("/profile")}
                                                         className={({ isActive }) =>
                                                             isActive ? "active-link" : ""
                                                         }
@@ -237,7 +307,7 @@ const Header = () => {
                                                 </li>
                                                 <li>
                                                     <NavLink
-                                                        to="/leaderboard"
+                                                        to={getCollegePath("/leaderboard")}
                                                         className={({ isActive }) =>
                                                             isActive ? "active-link" : ""
                                                         }

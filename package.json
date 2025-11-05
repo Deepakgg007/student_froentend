@@ -1,6 +1,7 @@
 {
   "name": "edukon",
   "version": "0.1.0",
+  "homepage": "https://z1-student.haegl.in/",
   "private": true,
   "dependencies": {
     "@craco/craco": "^7.1.0",

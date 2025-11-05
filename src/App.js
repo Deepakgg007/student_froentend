@@ -5,6 +5,8 @@ import 'swiper/css';
 
 import ScrollToTop from "./component/layout/ScrollToTop";
 import ProtectedRoute from "./component/ProtectedRoute";
+import CollegeRouteWrapper from "./component/CollegeRouteWrapper";
+import PageTransition from "./component/PageTransition";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Auth Pages
@@ -56,6 +58,8 @@ function App() {
 	return (
 		<BrowserRouter>
 			<ScrollToTop />
+			<CollegeRouteWrapper>
+			<PageTransition>
 			<Routes>
 				{/* Public Routes */}
 				<Route path="/" element={<Home />} />
@@ -72,7 +76,79 @@ function App() {
 				<Route path="signup" element={<SignupPage />} />
 				<Route path="forgetpass" element={<ForgetPass />} />
 
-				{/* Protected Routes - Require Authentication and Approval */}
+				{/* College-specific routes with slug */}
+				<Route path=":collegeSlug/course" element={
+					<ProtectedRoute>
+						<CoursePage />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/course-single/:id" element={
+					<ProtectedRoute>
+						<CourseSingle />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/course-view/:courseId" element={
+					<ProtectedRoute>
+						<CourseView />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/challenges" element={
+					<ProtectedRoute>
+						<ChallengeList />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/challenge/:slug" element={
+					<ProtectedRoute>
+						<SolveChallenge />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/companies" element={
+					<ProtectedRoute>
+						<CompanyList />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/companies/:slug" element={
+					<ProtectedRoute>
+						<CompanyDetail />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/companies/:companySlug/concepts/:conceptSlug" element={
+					<ProtectedRoute>
+						<ConceptDetail />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/companies/:companySlug/concepts/:conceptSlug/challenges/:challengeSlug/solve" element={
+					<ProtectedRoute>
+						<SolveCompanyChallenge />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/jobs" element={
+					<ProtectedRoute>
+						<JobList />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/jobs/:slug" element={
+					<ProtectedRoute>
+						<JobDetail />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/profile" element={
+					<ProtectedRoute>
+						<Profile />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/profile/:userId" element={
+					<ProtectedRoute>
+						<Profile />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/leaderboard" element={
+					<ProtectedRoute>
+						<Leaderboard />
+					</ProtectedRoute>
+				} />
+
+				{/* Backward compatibility routes without college slug - will redirect */}
 				<Route path="course" element={
 					<ProtectedRoute>
 						<CoursePage />
@@ -88,8 +164,6 @@ function App() {
 						<CourseView />
 					</ProtectedRoute>
 				} />
-
-				{/* Challenge Routes - Protected */}
 				<Route path="challenges" element={
 					<ProtectedRoute>
 						<ChallengeList />
@@ -100,8 +174,6 @@ function App() {
 						<SolveChallenge />
 					</ProtectedRoute>
 				} />
-
-				{/* Company Challenges Routes - Protected */}
 				<Route path="companies" element={
 					<ProtectedRoute>
 						<CompanyList />
@@ -112,18 +184,6 @@ function App() {
 						<CompanyDetail />
 					</ProtectedRoute>
 				} />
-				<Route path="companies/:companySlug/concepts/:conceptSlug" element={
-					<ProtectedRoute>
-						<ConceptDetail />
-					</ProtectedRoute>
-				} />
-				<Route path="companies/:companySlug/concepts/:conceptSlug/challenges/:challengeSlug/solve" element={
-					<ProtectedRoute>
-						<SolveCompanyChallenge />
-					</ProtectedRoute>
-				} />
-
-				{/* Job Routes - Protected */}
 				<Route path="jobs" element={
 					<ProtectedRoute>
 						<JobList />
@@ -134,8 +194,6 @@ function App() {
 						<JobDetail />
 					</ProtectedRoute>
 				} />
-
-				{/* Profile & Leaderboard Routes - Protected */}
 				<Route path="profile" element={
 					<ProtectedRoute>
 						<Profile />
@@ -152,9 +210,11 @@ function App() {
 					</ProtectedRoute>
 				} />
 
-				{/* 404 Route */}
+				{/* 404 Route - must be last */}
 				<Route path="*" element={<ErrorPage />} />
 			</Routes>
+			</PageTransition>
+			</CollegeRouteWrapper>
 		</BrowserRouter>
 	);
 }

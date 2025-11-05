@@ -8,6 +8,16 @@ import DocumentContent from './DocumentContent';
 import MCQContent from "./MCQContent";
 import CodingQuestionContent from "./CodingQuestionContent";
 
+// Import progress service with error handling
+let markContentComplete;
+try {
+    const progressService = require('../../services/contentProgressService');
+    markContentComplete = progressService.markContentComplete;
+} catch (err) {
+    console.warn('ContentProgress service not available:', err);
+    markContentComplete = null;
+}
+
 const ContentDisplay = ({ 
     taskId, 
     contentType, 
@@ -147,12 +157,34 @@ const ContentDisplay = ({
 
     const handleContentComplete = async () => {
         try {
-            await onContentComplete(contentId, contentType);  // Pass from URL/state
+            // Only track progress for videos, documents, and questions (NOT pages)
+            if (markContentComplete && ['video', 'document', 'question'].includes(contentType)) {
+                console.log(`📝 Marking ${contentType} ${contentId} as complete`);
+                try {
+                    await markContentComplete(contentType, parseInt(contentId), parseInt(taskId), parseInt(courseId));
+                } catch (progressError) {
+                    console.warn('Progress tracking failed, but continuing:', progressError);
+                }
+            }
+
+            // Call parent handler if exists (for backwards compatibility)
+            if (onContentComplete) {
+                try {
+                    await onContentComplete(contentId, contentType);
+                } catch (legacyError) {
+                    console.warn('Legacy completion handler failed:', legacyError);
+                }
+            }
+
             setCompletionSuccess(true);
 
-            // Refresh course data immediately to show green checkmark
+            // Refresh course data immediately to show updated progress
             if (refreshCourse) {
-                await refreshCourse();
+                try {
+                    await refreshCourse();
+                } catch (refreshError) {
+                    console.warn('Refresh failed:', refreshError);
+                }
             }
 
             // Show success message

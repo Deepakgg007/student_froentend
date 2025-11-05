@@ -4,6 +4,16 @@ import api from "../../services/api";
 import CourseSidebar from "../../component/course/CourseSidebar";
 import ContentDisplay from "../../component/course/ContentDisplay";
 
+// Import progress service with error handling
+let getCourseProgress;
+try {
+    const progressService = require("../../services/contentProgressService");
+    getCourseProgress = progressService.getCourseProgress;
+} catch (err) {
+    console.warn('ContentProgress service not available:', err);
+    getCourseProgress = null;
+}
+
 const CourseView = () => {
     const params = useParams();
     const { courseId } = params;
@@ -22,13 +32,29 @@ const CourseView = () => {
 
     useEffect(() => {
         if (courseId && courseId !== 'undefined') {
-            fetchCourseContent();
+            fetchCourseContent(); // This will call fetchRealProgress internally
         } else {
             console.error('❌ Invalid courseId:', courseId);
             setError('Invalid course ID');
             setLoading(false);
         }
     }, [courseId]);
+
+    const fetchRealProgress = async () => {
+        if (!getCourseProgress) {
+            console.log('📊 Progress service not available, skipping real progress fetch');
+            return;
+        }
+
+        try {
+            const progressData = await getCourseProgress(courseId);
+            console.log('📊 Real progress from backend:', progressData);
+            setProgress(progressData.percentage || 0);
+        } catch (error) {
+            console.error('Failed to fetch real progress:', error);
+            // Don't set progress on error, let the old calculation handle it
+        }
+    };
 
     const fetchCourseContent = async () => {
         try {
@@ -249,12 +275,31 @@ const CourseView = () => {
                 const firstContent = firstTask?.contentItems?.[0];
 
                 if (firstContent) {
-                    const redirectUrl = `/course-view/${courseId}?taskId=${firstTask.id.toString()}&contentType=${firstContent.type}&contentId=${firstContent.id.toString()}`;
+                    // Preserve the college slug in the URL if it exists
+                    const currentPath = window.location.pathname;
+                    const pathParts = currentPath.split('/').filter(p => p);
+
+                    // Check if the current path has a college slug (format: /college-slug/course-view/id)
+                    let baseUrl;
+                    if (pathParts.length >= 3 && pathParts[1] === 'course-view') {
+                        // Has college slug: /college-slug/course-view/courseId
+                        const collegeSlug = pathParts[0];
+                        baseUrl = `/${collegeSlug}/course-view/${courseId}`;
+                    } else {
+                        // No college slug: /course-view/courseId
+                        baseUrl = `/course-view/${courseId}`;
+                    }
+
+                    const redirectUrl = `${baseUrl}?taskId=${firstTask.id.toString()}&contentType=${firstContent.type}&contentId=${firstContent.id.toString()}`;
+                    console.log('🔄 Auto-redirecting to first content:', redirectUrl);
                     navigate(redirectUrl, { replace: true });
                 } else {
                     console.warn('⚠️ No content found in first task');
                 }
             } 
+
+            // Fetch real progress from backend
+            await fetchRealProgress();
 
         } catch (err) {
             console.error('Failed to fetch course content:', err.response?.data || err);
@@ -270,7 +315,23 @@ const CourseView = () => {
             contentType,
             contentId: contentId.toString()
         });
-        navigate(`/course-view/${courseId}?${params.toString()}`, { replace: true });
+
+        // Preserve the college slug in the URL if it exists
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/').filter(p => p);
+
+        // Check if the current path has a college slug
+        let baseUrl;
+        if (pathParts.length >= 3 && pathParts[1] === 'course-view') {
+            // Has college slug: /college-slug/course-view/courseId
+            const collegeSlug = pathParts[0];
+            baseUrl = `/${collegeSlug}/course-view/${courseId}`;
+        } else {
+            // No college slug: /course-view/courseId
+            baseUrl = `/course-view/${courseId}`;
+        }
+
+        navigate(`${baseUrl}?${params.toString()}`, { replace: true });
     };
 
     const toggleSidebar = () => {

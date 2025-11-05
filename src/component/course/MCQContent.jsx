@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import { useParams } from "react-router-dom";
 import api from "../../services/api";
+import { markContentComplete } from "../../services/contentProgressService";
 import QuizOverview from "./QuizOverview";
 import Swal from "sweetalert2";
 
@@ -12,6 +14,7 @@ import Swal from "sweetalert2";
  * - Shows correct/incorrect answers and explanations
  */
 const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPrev }) => {
+  const { courseId } = useParams();
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
   const [submissions, setSubmissions] = useState({});
@@ -116,6 +119,20 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
       setSubmissions(newSubmissions);
       setShowResult(true);
       setOverviewRefreshKey(prev => prev + 1); // Trigger overview refresh
+
+      // Mark each question as complete in progress tracking
+      if (markContentComplete && courseId) {
+        for (const question of questions) {
+          if (answers[question.id]) {
+            try {
+              await markContentComplete('question', question.id, task.id, parseInt(courseId));
+              console.log(`✅ MCQ question ${question.id} marked as complete`);
+            } catch (err) {
+              console.warn(`Failed to mark question ${question.id} complete:`, err);
+            }
+          }
+        }
+      }
 
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });

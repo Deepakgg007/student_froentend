@@ -55,7 +55,7 @@ const CourseSingle = () => {
         try {
             setEnrolling(true);
             setEnrollError('');
-            await api.post('/enrollments/', { course: id });
+            await api.post('/enrollments/', { course_id: course.id });
             await fetchCourseDetails();
             setEnrollError('');
         } catch (err) {

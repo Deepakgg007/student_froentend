@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useParams } from 'react-router-dom';
 import Editor from "@monaco-editor/react";
 import api from '../../services/api';
+import { markContentComplete } from '../../services/contentProgressService';
 import Swal from 'sweetalert2';
 
 /**
@@ -10,6 +12,7 @@ import Swal from 'sweetalert2';
  * Right: Code editor and output
  */
 const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
+    const { courseId } = useParams();
     const [code, setCode] = useState('');
     const [output, setOutput] = useState('');
     const [running, setRunning] = useState(false);
@@ -246,11 +249,21 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
 
             // Simple success notification - only submit if all tests pass
             if (allTestsPassed) {
+                // Mark question as complete in progress tracking
+                if (markContentComplete && courseId) {
+                    try {
+                        await markContentComplete('question', question.id, task.id, parseInt(courseId));
+                        console.log(`✅ Coding question ${question.id} marked as complete`);
+                    } catch (err) {
+                        console.warn(`Failed to mark question ${question.id} complete:`, err);
+                    }
+                }
+
                 // Refresh task completion status
                 if (onComplete) {
                     await onComplete();
                 }
-                
+
                 // Show success toast
                 Swal.fire({
                     icon: 'success',

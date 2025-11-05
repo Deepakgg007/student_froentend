@@ -10,15 +10,17 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
         try {
             await onComplete();
             // Show success toast message (side notification)
-            Swal.fire({
+            await Swal.fire({
                 toast: true,
                 position: 'top-end',
                 icon: 'success',
                 title: 'Document Completed!',
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 1500,
                 timerProgressBar: true
             });
+            // Reload page to update sidebar
+            window.location.reload();
         } catch (err) {
             console.error('Failed to mark complete:', err);
             Swal.fire({
@@ -30,7 +32,6 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
                 timer: 3000,
                 timerProgressBar: true
             });
-        } finally {
             setIsCompleting(false);
         }
     };

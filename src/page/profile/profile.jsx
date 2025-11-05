@@ -139,81 +139,16 @@ const Profile = () => {
         const enrollments = coursesRes.data.results || coursesRes.data.data || coursesRes.data || [];
         console.log('📚 Enrollments array:', enrollments);
 
-        // Use the same progress calculation as course-view - count completed items
-        const courses = await Promise.all(enrollments.map(async enrollment => {
+        // Use progress from backend enrollment (already calculated via ContentProgress)
+        const courses = enrollments.map(enrollment => {
           const course = enrollment.course || {};
           const courseId = course.id || enrollment.course_id;
-          console.log('📖 Individual course:', course);
-          console.log('📊 Enrollment data:', enrollment);
-
-          // Calculate progress by counting completed content items
-          let totalItems = 0;
-          let completedItems = 0;
-
-          try {
-            // Get all course tasks to count progress
-            const tasksRes = await api.get(`/tasks/?course=${courseId}`);
-            const tasks = tasksRes.data.results || tasksRes.data.data || tasksRes.data || [];
-            
-            // Count completed videos, documents, and questions - same as course-view
-            await Promise.all(tasks.map(async task => {
-              // Get full task details if needed
-              let taskDetail = task;
-              if (!task.videos && !task.documents && !task.questions) {
-                try {
-                  const detailRes = await api.get(`/tasks/${task.id}/`);
-                  taskDetail = detailRes.data.data || detailRes.data;
-                } catch (err) {
-                  console.warn(`Failed to get task ${task.id} details:`, err.message);
-                }
-              }
-
-              // Count videos
-              if (taskDetail.videos?.length) {
-                taskDetail.videos.forEach(v => {
-                  totalItems++;
-                  if (v.is_completed) completedItems++;
-                });
-              }
-
-              // Count documents
-              if (taskDetail.documents?.length) {
-                taskDetail.documents.forEach(d => {
-                  totalItems++;
-                  if (d.is_completed) completedItems++;
-                });
-              }
-
-              // Count questions (MCQ groups and coding)
-              if (taskDetail.questions?.length) {
-                taskDetail.questions.forEach(q => {
-                  totalItems++;
-                  if (q.is_completed) completedItems++;
-                });
-              }
-            }));
-
-          } catch (err) {
-            console.warn(`Failed to calculate detailed progress for course ${courseId}:`, err.message);
-          }
-
-            // Calculate progress as percentage, same as course-view
-          const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-
-          // If progress is 100% and course is not marked as completed, update it
-          if (Math.round(progress) === 100 && enrollment.status !== 'completed') {
-            try {
-              await api.post(`/student/enrollments/${enrollment.id}/complete/`);
-              console.log(`✅ Marked course ${courseId} as completed`);
-            } catch (err) {
-              console.warn(`Failed to mark course ${courseId} as completed:`, err.message);
-            }
-          }
+          console.log('📖 Course:', course.title, 'Progress:', enrollment.progress_percentage, '%');
 
           return {
             ...course,
             id: courseId,
-            progress: progress, // Use calculated progress
+            progress: enrollment.progress_percentage || 0, // Use backend calculated progress
             enrolled_at: enrollment.enrolled_at || enrollment.created_at,
             status: enrollment.status,
             completion_status: enrollment.completion_status,
@@ -221,15 +156,16 @@ const Profile = () => {
             completed_topics: enrollment.completed_topics || 0,
             total_topics: course.total_topics || course.topics_count || 0
           };
-        }));
+        });
+
         console.log('✅ Processed courses:', courses);
         setEnrolledCourses(courses);
-        
-        // Update stats with the real calculated progress
-        const completedCourses = courses.filter(c => Math.round(c.progress) === 100).length;
-        const totalProgress = courses.reduce((sum, c) => sum + c.progress, 0);
+
+        // Update stats with backend progress
+        const completedCourses = courses.filter(c => c.status === 'completed' || c.progress >= 100).length;
+        const totalProgress = courses.reduce((sum, c) => sum + (c.progress || 0), 0);
         const avgProgress = courses.length > 0 ? totalProgress / courses.length : 0;
-        
+
         setStats(prevStats => ({
           ...prevStats,
           course_stats: {
