@@ -1,4 +1,6 @@
-const PageContent = ({ content, onComplete, onNext, onPrev }) => {    
+import CodeBlockExecutor from './CodeBlockExecutor';
+
+const PageContent = ({ content, onComplete, onNext, onPrev }) => {
     if (!content) {
         return <p>No page content available</p>;
     }
@@ -21,18 +23,17 @@ const PageContent = ({ content, onComplete, onNext, onPrev }) => {
                 <p className="text-muted">No text content available.</p>
             )}
 
-            {/* Render code blocks */}
+            {/* Render code blocks with execution capability */}
             {content.code_blocks && content.code_blocks.length > 0 ? (
                 <div className="code-blocks">
                     {content.code_blocks.map((block, index) => (
-                        <div key={index} className="code-block mb-4">
-                            {block.title && <h5>{block.title}</h5>}
-                            <pre className="bg-dark text-light p-3 rounded">
-                                <code className={`language-${block.language || 'javascript'}`}>
-                                    {block.code}
-                                </code>
-                            </pre>
-                        </div>
+                        <CodeBlockExecutor
+                            key={index}
+                            code={block.code}
+                            language={block.language || 'javascript'}
+                            title={block.title || ''}
+                            description={block.description || ''}
+                        />
                     ))}
                 </div>
             ) : null}

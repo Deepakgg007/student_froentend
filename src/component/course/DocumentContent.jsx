@@ -6,11 +6,14 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
 
     // ✅ Manual completion with button
     const handleMarkComplete = async () => {
+        console.log('📄 DocumentContent: Mark as complete button clicked');
         setIsCompleting(true);
         try {
+            console.log('📞 DocumentContent: Calling onComplete()');
             await onComplete();
+            console.log('✅ DocumentContent: onComplete() succeeded');
             // Show success toast message (side notification)
-            await Swal.fire({
+            Swal.fire({
                 toast: true,
                 position: 'top-end',
                 icon: 'success',
@@ -19,10 +22,11 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
                 timer: 1500,
                 timerProgressBar: true
             });
-            // Reload page to update sidebar
-            window.location.reload();
+            console.log('🎉 DocumentContent: Success toast shown');
+            // Don't reload - let parent component handle state update
+            setIsCompleting(false);
         } catch (err) {
-            console.error('Failed to mark complete:', err);
+            console.error('❌ DocumentContent: Failed to mark complete:', err);
             Swal.fire({
                 toast: true,
                 position: 'top-end',

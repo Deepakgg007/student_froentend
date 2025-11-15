@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const PageTransition = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const location = useLocation();
+    const previousPathRef = useRef(location.pathname);
 
     useEffect(() => {
-        // Start loading transition
-        setIsLoading(true);
+        // Only show loading if the path actually changed
+        if (previousPathRef.current !== location.pathname) {
+            setIsLoading(true);
 
-        // Small delay to show smooth transition
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 300);
+            // Shorter delay for smoother transition
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+                previousPathRef.current = location.pathname;
+            }, 200);
 
-        return () => clearTimeout(timer);
+            return () => clearTimeout(timer);
+        }
     }, [location.pathname]);
 
     return (
@@ -27,33 +31,30 @@ const PageTransition = ({ children }) => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 9999,
-                    transition: 'opacity 0.3s ease-in-out',
-                    opacity: isLoading ? 1 : 0
+                    transition: 'opacity 0.2s ease-in-out',
+                    opacity: isLoading ? 1 : 0,
+                    pointerEvents: 'none'
                 }}>
                     <div style={{
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '20px'
+                        gap: '15px'
                     }}>
-                        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                        <div className="spinner-border text-primary" role="status" style={{ width: '2.5rem', height: '2.5rem' }}>
                             <span className="visually-hidden">Loading...</span>
                         </div>
-                        <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>Loading...</p>
                     </div>
                 </div>
             )}
 
-            {/* Page content with fade transition */}
-            <div style={{
-                opacity: isLoading ? 0.5 : 1,
-                transition: 'opacity 0.3s ease-in-out'
-            }}>
+            {/* Page content */}
+            <div>
                 {children}
             </div>
         </>

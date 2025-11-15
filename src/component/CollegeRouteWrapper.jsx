@@ -40,21 +40,17 @@ const CollegeRouteWrapper = ({ children }) => {
             const response = await api.get("/auth/me");
             const userData = response.data.data || response.data.user || response.data;
 
-            console.log('🔍 College Route Wrapper - User data:', userData);
 
             if (userData && userData.college_details && userData.college_details.name) {
                 // Create slug from college name
                 const slug = createSlug(userData.college_details.name);
-                console.log('🏫 College slug:', slug);
 
                 // Check if current URL has the college slug
                 const pathParts = location.pathname.split('/').filter(p => p);
-                console.log('📍 Current path parts:', pathParts);
 
                 // If first part is not the college slug, redirect
                 if (pathParts.length === 0 || pathParts[0] !== slug) {
                     const newPath = `/${slug}${location.pathname}`;
-                    console.log('🔄 Redirecting to college-specific URL:', newPath);
                     navigate(newPath, { replace: true });
                 }
             }

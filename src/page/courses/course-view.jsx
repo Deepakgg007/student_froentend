@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import api from "../../services/api";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import api, { getCertifications } from "../../services/api";
 import CourseSidebar from "../../component/course/CourseSidebar";
 import ContentDisplay from "../../component/course/ContentDisplay";
 
@@ -16,11 +16,12 @@ try {
 
 const CourseView = () => {
     const params = useParams();
-    const { courseId } = params;
+    const { courseId, collegeSlug } = params;
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [course, setCourse] = useState(null);
     const [topics, setTopics] = useState([]);
+    const [certifications, setCertifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [progress, setProgress] = useState(0);
@@ -40,15 +41,19 @@ const CourseView = () => {
         }
     }, [courseId]);
 
+    useEffect(() => {
+        if (courseId && courseId !== 'undefined') {
+            fetchCertifications();
+        }
+    }, [courseId]);
+
     const fetchRealProgress = async () => {
         if (!getCourseProgress) {
-            console.log('📊 Progress service not available, skipping real progress fetch');
             return;
         }
 
         try {
             const progressData = await getCourseProgress(courseId);
-            console.log('📊 Real progress from backend:', progressData);
             setProgress(progressData.percentage || 0);
         } catch (error) {
             console.error('Failed to fetch real progress:', error);
@@ -261,7 +266,6 @@ const CourseView = () => {
 
                     if (enrollment && enrollment.id && enrollment.status !== 'completed') {
                         await api.post(`/student/enrollments/${enrollment.id}/complete/`);
-                        console.log(`✅ Course ${courseId} marked as completed`);
                     }
                 } catch (err) {
                     console.warn(`Failed to mark course ${courseId} as completed:`, err.message);
@@ -291,7 +295,6 @@ const CourseView = () => {
                     }
 
                     const redirectUrl = `${baseUrl}?taskId=${firstTask.id.toString()}&contentType=${firstContent.type}&contentId=${firstContent.id.toString()}`;
-                    console.log('🔄 Auto-redirecting to first content:', redirectUrl);
                     navigate(redirectUrl, { replace: true });
                 } else {
                     console.warn('⚠️ No content found in first task');
@@ -306,6 +309,26 @@ const CourseView = () => {
             setError('Failed to load course content. Please try again later.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchCertifications = async () => {
+        try {
+            // Use getCertifications which handles URL following
+            const response = await getCertifications();
+            const data = response.data;
+            const allCerts = Array.isArray(data) ? data : data.results || [];
+
+
+            // Filter certifications for this course
+            const filteredCerts = allCerts.filter(cert =>
+                cert.course_id === parseInt(courseId) || cert.course === parseInt(courseId)
+            );
+
+            setCertifications(filteredCerts);
+        } catch (err) {
+            console.error('Error fetching certifications:', err);
+            setCertifications([]);
         }
     };
 
@@ -340,14 +363,16 @@ const CourseView = () => {
 
     const handleContentComplete = async (contentId, contentType) => {
         try {
-            const response = await api.post(`/student/tasks/${taskId}/mark-complete/`, {
+            const response = await api.post(`/student/content/mark-complete/`, {
                 content_id: contentId,
-                content_type: contentType
+                content_type: contentType,
+                task_id: taskId,
+                course_id: courseId
             });
 
             // Immediately update the topics state to mark content as completed
             setTopics(prevTopics => {
-                return prevTopics.map(topic => ({
+                const updatedTopics = prevTopics.map(topic => ({
                     ...topic,
                     tasks: topic.tasks.map(task => ({
                         ...task,
@@ -360,6 +385,7 @@ const CourseView = () => {
                         })
                     }))
                 }));
+                return updatedTopics;
             });
 
             // Update progress immediately
@@ -379,7 +405,7 @@ const CourseView = () => {
                     });
                 });
             });
-            
+
             const currentProgress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
             setProgress(currentProgress);
 
@@ -390,13 +416,12 @@ const CourseView = () => {
                         // Try to find the current enrollment ID
                         const enrollRes = await api.get(`/student/enrollments/?course=${courseId}`);
                         const enrollments = enrollRes.data.results || enrollRes.data.data || enrollRes.data || [];
-                        const enrollment = Array.isArray(enrollments) 
-                            ? enrollments.find(e => e.course == courseId || e.course_id == courseId) 
+                        const enrollment = Array.isArray(enrollments)
+                            ? enrollments.find(e => e.course == courseId || e.course_id == courseId)
                             : enrollments;
 
                         if (enrollment && enrollment.id && enrollment.status !== 'completed') {
                             await api.post(`/enrollments/${enrollment.id}/complete/`);
-                            console.log(`✅ Course ${courseId} marked as completed after content completion`);
                             // Update enrollment status locally
                             enrollment.status = 'completed';
                         }
@@ -404,14 +429,14 @@ const CourseView = () => {
                         console.warn(`Failed to mark course ${courseId} as completed after content completion:`, err.message);
                     }
                 })();
-                }
+            }
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             return response.data;
         } catch (err) {
-            console.error('Failed to mark content as complete:', err.response?.data || err);
+            console.error('❌ course-view: Failed to mark content as complete:', err.response?.data || err);
             throw err;
         }
     };
@@ -526,6 +551,57 @@ const CourseView = () => {
                         onContentNavigation={handleContentNavigation}
                         refreshCourse={fetchCourseContent}
                     />
+
+                    {/* Certifications Section */}
+                    {certifications.length > 0 && (
+                        <div style={{
+                            marginTop: '40px',
+                            padding: '24px',
+                            backgroundColor: 'white',
+                            borderRadius: '8px',
+                            border: '1px solid #e0e0e0',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                        }}>
+                            <h3 style={{ marginBottom: '20px', color: '#333' }}>
+                                <i className="fas fa-certificate" style={{ marginRight: '8px', color: '#2196f3' }}></i>
+                                Available Certifications
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                                {certifications.map(cert => (
+                                    <div key={cert.id} style={{
+                                        padding: '16px',
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#f9f9f9',
+                                        transition: 'all 0.3s ease'
+                                    }}>
+                                        <h5 style={{ marginBottom: '8px', color: '#333' }}>{cert.title}</h5>
+                                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+                                            <div>⏱️ Duration: {cert.duration_minutes} minutes</div>
+                                            <div>✓ Passing Score: {cert.passing_score}%</div>
+                                            <div>📝 Questions: {cert.total_questions || 'N/A'}</div>
+                                        </div>
+                                        <Link
+                                            to={collegeSlug ? `/${collegeSlug}/certification/${cert.id}` : `/certification/${cert.id}`}
+                                            style={{
+                                                display: 'inline-block',
+                                                padding: '10px 16px',
+                                                backgroundColor: '#ff9800',
+                                                color: 'white',
+                                                borderRadius: '4px',
+                                                textDecoration: 'none',
+                                                fontWeight: 'bold',
+                                                fontSize: '14px',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            📝 Start Exam
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </Fragment>

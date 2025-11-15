@@ -1,18 +1,15 @@
-//footer.jsx
-
 import { Link, useLocation } from "react-router-dom";
 
 const Footer = () => {
     const location = useLocation();
 
     // Check if current page is login or signup
-    const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
-
+    const isAuthPage = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/forgetpass";
     return (
         <div className="news-footer-wrap">
             <div className="fs-shape">
-                <img src="edukon\src\assets\images\shape-img\03.png" alt="fst" className="fst-1" />
-                <img src="assets/images/shape-img/04.png" alt="fst" className="fst-2" />
+                <img src="/assets/images/shape-img/03.png" alt="fst" className="fst-1" />
+                <img src="/assets/images/shape-img/04.png" alt="fst" className="fst-2" />
             </div>
 
             {/* Show this only if NOT on login or signup */}
@@ -105,9 +102,9 @@ const Footer = () => {
                 <div className="container">
                     <div className="section-wrapper">
                         <p>
-                            &copy; 2022 <Link to="/">Edukon</Link> Designed by{" "}
-                            <a href="https://themeforest.net/user/CodexCoder" target="_blank" rel="noreferrer">
-                                CodexCoder
+                            &copy; 2025 <Link to="/">Haegl Educate</Link> Designed by{" "}
+                            <a href="#" target="_blank" rel="noreferrer">
+                                Haegl
                             </a>
                         </p>
                     </div>

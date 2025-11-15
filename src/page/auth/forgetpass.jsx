@@ -2,7 +2,6 @@ import { Fragment, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../../component/layout/footer";
 import Header from "../../component/layout/header";
-import PageHeader from "../../component/layout/pageheader";
 import api from "../../services/api";
 
 const ForgetPass = () => {
@@ -140,7 +139,6 @@ const ForgetPass = () => {
     return (
         <Fragment>
             <Header />
-            <PageHeader title={'Forgot Password'} curPage={'Forgot Password'} />
             <div className="login-section padding-tb section-bg">
                 <div className="container">
                     <div className="account-wrapper">

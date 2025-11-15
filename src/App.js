@@ -2,11 +2,11 @@
 import {BrowserRouter, Routes, Route } from "react-router-dom";
 import 'swiper/css';
 
-
 import ScrollToTop from "./component/layout/ScrollToTop";
 import ProtectedRoute from "./component/ProtectedRoute";
 import CollegeRouteWrapper from "./component/CollegeRouteWrapper";
 import PageTransition from "./component/PageTransition";
+import useSessionValidator from "./hooks/useSessionValidator";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Auth Pages
@@ -37,6 +37,9 @@ import JobDetail from "./page/jobs/job-detail";
 import Profile from "./page/profile/profile";
 import Leaderboard from "./page/leaderboard/leaderboard";
 
+// Certification Pages
+import CertificationPage from "./page/certification/certification";
+
 // Home Page
 import Home from "./page/home/home-4";
 
@@ -55,6 +58,9 @@ import ErrorPage from "./page/general/404";
 
 
 function App() {
+	// Validate session every 30 seconds
+	useSessionValidator(30000);
+
 	return (
 		<BrowserRouter>
 			<ScrollToTop />
@@ -63,6 +69,7 @@ function App() {
 			<Routes>
 				{/* Public Routes */}
 				<Route path="/" element={<Home />} />
+				<Route path=":collegeSlug/" element={<Home />} />
 				<Route path="about" element={<AboutPage />} />
 				<Route path="team" element={<TeamPage />} />
 				<Route path="team-single" element={<TeamSingle />} />
@@ -145,6 +152,16 @@ function App() {
 				<Route path=":collegeSlug/leaderboard" element={
 					<ProtectedRoute>
 						<Leaderboard />
+					</ProtectedRoute>
+				} />
+				<Route path=":collegeSlug/certification/:certificationId" element={
+					<ProtectedRoute>
+						<CertificationPage />
+					</ProtectedRoute>
+				} />
+				<Route path="certification/:certificationId" element={
+					<ProtectedRoute>
+						<CertificationPage />
 					</ProtectedRoute>
 				} />
 

@@ -6444,13 +6444,20 @@ footer.style-2 .footer-top.dark-view * {
     display: none;
   }
 }
+.news-footer-wrap .fs-shape img {
+  opacity: 0.5;
+}
 .news-footer-wrap .fs-shape img.fst-1 {
   top: 0;
   left: -60px;
+  width: 300px;
+  height: 300px;
 }
 .news-footer-wrap .fs-shape img.fst-2 {
   bottom: 104px;
   right: 0;
+  width: 250px;
+  height: 250px;
 }
 
 /* @@@@@@@@@@@@@  Newsletter Section Start Here  @@@@@@@@@@@@@@ */

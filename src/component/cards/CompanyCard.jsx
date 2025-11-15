@@ -1,146 +1,303 @@
-// CompanyCard Component
+// CompanyCard Component - Enhanced Modern Design
 // Displays a single company card with logo, info, stats, and actions
 
-import React from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const CompanyCard = ({ company }) => {
+  const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
   const {
     slug,
     name,
     image,
+    image_display,
     industry,
     location,
     employee_count,
-    website,
     is_hiring_open,
-    days_until_hiring_ends,
     hiring_period_start,
     hiring_period_end,
     total_concepts,
     total_challenges,
   } = company;
 
+  // Use image_display if available, fallback to image
+  const logoUrl = image_display || image;
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
-    <div className="card company-card h-100 border-0 shadow-sm">
-      {/* Company Header */}
-      <div className="card-header bg-white border-0 pb-0">
-        <div className="d-flex align-items-center">
-          {image ? (
-            <img 
-              src={image} 
-              className="company-logo-inline me-3" 
-              alt={name}
-              style={{ width: '60px', height: '60px', objectFit: 'contain', borderRadius: '8px' }}
+    <div
+      className="company-card h-100 border-0"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        background: 'white',
+        borderRadius: '16px',
+        boxShadow: isHovered ? '0 12px 32px rgba(0, 0, 0, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflow: 'hidden',
+        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Company Logo Banner */}
+      <div
+        style={{
+          height: '120px',
+          background: isHovered
+            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            : 'linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        {/* Background decoration */}
+        <div
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2) 0%, transparent 50%)',
+          }}
+        />
+
+        {logoUrl && !imageError ? (
+          <img
+            src={logoUrl}
+            alt={name}
+            onError={handleImageError}
+            style={{
+              width: '80px',
+              height: '80px',
+              objectFit: 'contain',
+              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
+              transition: 'all 0.3s ease',
+              zIndex: 2,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(4px)',
+              zIndex: 2,
+            }}
+          >
+            <i
+              className="fas fa-building"
+              style={{
+                fontSize: '2.5rem',
+                color: isHovered ? 'white' : '#6c757d',
+              }}
             />
-          ) : (
-            <div 
-              className="company-logo-inline me-3 bg-light rounded d-flex align-items-center justify-content-center" 
-              style={{ width: '60px', height: '60px' }}
-            >
-              <i className="fas fa-building text-muted"></i>
-            </div>
-          )}
-          <div className="flex-grow-1">
-            <h5 className="mb-1 fw-bold">{name}</h5>
-            {industry && (
-              <span className="text-muted small">{industry}</span>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="card-body">
-        {/* Hiring Status Badge */}
+      {/* Card Content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px' }}>
+        {/* Company Name and Industry */}
         <div className="mb-3">
-          {is_hiring_open ? (
-            <>
-              <span className="badge rounded-pill bg-success px-3 py-2">
-                <i className="fas fa-check-circle me-1"></i> Actively Hiring
-              </span>
-              {days_until_hiring_ends > 0 && (
-                <span className="badge rounded-pill bg-warning text-dark px-3 py-2 ms-2">
-                  <i className="fas fa-clock me-1"></i> {days_until_hiring_ends} days left
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="badge rounded-pill bg-secondary px-3 py-2">
-              <i className="fas fa-pause-circle me-1"></i> Not Hiring
+          <h5
+            style={{
+              fontSize: '1.1rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              color: '#1a1a1a',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {name}
+          </h5>
+          {industry && (
+            <span
+              style={{
+                fontSize: '0.85rem',
+                color: '#667eea',
+                fontWeight: '500',
+                textTransform: 'capitalize',
+              }}
+            >
+              {industry}
             </span>
           )}
         </div>
 
-        {/* Company Info */}
-        <div className="company-info-grid mb-3">
+        {/* Hiring Status Badge */}
+        <div className="mb-3">
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              paddingLeft: '12px',
+              paddingRight: '12px',
+              paddingTop: '6px',
+              paddingBottom: '6px',
+              borderRadius: '20px',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              background: is_hiring_open ? '#d4edda' : '#e2e3e5',
+              color: is_hiring_open ? '#155724' : '#656565',
+            }}
+          >
+            <i className={`fas ${is_hiring_open ? 'fa-check-circle' : 'fa-pause-circle'}`} />
+            {is_hiring_open ? 'Actively Hiring' : 'Not Hiring'}
+          </div>
+        </div>
+
+        {/* Company Details */}
+        <div style={{ marginBottom: '16px', flex: 1 }}>
           {location && (
-            <div className="d-flex align-items-center mb-2">
-              <i className="fas fa-map-marker-alt text-primary me-2" style={{ width: '20px' }}></i>
-              <span className="text-muted small">{location}</span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px',
+                fontSize: '0.9rem',
+              }}
+            >
+              <i className="fas fa-map-marker-alt" style={{ color: '#667eea', width: '16px' }} />
+              <span style={{ color: '#495057' }}>{location}</span>
             </div>
           )}
           {employee_count && (
-            <div className="d-flex align-items-center mb-2">
-              <i className="fas fa-users text-primary me-2" style={{ width: '20px' }}></i>
-              <span className="text-muted small">{employee_count} employees</span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px',
+                fontSize: '0.9rem',
+              }}
+            >
+              <i className="fas fa-users" style={{ color: '#667eea', width: '16px' }} />
+              <span style={{ color: '#495057' }}>{employee_count} employees</span>
             </div>
           )}
           {hiring_period_start && hiring_period_end && (
-            <div className="d-flex align-items-center mb-2">
-              <i className="fas fa-calendar-alt text-primary me-2" style={{ width: '20px' }}></i>
-              <span className="text-muted small">
-                {new Date(hiring_period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {' '}
-                {new Date(hiring_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.9rem',
+              }}
+            >
+              <i className="fas fa-calendar-alt" style={{ color: '#667eea', width: '16px' }} />
+              <span style={{ color: '#495057' }}>
+                {new Date(hiring_period_start).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}{' '}
+                -{' '}
+                {new Date(hiring_period_end).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </span>
             </div>
           )}
         </div>
 
-        {/* Stats Section */}
-        <div className="stats-section bg-light rounded p-3 mb-3">
-          <div className="row text-center">
-            <div className="col-4">
-              <div className="stat-item">
-                <h4 className="mb-0 text-primary fw-bold">{total_concepts || 0}</h4>
-                <small className="text-muted">Concepts</small>
-              </div>
+        {/* Stats Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1px',
+            background: '#e9ecef',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            marginBottom: '16px',
+          }}
+        >
+          {/* Concepts */}
+          <div
+            style={{
+              background: 'white',
+              padding: '12px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#667eea' }}>
+              {total_concepts || 0}
             </div>
-            <div className="col-4 border-start border-end">
-              <div className="stat-item">
-                <h4 className="mb-0 text-success fw-bold">{total_challenges || 0}</h4>
-                <small className="text-muted">Challenges</small>
-              </div>
+            <div style={{ fontSize: '0.75rem', color: '#868e96', fontWeight: '500' }}>
+              Concepts
             </div>
-            <div className="col-4">
-              <div className="stat-item">
-                {website ? (
-                  <a href={website} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-                    <h4 className="mb-0"><i className="fas fa-globe text-info"></i></h4>
-                    <small>Website</small>
-                  </a>
-                ) : (
-                  <>
-                    <h4 className="mb-0 text-muted">-</h4>
-                    <small className="text-muted">No Website</small>
-                  </>
-                )}
-              </div>
+          </div>
+
+          {/* Challenges */}
+          <div
+            style={{
+              background: 'white',
+              padding: '12px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#22c55e' }}>
+              {total_challenges || 0}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#868e96', fontWeight: '500' }}>
+              Challenges
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Card Footer with Action Buttons */}
-      <div className="card-footer bg-white border-0 pt-0">
-        <div className="d-grid gap-2">
-          <Link 
-            to={`/companies/${slug}`} 
-            className="btn btn-primary"
-          >
-            <i className="fas fa-eye me-2"></i>
-            View Details
-          </Link>
-        </div>
+        {/* View Details Button */}
+        <Link
+          to={`/companies/${slug}`}
+          style={{
+            width: '100%',
+            padding: '10px 16px',
+            background: isHovered ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f0f1f3',
+            color: isHovered ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '0.95rem',
+            fontWeight: '600',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            if (!isHovered) {
+              e.currentTarget.style.background = '#e9ecef';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isHovered) {
+              e.currentTarget.style.background = '#f0f1f3';
+            }
+          }}
+        >
+          <i className="fas fa-arrow-right" />
+          View Details
+        </Link>
       </div>
     </div>
   );

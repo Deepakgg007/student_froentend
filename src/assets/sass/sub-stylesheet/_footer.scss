@@ -223,18 +223,29 @@ footer {
     background: #1f1f33;
     @extend %rel;
     .fs-shape {
-        @include breakpoint(max-xxl) {
-            display: none;
-        }
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 0;
         img {
             @extend %abs;
+            opacity: 0.5;
+            object-fit: contain;
             &.fst-1 {
-                top: 0;
-                left: -60px;
+                top: auto;
+                left: 0;
+                bottom: 30%;
+                width: clamp(200px, 25vw, 400px);
+                height: clamp(200px, 25vw, 400px);
             }
             &.fst-2 {
-                bottom: 104px;
+                bottom: 20%;
                 right: 0;
+                width: clamp(150px, 20vw, 300px);
+                height: clamp(150px, 20vw, 300px);
             }
         }
     }

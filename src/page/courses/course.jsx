@@ -25,12 +25,6 @@ const CoursePage = () => {
             const coursesData = Array.isArray(data)
                 ? data
                 : data.results || data.data || [];
-
-            console.log('Courses API Response:', coursesData);
-            if (coursesData.length > 0) {
-                console.log('First course data:', coursesData[0]);
-            }
-
             setCourses(coursesData);
         } catch (err) {
             console.error('Failed to fetch courses:', err);
@@ -60,7 +54,7 @@ const CoursePage = () => {
     const getImageUrl = (imageUrl) => {
         if (!imageUrl) return 'assets/images/course/01.jpg';
         if (imageUrl.startsWith('http')) return imageUrl;
-        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}${imageUrl}`;
+        return `${process.env.REACT_APP_API_BASE_URL}${imageUrl}`;
     };
 
     return (

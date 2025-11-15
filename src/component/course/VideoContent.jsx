@@ -12,7 +12,7 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
             try {
                 await onComplete();
                 // Show success toast message (side notification)
-                await Swal.fire({
+                Swal.fire({
                     toast: true,
                     position: 'top-end',
                     icon: 'success',
@@ -21,8 +21,8 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
                     timer: 1500,
                     timerProgressBar: true
                 });
-                // Reload page to update sidebar
-                window.location.reload();
+                // Don't reload - let parent component handle state update
+                setIsCompleting(false);
             } catch (err) {
                 console.error('Failed to mark video complete:', err);
                 Swal.fire({
@@ -41,11 +41,14 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
 
     // Manual mark as complete
     const handleMarkComplete = async () => {
+        console.log('🎬 VideoContent: Mark as complete button clicked');
         setIsCompleting(true);
         try {
+            console.log('📞 VideoContent: Calling onComplete()');
             await onComplete();
+            console.log('✅ VideoContent: onComplete() succeeded');
             // Show success toast message (side notification)
-            await Swal.fire({
+            Swal.fire({
                 toast: true,
                 position: 'top-end',
                 icon: 'success',
@@ -54,10 +57,11 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
                 timer: 1500,
                 timerProgressBar: true
             });
-            // Reload page to update sidebar
-            window.location.reload();
+            console.log('🎉 VideoContent: Success toast shown');
+            // Don't reload - let parent component handle state update
+            setIsCompleting(false);
         } catch (err) {
-            console.error('Failed to mark video complete:', err);
+            console.error('❌ VideoContent: Failed to mark video complete:', err);
             Swal.fire({
                 toast: true,
                 position: 'top-end',

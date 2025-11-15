@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../component/layout/header';
 import Footer from '../../component/layout/footer';
+import UserCertificates from '../../component/certification/UserCertificates';
 import api, { API_BASE_URL } from '../../services/api';
 import './profile.css';
 
 const Profile = () => {
-  const { userId } = useParams();
+  const { userId, collegeSlug } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
@@ -365,22 +366,32 @@ const Profile = () => {
         >
           <i className="fas fa-book"></i> Courses ({enrolledCourses.length})
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'badges' ? 'active' : ''}`}
           onClick={() => setActiveTab('badges')}
-          style={{ 
+          style={{
             ':hover': { color: '#000' },
-            color: activeTab === 'badges' ? '#000' : undefined 
+            color: activeTab === 'badges' ? '#000' : undefined
           }}
         >
           <i className="fas fa-award"></i> Badges ({badges.length})
         </button>
-        <button 
+        <button
+          className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`}
+          onClick={() => setActiveTab('certificates')}
+          style={{
+            ':hover': { color: '#000' },
+            color: activeTab === 'certificates' ? '#000' : undefined
+          }}
+        >
+          <i className="fas fa-certificate"></i> Certificates
+        </button>
+        <button
           className={`tab-btn ${activeTab === 'activity' ? 'active' : ''}`}
           onClick={() => setActiveTab('activity')}
-          style={{ 
+          style={{
             ':hover': { color: '#000' },
-            color: activeTab === 'activity' ? '#000' : undefined 
+            color: activeTab === 'activity' ? '#000' : undefined
           }}
         >
           <i className="fas fa-history"></i> Activity
@@ -526,8 +537,8 @@ const Profile = () => {
             {badges.length > 0 ? (
               <div className="badges-grid">
                 {badges.map((userBadge) => (
-                  <div 
-                    key={userBadge.id} 
+                  <div
+                    key={userBadge.id}
                     className="badge-card"
                     style={{ borderColor: getRarityColor(userBadge.badge.rarity) }}
                   >
@@ -558,6 +569,13 @@ const Profile = () => {
                 <p>No badges earned yet. Start solving challenges!</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Certificates Tab */}
+        {activeTab === 'certificates' && (
+          <div className="certificates-tab">
+            <UserCertificates collegeSlug={collegeSlug} />
           </div>
         )}
 

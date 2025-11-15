@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-export const API_BASE_URL = 'http://localhost:8000';
+// export const API_BASE_URL = 'http://localhost:8000';
+// export const API_BASE_URL = 'http://192.168.1.9:8000';
+export const API_BASE_URL = 'http://16.16.76.74:8000';
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -33,6 +35,16 @@ api.interceptors.response.use(
       data: error.response?.data,
     });
 
+    // Check for session invalidation error (logged in from another device)
+    if (error.response?.status === 403) {
+      const errorMessage = error.response?.data?.detail || '';
+      if (errorMessage.includes('session is no longer valid') ||
+          errorMessage.includes('logged in from another device')) {
+        localStorage.clear();
+        window.location.href = '/login?session_expired=true';
+      }
+    }
+
     if (error.response?.status === 401) {
       localStorage.clear();
       window.location.href = '/login';
@@ -40,6 +52,37 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ========== Authentication APIs ==========
+
+/**
+ * Login user
+ * @param {string} email - User email
+ * @param {string} password - User password
+ * @param {boolean} rememberMe - Remember me flag (optional)
+ */
+export const loginUser = (email, password, rememberMe = false) => {
+  return api.post('/auth/login/', {
+    email,
+    password,
+    remember_me: rememberMe,
+  });
+};
+
+/**
+ * Logout user and clear session
+ */
+export const logoutUser = () => {
+  return api.post('/auth/logout/');
+};
+
+/**
+ * Register new user
+ * @param {Object} userData - User registration data
+ */
+export const registerUser = (userData) => {
+  return api.post('/auth/register/', userData);
+};
 
 // ========== Company APIs ==========
 
@@ -250,6 +293,189 @@ export const getDaysRemaining = (deadline) => {
 export const isDeadlinePassed = (deadline) => {
   if (!deadline) return false;
   return new Date(deadline) < new Date();
+};
+
+// ========== Certification/Exam APIs ==========
+
+/**
+ * Get all available certifications for a course
+ * @param {number} courseId - Course ID
+ * @param {Object} params - Query parameters
+ */
+export const getCertifications = async (params = {}) => {
+  try {
+    // The backend routes: /api/student/certifications/certifications/
+    const response = await api.get('/student/certifications/certifications/', { params });
+
+    // Check if response contains URLs instead of data
+    if (response.data && typeof response.data === 'object') {
+      // If it's a dict with 'certifications' key pointing to a URL, fetch from that URL
+      if (response.data.certifications && typeof response.data.certifications === 'string') {
+        const certsResponse = await api.get(response.data.certifications);
+        return certsResponse;
+      }
+      // If it's a dict with data key, return the data
+      if (response.data.data) {
+        return { data: response.data.data };
+      }
+      // If it's already the array, return it
+      if (Array.isArray(response.data)) {
+        return { data: response.data };
+      }
+    }
+
+    return response;
+  } catch (err) {
+    console.error('Error fetching certifications:', err);
+    throw err;
+  }
+};
+
+/**
+ * Get certification by ID
+ * @param {number} id - Certification ID
+ */
+export const getCertificationById = async (id) => {
+  try {
+    // The backend routes: /api/student/certifications/certifications/{id}/
+    const response = await api.get(`/student/certifications/certifications/${id}/`);
+
+    // Check if response is a URL or actual data
+    if (response.data && typeof response.data === 'object') {
+      // If it has questions key pointing to URL, this is likely the detail endpoint
+      if (response.data.questions && typeof response.data.questions === 'string') {
+        return response;
+      }
+      // If it's already the data, return it
+      if (response.data.id && response.data.title) {
+        return response;
+      }
+    }
+
+    return response;
+  } catch (err) {
+    console.error('Error fetching certification:', err);
+    throw err;
+  }
+};
+
+/**
+ * Get questions for a certification (without showing correct answers)
+ * @param {number} certificationId - Certification ID
+ */
+export const getCertificationQuestions = async (certificationId) => {
+  try {
+    // The backend routes: /api/student/certifications/certifications/{id}/questions/
+    const response = await api.get(`/student/certifications/certifications/${certificationId}/questions/`);
+
+    // Handle URL responses
+    if (response.data && typeof response.data === 'object') {
+      // If it's an array of questions, return it
+      if (Array.isArray(response.data)) {
+        return { data: response.data };
+      }
+      // If it has results key (paginated response)
+      if (response.data.results) {
+        return { data: response.data.results };
+      }
+      // If it's a dict with data key
+      if (response.data.data) {
+        return { data: response.data.data };
+      }
+    }
+
+    return response;
+  } catch (err) {
+    console.error('Error fetching questions:', err);
+    throw err;
+  }
+};
+
+/**
+ * Get student's certification attempts
+ * @param {number} certificationId - Certification ID
+ */
+export const getCertificationAttempts = async (certificationId) => {
+  try {
+    // The backend routes: /api/student/certifications/certifications/{id}/my_attempts/
+    const response = await api.get(`/student/certifications/certifications/${certificationId}/my_attempts/`);
+
+    // Handle URL responses
+    if (response.data && typeof response.data === 'object') {
+      // If it's an array of attempts, return it
+      if (Array.isArray(response.data)) {
+        return { data: response.data };
+      }
+      // If it has results key (paginated response)
+      if (response.data.results) {
+        return { data: response.data.results };
+      }
+      // If it's a dict with data key
+      if (response.data.data) {
+        return { data: response.data.data };
+      }
+    }
+
+    return response;
+  } catch (err) {
+    console.error('Error fetching attempts:', err);
+    throw err;
+  }
+};
+
+/**
+ * Start a new certification attempt
+ * @param {number} certificationId - Certification ID
+ */
+export const startCertificationAttempt = (certificationId) => {
+  // The backend routes: /api/student/certifications/attempts/start/
+  return api.post(`/student/certifications/attempts/start/`, {
+    certification: certificationId
+  });
+};
+
+/**
+ * Submit certification attempt with answers
+ * @param {number} attemptId - Certification Attempt ID
+ * @param {Array} answers - Array of {question_id, selected_options}
+ */
+export const submitCertificationAttempt = (attemptId, answers) => {
+  return api.post(`/student/certifications/attempts/${attemptId}/submit/`, {
+    answers
+  });
+};
+
+/**
+ * Download certificate PDF
+ * @param {number} attemptId - Certification Attempt ID
+ */
+export const downloadCertificate = (attemptId) => {
+  // Create a separate axios instance to avoid DRF content negotiation issues
+  // that cause 406 Not Acceptable errors
+  const downloadApi = axios.create({
+    baseURL: `${API_BASE_URL}/api`,
+    timeout: 30000, // 30 second timeout for PDF generation
+  });
+
+  // Add auth token
+  const token = localStorage.getItem('student_access_token');
+  if (token) {
+    downloadApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+
+  // Don't send Content-Type header to avoid content negotiation conflicts
+  return downloadApi.get(`/student/certifications/attempts/${attemptId}/download_certificate/`, {
+    responseType: 'blob'
+  }).catch(error => {
+    console.error('Certificate download error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    });
+    throw error;
+  });
 };
 
 export default api;

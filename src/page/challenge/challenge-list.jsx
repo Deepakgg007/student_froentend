@@ -13,6 +13,7 @@ const ChallengeList = () => {
     difficulty: '',
     category: '',
   });
+  const [showFilter, setShowFilter] = useState(false); // For mobile toggle
 
   const difficultyColors = {
     EASY: 'success',
@@ -43,15 +44,14 @@ const ChallengeList = () => {
 
   const fetchChallenges = async () => {
     try {
+      setLoading(true);
       const params = {};
       if (filters.difficulty) params.difficulty = filters.difficulty;
       if (filters.category) params.category = filters.category;
 
       const response = await api.get('/challenges/', { params });
-      // Handle paginated response
       const data = response.data.results || response.data.data || response.data;
       setChallenges(Array.isArray(data) ? data : []);
-      console.log('Challenges loaded:', data);
     } catch (error) {
       console.error('Error fetching challenges:', error);
       setChallenges([]);
@@ -74,43 +74,137 @@ const ChallengeList = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="container py-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <Header />
       <div style={{ background: '#f8fafc', minHeight: '100vh', paddingTop: '80px' }}>
-        <div className="container-fluid py-4 px-5">
-          <div className="card mb-4 border-0 shadow-sm">
-            <div className="card-body text-center py-4">
-              <h1 className="h2 fw-bold mb-3" style={{ color: '#2d3748' }}>
-                <i className="fas fa-code-branch me-3" style={{ color: '#7b61ff' }}></i>
-                Coding Challenges
-              </h1>
-              <p className="text-muted mb-0" style={{ fontSize: '1.1rem' }}>
-                {challenges.length} coding challenges ready to be solved
-              </p>
-            </div>
+        <div className="container-fluid py-4 px-3 px-md-5">
+          
+
+          {/* 🔹 Mobile Filter Toggle Button */}
+          <div className="d-block d-lg-none mb-3">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className="btn btn-primary w-100 fw-semibold"
+              style={{
+                background: 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
+                border: 'none',
+                borderRadius: '10px',
+              }}
+            >
+              {showFilter ? (
+                <>
+                  <i className="fas fa-times me-2"></i>Hide Filters
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-filter me-2"></i>Show Filters
+                </>
+              )}
+            </button>
           </div>
+
+          {/* 🔹 Mobile Filters */}
+          {showFilter && (
+            <div className="d-block d-lg-none mb-4 animate__animated animate__fadeInDown">
+              <div className="card border-0 shadow-sm">
+                <div className="card-body">
+                  <h5 className="fw-bold mb-4">Filters</h5>
+                  <form>
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold" style={{ fontSize: '0.9rem' }}>
+                        <i className="fas fa-code me-2"></i>Category
+                      </label>
+                      <select
+                        className="form-select form-select-sm"
+                        name="category"
+                        value={filters.category}
+                        onChange={handleFilterChange}
+                      >
+                        <option value="">All Categories</option>
+                        {algorithmCategories.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold" style={{ fontSize: '0.9rem' }}>
+                        <i className="fas fa-signal me-2"></i>Difficulty
+                      </label>
+                      <div>
+                        {['', 'EASY', 'MEDIUM', 'HARD'].map((level) => (
+                          <div className="form-check mb-2" key={level}>
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="difficulty"
+                              value={level}
+                              checked={filters.difficulty === level}
+                              onChange={handleFilterChange}
+                              id={`difficulty-${level || 'all'}-mobile`}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor={`difficulty-${level || 'all'}-mobile`}
+                            >
+                              {level || 'All Levels'}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {(filters.difficulty || filters.category) && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm w-100"
+                        onClick={clearFilters}
+                      >
+                        <i className="fas fa-times me-2"></i>Clear Filters
+                      </button>
+                    )}
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="row">
             <div className="col-lg-9">
+              {/* Subtle Loading Indicator */}
+              {loading && (
+                <div style={{
+                  position: 'absolute',
+                  top: '80px',
+                  right: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 16px',
+                  backgroundColor: 'rgba(123, 97, 255, 0.1)',
+                  borderRadius: '20px',
+                  zIndex: 100
+                }}>
+                  <div className="spinner-border" style={{ width: '1rem', height: '1rem' }} role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <span style={{ fontSize: '0.85rem', color: '#7b61ff', fontWeight: '500' }}>
+                    Updating...
+                  </span>
+                </div>
+              )}
+
               {challenges.length > 0 ? (
                 challenges.map((challenge) => (
-                  <div 
-                    key={challenge.id} 
+                  <div
+                    key={challenge.id}
                     className="card mb-3 border-0"
                     style={{
                       transition: 'all 0.2s ease',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-4px)';
@@ -122,37 +216,37 @@ const ChallengeList = () => {
                     }}
                   >
                     <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start">
+                      <div className="d-flex justify-content-between align-items-start flex-wrap">
                         <div className="flex-grow-1">
                           <h5 className="mb-2 d-flex align-items-center">
                             <Link
                               to={`/challenge/${challenge.slug}`}
-                              className="text-dark text-decoration-none"
-                              style={{ 
-                                fontWeight: 700,
-                                fontSize: '1.1rem',
-                                color: '#2d3748',
-                                transition: 'color 0.15s ease'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = '#7b61ff'}
-                              onMouseLeave={(e) => e.currentTarget.style.color = '#2d3748'}
+                              className="text-dark text-decoration-none fw-bold"
+                              style={{ fontSize: '1.1rem', color: '#2d3748' }}
                             >
                               {challenge.title}
                             </Link>
                           </h5>
 
                           <div className="d-flex flex-wrap gap-2 mb-3">
-                            <span className={`badge px-3 py-2 rounded-pill bg-${difficultyColors[challenge.difficulty]} text-uppercase`} 
-                                  style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                            <span
+                              className={`badge px-3 py-2 rounded-pill bg-${difficultyColors[challenge.difficulty]} text-uppercase`}
+                              style={{ fontSize: '0.8rem', fontWeight: 600 }}
+                            >
                               {challenge.difficulty}
                             </span>
-                            <span className="badge px-3 py-2 rounded-pill bg-light text-dark" 
-                                  style={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                            <span
+                              className="badge px-3 py-2 rounded-pill bg-light text-dark"
+                              style={{ fontSize: '0.8rem', fontWeight: 500 }}
+                            >
                               {challenge.category}
                             </span>
                           </div>
 
-                          <div className="d-flex align-items-center gap-3 mb-2" style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                          <div
+                            className="d-flex align-items-center gap-3 mb-2"
+                            style={{ fontSize: '0.85rem', color: '#6c757d' }}
+                          >
                             <span>
                               <i className="fas fa-star-half-alt me-1"></i>
                               {challenge.max_score} points
@@ -168,72 +262,43 @@ const ChallengeList = () => {
                           </div>
                         </div>
 
-                        {challenge.submission_status ? (
-                          // User has attempted this challenge
-                          challenge.submission_status === 'ACCEPTED' ? (
-                            <Link
-                              to={`/challenge/${challenge.slug}`}
-                              className="btn d-inline-flex align-items-center btn-success"
-                              style={{
-                                padding: '10px 20px',
-                                borderRadius: '12px',
-                                transition: 'all 0.2s ease',
-                                textDecoration: 'none',
-                                fontWeight: 600,
-                                fontSize: '0.95rem',
-                              }}
-                            >
-                              <i className="fas fa-check-circle me-2"></i>
-                              Score: {challenge.submission_score || 0} - View Code
-                            </Link>
-                          ) : (
-                            <Link
-                              to={`/challenge/${challenge.slug}`}
-                              className="btn d-inline-flex align-items-center btn-warning"
-                              style={{
-                                padding: '10px 20px',
-                                borderRadius: '12px',
-                                transition: 'all 0.2s ease',
-                                textDecoration: 'none',
-                                fontWeight: 600,
-                                fontSize: '0.95rem',
-                              }}
-                            >
-                              <i className="fas fa-times-circle me-2"></i>
-                              Failed - Try Again
-                            </Link>
-                          )
-                        ) : (
-                          // User hasn't attempted yet
-                          <Link
-                            to={`/challenge/${challenge.slug}`}
-                            className="btn d-inline-flex align-items-center"
-                            style={{
-                              background: 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
-                              color: '#fff',
-                              padding: '10px 20px',
-                              borderRadius: '12px',
-                              boxShadow: '0 8px 24px rgba(123,97,255,0.25)',
-                              border: 'none',
-                              transition: 'all 0.2s ease',
-                              textDecoration: 'none',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              letterSpacing: '0.3px'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'translateY(-3px)';
-                              e.currentTarget.style.boxShadow = '0 12px 28px rgba(123,97,255,0.35)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'none';
-                              e.currentTarget.style.boxShadow = '0 8px 24px rgba(123,97,255,0.25)';
-                            }}
-                          >
-                            <i className="fas fa-bolt me-2"></i>
-                            Solve Challenge
-                          </Link>
-                        )}
+                        {/* Desktop Button */}
+                        <Link
+                          to={`/challenge/${challenge.slug}`}
+                          className="btn d-none d-md-inline-flex align-items-center"
+                          style={{
+                            background: 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
+                            color: '#fff',
+                            padding: '10px 20px',
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 24px rgba(123,97,255,0.25)',
+                            border: 'none',
+                            fontWeight: 600,
+                            fontSize: '0.95rem',
+                          }}
+                        >
+                          <i className="fas fa-bolt me-2"></i>
+                          Solve Challenge
+                        </Link>
+                      </div>
+
+                      {/* Mobile Button */}
+                      <div className="d-block d-md-none mt-3">
+                        <Link
+                          to={`/challenge/${challenge.slug}`}
+                          className="btn w-100 d-flex justify-content-center align-items-center"
+                          style={{
+                            background: 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
+                            color: '#fff',
+                            padding: '10px 20px',
+                            borderRadius: '10px',
+                            fontWeight: 600,
+                            fontSize: '0.95rem',
+                          }}
+                        >
+                          <i className="fas fa-bolt me-2"></i>
+                          Solve Challenge
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -251,22 +316,26 @@ const ChallengeList = () => {
               )}
             </div>
 
-            <div className="col-lg-3">
-              {/* User Stats Widget */}
+            {/* Desktop Sidebar */}
+            <div className="col-lg-3 d-none d-lg-block">
               <div style={{ position: 'sticky', top: '100px' }}>
                 <UserStatsWidget />
               </div>
 
-              <div className="card border-0 shadow-sm">
+              <div className="card border-0 shadow-sm mt-4">
                 <div className="card-body">
                   <h5 className="fw-bold mb-4">Filters</h5>
-
                   <form>
                     <div className="mb-4">
                       <label className="form-label fw-semibold" style={{ fontSize: '0.9rem' }}>
                         <i className="fas fa-code me-2"></i>Category
                       </label>
-                      <select className="form-select form-select-sm" name="category" value={filters.category} onChange={handleFilterChange}>
+                      <select
+                        className="form-select form-select-sm"
+                        name="category"
+                        value={filters.category}
+                        onChange={handleFilterChange}
+                      >
                         <option value="">All Categories</option>
                         {algorithmCategories.map((cat) => (
                           <option key={cat.value} value={cat.value}>
@@ -281,67 +350,34 @@ const ChallengeList = () => {
                         <i className="fas fa-signal me-2"></i>Difficulty
                       </label>
                       <div>
-                        <div className="form-check mb-2">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="difficulty"
-                            value=""
-                            checked={filters.difficulty === ''}
-                            onChange={handleFilterChange}
-                            id="difficulty-all"
-                          />
-                          <label className="form-check-label" htmlFor="difficulty-all">
-                            All Levels
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="difficulty"
-                            value="EASY"
-                            checked={filters.difficulty === 'EASY'}
-                            onChange={handleFilterChange}
-                            id="difficulty-easy"
-                          />
-                          <label className="form-check-label" htmlFor="difficulty-easy">
-                            Easy
-                          </label>
-                        </div>
-                        <div className="form-check mb-2">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="difficulty"
-                            value="MEDIUM"
-                            checked={filters.difficulty === 'MEDIUM'}
-                            onChange={handleFilterChange}
-                            id="difficulty-medium"
-                          />
-                          <label className="form-check-label" htmlFor="difficulty-medium">
-                            Medium
-                          </label>
-                        </div>
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="difficulty"
-                            value="HARD"
-                            checked={filters.difficulty === 'HARD'}
-                            onChange={handleFilterChange}
-                            id="difficulty-hard"
-                          />
-                          <label className="form-check-label" htmlFor="difficulty-hard">
-                            Hard
-                          </label>
-                        </div>
+                        {['', 'EASY', 'MEDIUM', 'HARD'].map((level) => (
+                          <div className="form-check mb-2" key={level}>
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="difficulty"
+                              value={level}
+                              checked={filters.difficulty === level}
+                              onChange={handleFilterChange}
+                              id={`difficulty-${level || 'all'}-desktop`}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor={`difficulty-${level || 'all'}-desktop`}
+                            >
+                              {level || 'All Levels'}
+                            </label>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
                     {(filters.difficulty || filters.category) && (
-                      <button type="button" className="btn btn-outline-secondary btn-sm w-100" onClick={clearFilters}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm w-100"
+                        onClick={clearFilters}
+                      >
                         <i className="fas fa-times me-2"></i>Clear Filters
                       </button>
                     )}

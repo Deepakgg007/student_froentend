@@ -1,7 +1,7 @@
 // Company Detail Page
 // Displays company information with Concepts and Jobs tabs
 
-import React, { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCompanyBySlug, getCompanyConcepts, getCompanyJobs } from '../../services/api';
 import ConceptCard from '../../component/cards/ConceptCard';
@@ -125,16 +125,16 @@ const CompanyDetail = () => {
               <div className="row align-items-center">
                 {/* Company Logo */}
                 <div className="col-md-2 text-center">
-                  {company.image ? (
+                  {(company.image_display || company.image) ? (
                     <img
-                      src={company.image}
+                      src={company.image_display || company.image}
                       alt={company.name}
                       className="img-fluid"
                       style={{ maxHeight: '150px', objectFit: 'contain' }}
                     />
                   ) : (
-                    <div 
-                      className="d-flex align-items-center justify-content-center bg-light rounded" 
+                    <div
+                      className="d-flex align-items-center justify-content-center bg-light rounded"
                       style={{ height: '150px' }}
                     >
                       <i className="fas fa-building fa-4x text-muted"></i>

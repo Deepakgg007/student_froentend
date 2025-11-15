@@ -90,8 +90,6 @@ const SolveChallenge = () => {
           setCode(codes[language]);
         }
       } catch (error) {
-        // If fetching last code fails, fallback to starter code
-        console.log('No previous submission found, using starter code');
         if (codes[language]) {
           setCode(codes[language]);
         }

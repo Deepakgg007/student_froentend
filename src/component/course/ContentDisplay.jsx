@@ -157,40 +157,30 @@ const ContentDisplay = ({
 
     const handleContentComplete = async () => {
         try {
-            // Only track progress for videos, documents, and questions (NOT pages)
-            if (markContentComplete && ['video', 'document', 'question'].includes(contentType)) {
-                console.log(`📝 Marking ${contentType} ${contentId} as complete`);
-                try {
-                    await markContentComplete(contentType, parseInt(contentId), parseInt(taskId), parseInt(courseId));
-                } catch (progressError) {
-                    console.warn('Progress tracking failed, but continuing:', progressError);
-                }
-            }
+            console.log(`🎯 ContentDisplay: Marking ${contentType} ${contentId} as complete`);
 
-            // Call parent handler if exists (for backwards compatibility)
+            // Call parent handler (course-view's handleContentComplete)
             if (onContentComplete) {
                 try {
+                    console.log(`📤 Calling parent onContentComplete with contentId=${contentId}, contentType=${contentType}`);
                     await onContentComplete(contentId, contentType);
+                    console.log(`✅ Parent handler completed successfully`);
                 } catch (legacyError) {
-                    console.warn('Legacy completion handler failed:', legacyError);
+                    console.error('❌ Parent completion handler failed:', legacyError);
+                    throw legacyError; // Re-throw to trigger error handling in child components
                 }
+            } else {
+                console.warn('⚠️ No onContentComplete handler provided');
             }
 
             setCompletionSuccess(true);
+            console.log(`✅ Completion success state set to true`);
 
-            // Refresh course data immediately to show updated progress
-            if (refreshCourse) {
-                try {
-                    await refreshCourse();
-                } catch (refreshError) {
-                    console.warn('Refresh failed:', refreshError);
-                }
-            }
-
-            // Show success message
+            // Show success message for 3 seconds
             setTimeout(() => setCompletionSuccess(false), 3000);
         } catch (err) {
-            console.error('Failed to mark content complete:', err);
+            console.error('❌ Failed to mark content complete:', err);
+            throw err; // Re-throw so child components can handle error
         }
     };
 

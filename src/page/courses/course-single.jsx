@@ -55,16 +55,20 @@ const CourseSingle = () => {
         try {
             setEnrolling(true);
             setEnrollError('');
-            await api.post('/enrollments/', { course_id: course.id });
+            // Use the course enroll endpoint instead of direct enrollment creation
+            await api.post(`/courses/${course.id}/enroll/`);
             await fetchCourseDetails();
             setEnrollError('');
         } catch (err) {
-            setEnrollError(
-                err.response?.data?.detail ||
-                err.response?.data?.message ||
-                err.response?.data?.error ||
-                'Failed to enroll in course'
-            );
+            console.error('Enrollment error:', err.response?.data);
+            let errorMessage = 'Failed to enroll in course';
+
+            if (err.response?.data) {
+                const data = err.response.data;
+                errorMessage = data.message || data.detail || data.error || errorMessage;
+            }
+
+            setEnrollError(errorMessage);
         } finally {
             setEnrolling(false);
         }

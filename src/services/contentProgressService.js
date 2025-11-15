@@ -1,9 +1,5 @@
 import api from './api';
 
-/**
- * Content Progress Service
- * Tracks completion of videos, documents, and questions (NO PAGES)
- */
 
 /**
  * Mark a content item as completed
@@ -22,7 +18,6 @@ export const markContentComplete = async (contentType, contentId, taskId, course
             course_id: courseId
         });
 
-        console.log(`✅ ${contentType} ${contentId} marked as completed`);
         return response.data;
     } catch (error) {
         console.error(`❌ Error marking ${contentType} as complete:`, error);
