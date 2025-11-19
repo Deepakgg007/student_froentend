@@ -100,6 +100,23 @@ const BannerFour = () => {
         break;
     }
   };
+  
+  const handleCategoryChange = (e) => {
+    const selected = e.target.value;
+
+    // Update search query
+    setSearchQuery(selected);
+
+    // Filter courses immediately
+    const results = courses.filter(
+      (course) =>
+        course.title?.toLowerCase().includes(selected.toLowerCase()) ||
+        course.category?.name?.toLowerCase().includes(selected.toLowerCase())
+    );
+
+    setFilteredCourses(results);
+    setHasSearched(true);
+  };
 
   const handleSuggestionClick = (course) => {
     window.location.href = `/course-single/${course.course_id || course.id}`;
@@ -160,7 +177,7 @@ const BannerFour = () => {
 
             {/* 🔍 Search Bar */}
             <form onSubmit={handleSearch} style={{ position: 'relative' }}>
-              <SelectCatagory select={"all"} />
+              <SelectCatagory select={"all"} onChange={handleCategoryChange} />
               <input
                 type="text"
                 name="search"

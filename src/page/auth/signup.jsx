@@ -40,7 +40,6 @@ const SignupPage = () => {
   });
 
   const [previewImage, setPreviewImage] = useState(null);
-
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -280,26 +279,33 @@ const SignupPage = () => {
                 </div>
               ))}
 
-              {/* College */}
+              {/* College - FIXED DROPDOWN */}
               <div className="form-row">
                 <label className="form-label">
                   College <span className="required">*</span>
                 </label>
                 <div className="form-control-wrap">
-                  <select
-                    name="college"
-                    value={formData.college}
-                    onChange={handleChange}
-                    required
-                    className="text-input"
-                  >
-                    <option value="">Select College</option>
-                    {colleges.map((college) => (
-                      <option key={college.id} value={college.id}>
-                        {college.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="select-wrapper" style={{ position: 'relative' }}>
+                    <select
+                      name="college"
+                      value={formData.college}
+                      onChange={handleChange}
+                      required
+                      className="text-input"
+                      style={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="">Select College</option>
+                      {colleges.map((college) => (
+                        <option key={college.id} value={college.id}>
+                          {college.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -433,7 +439,7 @@ const SignupPage = () => {
 
       <Footer />
 
-      {/* Enhanced styles with modern design */}
+      {/* Enhanced styles with modern design - FIXED DROPDOWN STYLES */}
       <style>{`
         /* Layout with gradient background */
         .login-section {
@@ -505,6 +511,7 @@ const SignupPage = () => {
         
         .form-control-wrap { 
           flex: 1;
+          min-width: 0; /* Important for preventing overflow */
         }
 
         /* Enhanced Inputs with gradient borders */
@@ -518,6 +525,8 @@ const SignupPage = () => {
           background: white;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          box-sizing: border-box; /* Important for width calculation */
+          max-width: 100%; /* Prevent overflow */
         }
         
         .text-input:hover {
@@ -531,6 +540,32 @@ const SignupPage = () => {
                       linear-gradient(135deg, #667eea, #764ba2) border-box;
           box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
           transform: translateY(-1px);
+        }
+
+        /* FIXED SELECT DROPDOWN STYLES */
+        .select-wrapper {
+          position: relative;
+          width: 100%;
+        }
+
+        select.text-input {
+          cursor: pointer;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 16px center;
+          padding-right: 44px;
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        /* Ensure dropdown options don't overflow */
+        select.text-input option {
+          max-width: 100%;
+          word-wrap: break-word;
+          white-space: normal;
+          padding: 8px 12px;
         }
 
         /* Password wrapper + icon */
@@ -690,16 +725,6 @@ const SignupPage = () => {
           width: 100%;
         }
 
-        /* Select dropdown enhancement */
-        select.text-input {
-          cursor: pointer;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 16px center;
-          padding-right: 44px;
-        }
-
         /* Profile Picture Upload Styles */
         .file-upload-wrapper {
           display: flex;
@@ -805,10 +830,13 @@ const SignupPage = () => {
           margin-left: 4px;
         }
 
-        /* Responsive: stack on small screens */
+        /* CRITICAL: Responsive fixes for dropdown overflow */
         @media (max-width: 700px) {
           .account-wrapper {
             padding: 28px 20px;
+            margin: 20px;
+            width: calc(100% - 40px);
+            box-sizing: border-box;
           }
 
           .title {
@@ -825,6 +853,21 @@ const SignupPage = () => {
             width: 100%;
             margin-bottom: 4px;
             text-align: left;
+          }
+
+          .form-control-wrap {
+            width: 100%;
+          }
+
+          .text-input {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* Ensure select dropdown fits on mobile */
+          select.text-input {
+            width: 100% !important;
+            max-width: 100% !important;
           }
 
           .submit-row {
@@ -853,6 +896,15 @@ const SignupPage = () => {
           .file-label-text::before {
             font-size: 18px;
           }
+        }
+
+        /* Additional overflow protection */
+        .container {
+          overflow: visible !important;
+        }
+        
+        .account-form {
+          overflow: visible !important;
         }
         
         /* Smooth scrolling */
