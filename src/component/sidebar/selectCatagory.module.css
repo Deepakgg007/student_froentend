@@ -1,0 +1,68 @@
+.selectContainer {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.selectContainer select {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 35px; /* Space for the dropdown arrow */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown arrow */
+.selectContainer::after {
+  content: '▼';
+  font-size: 10px;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #6b7280;
+}
+
+/* Dropdown menu styles */
+.selectContainer select option {
+  padding: 10px 15px;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Focus state */
+.selectContainer select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+/* For mobile devices */
+@media (max-width: 768px) {
+  .selectContainer select {
+    font-size: 16px; /* Larger font for better touch targets on mobile */
+  }
+  
+  /* This is important for mobile to ensure the dropdown doesn't overflow */
+  .selectContainer select:focus {
+    position: relative;
+    z-index: 1001; /* Ensure it's above other elements */
+  }
+  
+  /* This ensures the dropdown options are visible on mobile */
+  .selectContainer select option {
+    font-size: 16px;
+    padding: 12px 15px;
+  }
+}

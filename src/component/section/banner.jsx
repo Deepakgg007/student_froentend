@@ -19,10 +19,6 @@ const catagoryList = [
         name: 'Python',
         link: '/course-single/${course.course_id || course.id}',
     },
-    {
-        name: 'Etc',
-        link: '#',
-    },
 ]
 
 
