@@ -18,7 +18,7 @@ const CourseSingle = () => {
 
     useEffect(() => {
         fetchCourseDetails();
-    }, [id]);
+    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchCourseDetails = async () => {
         try {
@@ -85,15 +85,6 @@ const CourseSingle = () => {
             case 'beginner': return 'bg-success';
             case 'intermediate': return 'bg-warning';
             case 'advanced': return 'bg-danger';
-            default: return 'bg-secondary';
-        }
-    };
-
-    const getStatusBadgeClass = (status) => {
-        switch (status?.toUpperCase()) {
-            case 'DRAFT': return 'bg-secondary';
-            case 'PUBLISHED': return 'bg-success';
-            case 'ARCHIVED': return 'bg-dark';
             default: return 'bg-secondary';
         }
     };
@@ -293,7 +284,6 @@ const CourseSingle = () => {
                                         <div className="course-video-content">
                                             <div className="accordion" id="accordionExample">
                                                 {(syllabus.ordered_topics || syllabus.topics || []).map((topic, index) => {
-                                                    const topics = syllabus.ordered_topics || syllabus.topics || [];
                                                     const topicKey = `topic${index}`;
                                                     const isOpen = activeTab === topicKey;
 

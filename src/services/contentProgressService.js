@@ -72,9 +72,11 @@ export const isContentCompleted = (progressList, contentType, contentId) => {
     );
 };
 
-export default {
+const contentProgressService = {
     markContentComplete,
     getCourseProgress,
     getContentProgressList,
     isContentCompleted
 };
+
+export default contentProgressService;

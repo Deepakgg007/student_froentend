@@ -1,7 +1,7 @@
 // Job List Page
 // Displays all job openings with filters
 
-import React, { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { getJobs, getJobTypeDisplay, getExperienceLevelDisplay } from '../../services/api';
 import JobCard from '../../component/cards/JobCard';
 import Header from '../../component/layout/header';
@@ -27,7 +27,7 @@ const JobList = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [filters]);
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchLocations();

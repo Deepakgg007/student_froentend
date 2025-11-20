@@ -1,7 +1,7 @@
 // Solve Company Challenge Page
 // Code editor interface for solving company concept challenges
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Badge } from 'react-bootstrap';
 import AceEditor from 'react-ace';

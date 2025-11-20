@@ -1,5 +1,5 @@
 // edukon/src/page/profile/profile.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../component/layout/header';
 import Footer from '../../component/layout/footer';
@@ -28,7 +28,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfileData();
-  }, [userId]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProfileData = async () => {
     try {

@@ -42,14 +42,6 @@ const CoursePage = () => {
         return matchesSearch && matchesDifficulty;
     });
 
-    const getDifficultyBadgeClass = (difficulty) => {
-        switch (difficulty?.toLowerCase()) {
-            case 'beginner': return 'bg-success';
-            case 'intermediate': return 'bg-warning';
-            case 'advanced': return 'bg-danger';
-            default: return 'bg-secondary';
-        }
-    };
 
     const getImageUrl = (imageUrl) => {
         if (!imageUrl) return 'assets/images/course/01.jpg';

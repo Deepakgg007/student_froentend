@@ -1,5 +1,5 @@
 // edukon/src/page/leaderboard/leaderboard.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../component/layout/header';
 import Footer from '../../component/layout/footer';
@@ -17,7 +17,7 @@ const Leaderboard = () => {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [activeTab, limit]);
+  }, [activeTab, limit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLeaderboard = async () => {
     try {

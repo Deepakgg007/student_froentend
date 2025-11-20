@@ -39,13 +39,13 @@ const CourseView = () => {
             setError('Invalid course ID');
             setLoading(false);
         }
-    }, [courseId]);
+    }, [courseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (courseId && courseId !== 'undefined') {
             fetchCertifications();
         }
-    }, [courseId]);
+    }, [courseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchRealProgress = async () => {
         if (!getCourseProgress) {
@@ -260,8 +260,8 @@ const CourseView = () => {
                     // Try to find the current enrollment ID
                     const enrollRes = await api.get(`/student/enrollments/?course=${courseId}`);
                     const enrollments = enrollRes.data.results || enrollRes.data.data || enrollRes.data || [];
-                    const enrollment = Array.isArray(enrollments) 
-                        ? enrollments.find(e => e.course == courseId || e.course_id == courseId) 
+                    const enrollment = Array.isArray(enrollments)
+                        ? enrollments.find(e => e.course === courseId || e.course_id === courseId)
                         : enrollments;
 
                     if (enrollment && enrollment.id && enrollment.status !== 'completed') {
@@ -417,7 +417,7 @@ const CourseView = () => {
                         const enrollRes = await api.get(`/student/enrollments/?course=${courseId}`);
                         const enrollments = enrollRes.data.results || enrollRes.data.data || enrollRes.data || [];
                         const enrollment = Array.isArray(enrollments)
-                            ? enrollments.find(e => e.course == courseId || e.course_id == courseId)
+                            ? enrollments.find(e => e.course === courseId || e.course_id === courseId)
                             : enrollments;
 
                         if (enrollment && enrollment.id && enrollment.status !== 'completed') {

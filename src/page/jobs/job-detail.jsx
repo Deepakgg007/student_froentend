@@ -1,7 +1,7 @@
 // Job Detail Page
 // Displays full job information and application details
 
-import React, { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobBySlug, getCompanyBySlug, formatSalary, getJobTypeDisplay, getExperienceLevelDisplay, getDaysRemaining, isDeadlinePassed } from '../../services/api';
 import Header from '../../component/layout/header';
@@ -18,7 +18,7 @@ const JobDetail = () => {
 
   useEffect(() => {
     fetchJobData();
-  }, [slug]);
+  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When job data is available, try to resolve the company's website via API
   useEffect(() => {
