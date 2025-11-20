@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-
+import { MdPages } from "react-icons/md";
 const PublicHeader = () => {
     const [menuToggle, setMenuToggle] = useState(false);
     const [headerFixed, setHeaderFixed] = useState(false);
@@ -56,67 +56,26 @@ const PublicHeader = () => {
                     font-weight: 600;
                     border-bottom: 2px solid #ff6600;
                 }
-                /* Login/Logout Button Styling */
-                .login, .signup {
+
+                /* Login Button Styling */
+                .login-btn {
                     display: inline-flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 6px;
                     padding: 10px 18px;
-                    border-radius: 10px;
                     font-weight: 600;
                     text-decoration: none;
                     transition: all 0.3s ease;
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .login {
-                    color: #ff6600;
-                    background: transparent;
+                    border: 2px solid #ff6600;
                     border-radius: 10px;
-                    
+                    background: transparent;
+                    color: #ff6600;
                 }
 
-                .login:hover {
+                .login-btn:hover {
                     background: #ff6600;
                     color: white;
                     transform: translateX(5px);
-                }
-
-                .login::after {
-                    content: '→';
-                    font-size: 16px;
-                    transition: transform 0.3s ease;
-                }
-
-                .login:hover::after {
-                    transform: translateX(5px);
-                }
-
-                .logout-btn {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 10px 18px;
-                    color: #e63946;
-                    font-weight: 600;
-                    text-decoration: none;
-                    transition: all 0.3s ease;
-                }
-
-                .logout-btn:hover {
-                    color: #ff0000;
-                    transform: translateX(5px);
-                }
-
-                .logout-btn::after {
-                    content: '←';
-                    font-size: 16px;
-                    transition: transform 0.3s ease;
-                }
-
-                .logout-btn:hover::after {
-                    transform: translateX(-5px);
                 }
 
                 /* Mobile Menu Styles */
@@ -134,20 +93,19 @@ const PublicHeader = () => {
                         opacity: 1;
                     }
                     .menu-item-has-children > a::after {
-                        content: '+';
                         margin-left: 8px;
                         font-size: 18px;
                         font-weight: bold;
                         transition: transform 0.3s ease;
                     }
                     .menu-item-has-children.open > a::after {
-                        content: '−';
                         color: #ff6600;
                     }
-                    .menu-item-has-children > a {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
+
+                    /* Show Login button inside mobile menu too */
+                    .mobile-auth-btn {
+                        margin-top: 10px;
+                        padding-left: 20px;
                     }
                 }
             `}</style>
@@ -156,6 +114,7 @@ const PublicHeader = () => {
                 <div className="header-bottom">
                     <div className="container">
                         <div className="header-wrapper">
+                            
                             {/* Logo */}
                             <div className="logo">
                                 <Link to="/">
@@ -167,6 +126,7 @@ const PublicHeader = () => {
                             <div className="menu-area">
                                 <div className="menu">
                                     <ul className={`lab-ul ${menuToggle ? "active" : ""}`}>
+                                        
                                         {/* Home */}
                                         <li>
                                             <NavLink
@@ -221,63 +181,50 @@ const PublicHeader = () => {
                                                 href="#"
                                                 onClick={(e) => handleDropdownToggle("pages", e)}
                                             >
-                                                Pages
+                                            <MdPages size={24} /> Pages
                                             </a>
                                             <ul className={`lab-ul dropdown-menu ${openDropdown === "pages" ? "open" : ""}`}>
                                                 <li>
-                                                    <NavLink
-                                                        to="/about"
-                                                        onClick={closeMenu}
-                                                        className={({ isActive }) =>
-                                                            isActive ? "active-link" : ""
-                                                        }
-                                                    >
+                                                    <NavLink to="/about" onClick={closeMenu}>
                                                         <i className="icofont-info-circle"></i> About
                                                     </NavLink>
                                                 </li>
                                                 <li>
-                                                    <NavLink
-                                                        to="/team"
-                                                        onClick={closeMenu}
-                                                        className={({ isActive }) =>
-                                                            isActive ? "active-link" : ""
-                                                        }
-                                                    >
+                                                    <NavLink to="/team" onClick={closeMenu}>
                                                         <i className="icofont-users-social"></i> Team
                                                     </NavLink>
                                                 </li>
                                                 <li>
-                                                    <NavLink
-                                                        to="/instructor"
-                                                        onClick={closeMenu}
-                                                        className={({ isActive }) =>
-                                                            isActive ? "active-link" : ""
-                                                        }
-                                                    >
+                                                    <NavLink to="/instructor" onClick={closeMenu}>
                                                         <i className="icofont-teacher"></i> Instructor
                                                     </NavLink>
                                                 </li>
                                                 <li>
-                                                    <NavLink
-                                                        to="/contact"
-                                                        onClick={closeMenu}
-                                                        className={({ isActive }) =>
-                                                            isActive ? "active-link" : ""
-                                                        }
-                                                    >
-                                                        <i className="icofont-phone"></i> Contact
+                                                    <NavLink to="/contact" onClick={closeMenu}>
+                                                        <i className="icofont-ui-contact-list"></i> Contact
                                                     </NavLink>
                                                 </li>
                                             </ul>
                                         </li>
+
+                                        {/* Mobile Login Button */}
+                                        <li className="mobile-auth-btn d-lg-none">
+                                            <NavLink
+                                                to="/login"
+                                                onClick={closeMenu}
+                                                className="login-btn"
+                                            >
+                                                Login <i className="icofont-arrow-right"></i>
+                                            </NavLink>
+                                        </li>
+
                                     </ul>
                                 </div>
 
-                                {/* Auth Section - Login/SignUp */}
-                                <div className="auth-section d-flex align-items-center gap-2">
-                                    <Link to="/login" className="login">
-                                        <i className="icofont-user"></i>
-                                        <span className="d-none d-md-inline ms-1">LOG IN</span>
+                                {/* Desktop Login Button (Right Side) */}
+                                <div className="auth-section d-none d-lg-flex align-items-center ms-3">
+                                    <Link to="/login" className="login-btn">
+                                        Login <i className="icofont-arrow-right"></i>
                                     </Link>
                                 </div>
 
@@ -290,6 +237,7 @@ const PublicHeader = () => {
                                     <span></span>
                                     <span></span>
                                 </div>
+
                             </div>
                         </div>
                     </div>

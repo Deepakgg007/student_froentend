@@ -258,6 +258,13 @@ const CourseSingle = () => {
                                 <div className="course-item">
                                     <div className="course-inner">
                                         <div className="course-content">
+                                             <button
+        onClick={() => navigate(-1)}
+        className="lab-btn mb-3"
+    >
+        <i className="icofont-simple-left me-2"></i>
+        <span>Back</span>
+    </button>
                                             <h3>Course Overview</h3>
                                             <div dangerouslySetInnerHTML={{ __html: course.description || 'No description available for this course.' }} />
 
@@ -413,6 +420,7 @@ const CourseSingle = () => {
                     </div>
                 </div>
             </div>
+            
             <Footer />
         </Fragment>
     );

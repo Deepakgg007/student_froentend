@@ -13,9 +13,18 @@ const CourseFour = () => {
   const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     fetchCourses();
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
 
   const fetchCourses = async () => {
     try {
@@ -38,13 +47,17 @@ const CourseFour = () => {
     }
   };
 
+  // Desktop-only filter function (hidden on mobile)
   const filterItem = (category) => {
+    if (isMobile) return; // disable filtering on mobile
     setActiveFilter(category);
     if (category === "All") {
       setFilteredCourses(courses);
     } else {
       const filtered = courses.filter((course) => {
-        const titleMatch = course.title?.toLowerCase().includes(category.toLowerCase());
+        const titleMatch = course.title
+          ?.toLowerCase()
+          .includes(category.toLowerCase());
         const categoryMatch =
           course.category?.name?.toLowerCase() === category.toLowerCase() ||
           course.category?.toLowerCase() === category.toLowerCase();
@@ -57,15 +70,24 @@ const CourseFour = () => {
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return "assets/images/course/01.jpg";
     if (imageUrl.startsWith("http")) return imageUrl;
-    return `${process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"}${imageUrl}`;
+    return `${
+      process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"
+    }${imageUrl}`;
   };
 
-  // Inline styles
+  // Styles
   const styles = {
     gridContainer: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(28%, 2fr))",
+      display: isMobile ? "flex" : "grid",
+      gridTemplateColumns: isMobile
+        ? "none"
+        : "repeat(auto-fit, minmax(28%, 2fr))",
       gap: "20px",
+      overflowX: isMobile ? "auto" : "visible",
+      whiteSpace: isMobile ? "nowrap" : "normal",
+      scrollSnapType: isMobile ? "x mandatory" : "none",
+      WebkitOverflowScrolling: isMobile ? "touch" : "auto",
+      paddingBottom: isMobile ? "10px" : "0",
     },
     courseItem: {
       display: "flex",
@@ -75,10 +97,13 @@ const CourseFour = () => {
       boxShadow: "0 4px 10px rgba(0, 0, 0, 0.08)",
       transition: "all 0.3s ease",
       padding: "10px",
+      flex: isMobile ? "0 0 auto" : "unset",
+      width: isMobile ? "280px" : "auto",
+      scrollSnapAlign: isMobile ? "start" : "unset",
     },
     thumb: {
-      flex: "0 0 150px",
-      marginRight: "20px",
+      flex: "0 0 120px",
+      marginRight: "15px",
     },
     thumbImg: {
       width: "100%",
@@ -86,11 +111,9 @@ const CourseFour = () => {
       objectFit: "cover",
       borderRadius: "8px",
     },
-    content: {
-      flexGrow: 1,
-    },
+    content: { flexGrow: 1 },
     titleText: {
-      fontSize: "20px",
+      fontSize: "18px",
       fontWeight: 600,
       margin: "0 0 8px 0",
       color: "#222",
@@ -112,45 +135,49 @@ const CourseFour = () => {
   };
 
   return (
-    <div className="course-section style-3 padding-tb">
+    <div id="course-4" className="course-section style-3 padding-tb">
       <div className="container">
         {/* Section Header */}
         <div className="section-header text-center mb-5">
           <h2 className="title mb-3">{title}</h2>
-          <div className="course-filter-group">
-            <ul
-              style={{
-                listStyle: "none",
-                padding: 0,
-                margin: 0,
-                display: "inline-flex",
-                flexWrap: "wrap",
-                gap: "8px",
-              }}
-            >
-              <li
+
+          {/* Hide filter buttons on mobile */}
+          {!isMobile && (
+            <div className="course-filter-group">
+              <ul
                 style={{
-                  ...styles.filterBtn,
-                  ...(activeFilter === "All" ? styles.filterBtnActive : {}),
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  display: "inline-flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
                 }}
-                onClick={() => filterItem("All")}
               >
-                All
-              </li>
-              {staticCategories.map((cat, idx) => (
                 <li
-                  key={idx}
                   style={{
                     ...styles.filterBtn,
-                    ...(activeFilter === cat ? styles.filterBtnActive : {}),
+                    ...(activeFilter === "All" ? styles.filterBtnActive : {}),
                   }}
-                  onClick={() => filterItem(cat)}
+                  onClick={() => filterItem("All")}
                 >
-                  {cat}
+                  All
                 </li>
-              ))}
-            </ul>
-          </div>
+                {staticCategories.map((cat, idx) => (
+                  <li
+                    key={idx}
+                    style={{
+                      ...styles.filterBtn,
+                      ...(activeFilter === cat ? styles.filterBtnActive : {}),
+                    }}
+                    onClick={() => filterItem(cat)}
+                  >
+                    {cat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -173,28 +200,34 @@ const CourseFour = () => {
           ) : (
             <div style={styles.gridContainer}>
               {filteredCourses.map((course) => (
-                <div key={course.course_id || course.id} style={styles.courseItem}>
-                  <div style={styles.thumb}>
-                    <img
-                      src={getImageUrl(course.thumbnail || course.image)}
-                      alt={course.title}
-                      onError={(e) => {
-                        e.target.src = "assets/images/course/01.jpg";
-                      }}
-                      style={styles.thumbImg}
-                    />
-                  </div>
-                  <div style={styles.content}>
-                    <Link to={`/course-single/${course.course_id || course.id}`}>
-                      <h5 style={styles.titleText}>{course.title}</h5>
-                    </Link>
-                    <div>
-                      <span style={{ fontSize: "14px", color: "#555" }}>
-                        Course ID: {course.course_id || course.id}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <Link 
+  to={`/course-single/${course.id}`} 
+  style={{ textDecoration: "none", color: "inherit" }}
+>
+  <div
+    key={course.course_id || course.id}
+    style={styles.courseItem}
+  >
+    <div style={styles.thumb}>
+      <img
+        src={getImageUrl(course.thumbnail || course.image)}
+        alt={course.title}
+        onError={(e) => {
+          e.target.src = "assets/images/course/01.jpg";
+        }}
+        style={styles.thumbImg}
+      />
+    </div>
+
+    <div style={styles.content}>
+      <h5 style={styles.titleText}>{course.title}</h5>
+      <span style={{ fontSize: "14px", color: "#555" }}>
+        Course ID: {course.course_id || course.id}
+      </span>
+    </div>
+  </div>
+</Link>
+
               ))}
             </div>
           )}
@@ -204,7 +237,7 @@ const CourseFour = () => {
             <Link to="/course" className="lab-btn">
               <span>{btnText}</span>
             </Link>
-          </div>
+          </div> 
         </div>
       </div>
     </div>

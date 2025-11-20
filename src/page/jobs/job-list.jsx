@@ -34,40 +34,59 @@ const JobList = () => {
   }, []);
 
   const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      const params = { is_active: true };
-      Object.entries(filters).forEach(([k, v]) => {
-        if (v) params[k] = v;
-      });
-      const response = await getJobs(params);
-      const jobsData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.results || response.data?.data || [];
-      setJobs(jobsData);
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to load jobs. Please try again.',
-      });
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const params = { is_active: true };
+
+    // Send only supported params to API
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v && k !== 'location') params[k] = v;
+    });
+
+    const response = await getJobs(params);
+
+    let jobsData = Array.isArray(response.data)
+      ? response.data
+      : response.data?.results || response.data?.data || [];
+
+    // ⛔ API does not filter location properly — so filter manually
+    if (filters.location) {
+      jobsData = jobsData.filter(
+        (j) =>
+          j.location &&
+          j.location.toLowerCase() === filters.location.toLowerCase()
+      );
     }
-  };
+
+    setJobs(jobsData);
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to load jobs. Please try again.',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchLocations = async () => {
-    try {
-      const response = await getJobs({ is_active: true });
-      const jobsData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.results || response.data?.data || [];
-      const uniqueLocations = [...new Set(jobsData.map(j => j.location).filter(Boolean))];
-      setLocations(uniqueLocations.sort());
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-    }
-  };
+  try {
+    const response = await getJobs(); // ❗ Fetch ALL jobs without filters
+    const jobsData = Array.isArray(response.data)
+      ? response.data
+      : response.data?.results || response.data?.data || [];
+
+    const uniqueLocations = [...new Set(jobsData
+      .map(j => j.location)
+      .filter(Boolean)
+    )];
+
+    setLocations(uniqueLocations.sort());
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+  }
+};
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

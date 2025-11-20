@@ -108,7 +108,6 @@
   display: flex;
   gap: 1rem;
   margin-top: 2rem;
-  border-bottom: 2px solid #e2e8f0;
 }
 
 .tab-button {
@@ -140,6 +139,7 @@
 
 .tab-button.active {
   color: #1e293b;
+  border-bottom: 2px solid #092f61;
 }
 
 .tab-button.active::after {

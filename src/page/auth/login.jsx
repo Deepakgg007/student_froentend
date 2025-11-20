@@ -36,17 +36,21 @@ const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
-        const rememberedEmail = localStorage.getItem('student_remembered_email');
-        const rememberedPassword = localStorage.getItem('student_remembered_password');
-        if (rememberedEmail && rememberedPassword) {
-            setFormData(prev => ({
+    setTimeout(() => {
+        const email = localStorage.getItem('student_remembered_email');
+        const password = localStorage.getItem('student_remembered_password');
+
+        if (email && password) {
+            setFormData((prev) => ({
                 ...prev,
-                email: rememberedEmail,
-                password: rememberedPassword,
-                rememberMe: true
+                email,
+                password,
+                rememberMe: true,
             }));
         }
-    }, []);
+    }, 50); // 🔥 fixes race-condition on fast navigation
+}, []);
+
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -58,73 +62,42 @@ const LoginPage = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-        try {
-            const response = await loginUser(
-                formData.email,
-                formData.password,
-                formData.rememberMe
-            );
+    // 🔥 Save Remember Me FIRST
+    if (formData.rememberMe) {
+        localStorage.setItem("student_remembered_email", formData.email);
+        localStorage.setItem("student_remembered_password", formData.password);
+    } else {
+        localStorage.removeItem("student_remembered_email");
+        localStorage.removeItem("student_remembered_password");
+    }
 
-            const responseData = response.data.data || response.data;
-            const user = responseData.user;
-            const accessToken = responseData.access;
-            const refreshToken = responseData.refresh;
+    try {
+        const response = await loginUser(
+            formData.email,
+            formData.password,
+            formData.rememberMe
+        );
 
-            if (!user) {
-                setError('Invalid response from server');
-                setLoading(false);
-                return;
-            }
+        const responseData = response.data.data || response.data;
+        const user = responseData.user;
 
-            localStorage.setItem('student_access_token', accessToken);
-            localStorage.setItem('student_refresh_token', refreshToken);
-            localStorage.setItem('student_user', JSON.stringify(user));
+        // 🔥 These should ONLY be set on successful login
+        localStorage.setItem("student_access_token", responseData.access);
+        localStorage.setItem("student_refresh_token", responseData.refresh);
+        localStorage.setItem("student_user", JSON.stringify(user));
 
-            if (formData.rememberMe) {
-                localStorage.setItem('student_remembered_email', formData.email);
-                localStorage.setItem('student_remembered_password', formData.password);
-            } else {
-                localStorage.removeItem('student_remembered_email');
-                localStorage.removeItem('student_remembered_password');
-            }
-
-            navigate('/');
-        } catch (err) {
-            console.error('Login error:', err.response?.data);
-            let errorMessage = 'Login failed. Please check your credentials.';
-
-            if (err.response?.data) {
-                const responseData = err.response.data;
-                if (responseData.email) {
-                    errorMessage = Array.isArray(responseData.email)
-                        ? responseData.email[0]
-                        : responseData.email;
-                } else if (responseData.password) {
-                    errorMessage = Array.isArray(responseData.password)
-                        ? responseData.password[0]
-                        : responseData.password;
-                } else if (responseData.non_field_errors) {
-                    errorMessage = Array.isArray(responseData.non_field_errors)
-                        ? responseData.non_field_errors[0]
-                        : responseData.non_field_errors;
-                } else if (responseData.message) {
-                    errorMessage = responseData.message;
-                } else if (responseData.detail) {
-                    errorMessage = responseData.detail;
-                } else if (responseData.error) {
-                    errorMessage = responseData.error;
-                }
-            }
-
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
+        navigate("/");
+    } catch (err) {
+        console.error("Login error:", err.response?.data);
+        setError("Login failed. Please check your credentials.");
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <Fragment>
