@@ -24,24 +24,6 @@ const achievementList = [
     },
 ]
 
-const achieveList = [
-    {
-        imgUrl: 'assets/images/achive/01.png',
-        imgAlt: 'achive thumb rajibraj91 rajibraj',
-        title: 'Start Teaching Today',
-        desc: 'Seamlessly engage technically sound coaborative reintermed goal oriented content rather than ethica',
-        btnText: 'Become A Instructor',
-        siteLink: '#',
-    },
-    {
-        imgUrl: 'assets/images/achive/02.png',
-        imgAlt: 'achive thumb rajibraj91 rajibraj',
-        title: 'If You Join Our Course',
-        desc: 'Seamlessly engage technically sound coaborative reintermed goal oriented content rather than ethica',
-        btnText: 'Register For Free',
-        siteLink: '#',
-    },
-]
 
 
 const Achievement = () => {
@@ -62,26 +44,6 @@ const Achievement = () => {
                                             <div className="count-content">
                                                 <h2><span className="count"><CountUp end={val.count} /></span><span>+</span></h2>
                                                 <p>{val.desc}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="achieve-part">
-                        <div className="row g-4 row-cols-1 row-cols-lg-2">
-                            {achieveList.map((val, i) => (
-                                <div className="col" key={i}>
-                                    <div className="achieve-item">
-                                        <div className="achieve-inner">
-                                            <div className="achieve-thumb">
-                                                <img src={`${val.imgUrl}`} alt={`${val.imgAlt}`} />
-                                            </div>
-                                            <div className="achieve-content">
-                                                <h4>{val.title}</h4>
-                                                <p>{val.desc}</p>
-                                                <a href={val.siteLink} className="lab-btn"><span>{val.btnText}</span></a>
                                             </div>
                                         </div>
                                     </div>

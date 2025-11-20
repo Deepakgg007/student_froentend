@@ -172,7 +172,7 @@ const PublicHeader = () => {
                                         {/* Pages */}
                                         <li
                                             className={`menu-item-has-children ${
-                                                ["/about", "/team", "/instructor", "/contact"].includes(currentPath)
+                                                ["/about", "/instructor", "/contact"].includes(currentPath)
                                                     ? "active-parent"
                                                     : ""
                                             } ${openDropdown === "pages" ? "open" : ""}`}
@@ -189,11 +189,7 @@ const PublicHeader = () => {
                                                         <i className="icofont-info-circle"></i> About
                                                     </NavLink>
                                                 </li>
-                                                <li>
-                                                    <NavLink to="/team" onClick={closeMenu}>
-                                                        <i className="icofont-users-social"></i> Team
-                                                    </NavLink>
-                                                </li>
+                                                
                                                 <li>
                                                     <NavLink to="/instructor" onClick={closeMenu}>
                                                         <i className="icofont-teacher"></i> Instructor

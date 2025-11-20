@@ -44,8 +44,6 @@ import CertificationPage from "./page/certification/certification";
 import Home from "./page/home/home-4";
 
 // Team Pages
-import TeamPage from "./page/team/team";
-import TeamSingle from "./page/team/team-single";
 import InstructorPage from "./page/team/instructor";
 
 // General Pages
@@ -71,8 +69,6 @@ function App() {
 				<Route path="/" element={<Home />} />
 				<Route path=":collegeSlug/" element={<Home />} />
 				<Route path="about" element={<AboutPage />} />
-				<Route path="team" element={<TeamPage />} />
-				<Route path="team-single" element={<TeamSingle />} />
 				<Route path="instructor" element={<InstructorPage />} />
 				<Route path="search-page" element={<SearchPage />} />
 				<Route path="search-none" element={<SearchNone />} />

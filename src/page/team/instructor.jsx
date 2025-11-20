@@ -2,10 +2,7 @@ import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../../component/layout/footer";
 import Header from "../../component/layout/header";
-import PageHeader from "../../component/layout/pageheader";
 import Achievement from "../../component/section/achievement";
-import Student from "../../component/section/student";
-
 const subTitle = "Teach on edulon";
 const title = "Discover Your Potential. Make A Global Impact.";
 const btnText = "Browse All Categories";
@@ -37,7 +34,6 @@ const InstructorPage = () => {
     return (
         <Fragment>
             <Header />
-            <PageHeader title={'All Best Instructors'} curPage={'instructor'} />
             <div className="category-section padding-tb section-bg style-3">
                 <div className="container">
                     <div className="section-header text-center">
@@ -68,7 +64,6 @@ const InstructorPage = () => {
                     </div>
                 </div>
             </div>
-            <Student />
             <Achievement />
             <Footer />
         </Fragment>
