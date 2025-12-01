@@ -1,58 +1,57 @@
 
 import { Link } from "react-router-dom";
-import Rating from "../sidebar/rating";
+import { useEffect, useState } from "react";
 
 
-const subTitle = "World-class Instructors";
-const title = "Classes Taught By Real Creators";
+const title = "Classes Taught By Real Instructors";
 
 const instructorList = [
     {
-        imgUrl: 'assets/images/instructor/01.jpg',
+        imgUrl: '/assets/images/instructor/16.jpg',
         imgAlt: 'instructor rajibraj91 rajibraj',
-        name: 'Emilee Logan',
-        degi: 'Master of Education Degree',
-        courseCount: '08 courses',
-        studentAnroll: '30 students',
+        name: 'Deepak Mehta',
+        degi: 'M.Tech CSE',
     },
     {
-        imgUrl: 'assets/images/instructor/02.jpg',
+        imgUrl: '/assets/images/instructor/17.jpg',
         imgAlt: 'instructor rajibraj91 rajibraj',
-        name: 'Donald Logan',
-        degi: 'Master of Education Degree',
-        courseCount: '08 courses',
-        studentAnroll: '30 students',
+        name: 'Gautam Shigaokar',
+        degi: 'M.Tech CSE',
     },
-    {
-        imgUrl: 'assets/images/instructor/03.jpg',
+     {
+        imgUrl: '/assets/images/instructor/18.png',
         imgAlt: 'instructor rajibraj91 rajibraj',
-        name: 'Oliver Porter',
-        degi: 'Master of Education Degree',
-        courseCount: '08 courses',
-        studentAnroll: '30 students',
+        name: 'Prabhugoud Patil',
+        degi: 'M.Tech CSE',
     },
-    {
-        imgUrl: 'assets/images/instructor/04.jpg',
-        imgAlt: 'instructor rajibraj91 rajibraj',
-        name: 'Nahla Jones',
-        degi: 'Master of Education Degree',
-        courseCount: '08 courses',
-        studentAnroll: '30 students',
-    },
+
+
 ]
 
 
 const Instructor = () => {
+    const [instructors, setInstructors] = useState(instructorList);
+
+    useEffect(() => {
+        // Always ensure instructors data is loaded
+        setInstructors(instructorList);
+
+        // Force re-render by preloading images
+        instructorList.forEach(instructor => {
+            const img = new Image();
+            img.src = instructor.imgUrl;
+        });
+    });
+
     return (
         <div className="instructor-section padding-tb section-bg">
             <div className="container">
                 <div className="section-header text-center">
-                    <span className="subtitle">{subTitle}</span>
-                    <h2 className="title">{title}</h2>
+                   <h2 className="title">{title}</h2>
                 </div>
                 <div className="section-wrapper">
                     <div className="row g-4 justify-content-center row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
-                        {instructorList.map((val, i) => (
+                        {instructors.length > 0 ? instructors.map((val, i) => (
                             <div className="col" key={i}>
                                 <div className="instructor-item">
                                     <div className="instructor-inner">
@@ -62,21 +61,14 @@ const Instructor = () => {
                                         <div className="instructor-content">
                                             <Link to="/team-single"><h4>{val.name}</h4></Link>
                                             <p>{val.degi}</p>
-                                            <Rating />
                                         </div>
                                     </div>
                                     <div className="instructor-footer">
-                                        <ul className="lab-ul d-flex flex-wrap justify-content-between align-items-center">
-                                            <li><i className="icofont-book-alt"></i> {val.courseCount}</li>
-                                            <li><i className="icofont-users-alt-3"></i> {val.studentAnroll}</li>
-                                        </ul>
+
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                    <div className="text-center footer-btn">
-                        <p>Want to help people learn, grow and achieve more in life?<Link to="/team">Become an instructor</Link></p>
+                        )) : null}
                     </div>
                 </div>
             </div>

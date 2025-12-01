@@ -1,7 +1,5 @@
 import { Fragment, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
 import api from "../../services/api";
 
 /* Eye Icons */
@@ -156,7 +154,6 @@ const ForgetPass = () => {
 
     return (
         <Fragment>
-            <Header />
             <div className="login-section padding-tb section-bg">
                 <div className="container">
                     <div className="account-wrapper" style={{ maxWidth: 500, margin: "0 auto" }}>
@@ -377,7 +374,6 @@ const ForgetPass = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
 
             {/* Enhanced attractive styles matching login page */}
             <style>{`

@@ -4,8 +4,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { getJobs, getJobTypeDisplay, getExperienceLevelDisplay } from '../../services/api';
 import JobCard from '../../component/cards/JobCard';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import Swal from 'sweetalert2';
 
 const JobList = () => {
@@ -109,7 +107,6 @@ const JobList = () => {
 
   return (
     <Fragment>
-      <Header />
 
       {/* ✅ Enhanced Page Header (more compact for mobile) */}
       <div
@@ -117,12 +114,12 @@ const JobList = () => {
         style={{
           paddingTop: '100px',
           paddingBottom: '50px',
-          background: 'linear-gradient(135deg, #0061ff 0%, #60efff 100%)',
+          background: 'linear-gradient(135deg, #f6f7f8ff 0%, #fbffffff 100%)',
         }}
       >
         <div className="container">
           <h2
-            className="text-white fw-bold mb-3"
+            className="text-black fw-bold mb-3"
             style={{
               fontSize: 'clamp(1.6rem, 4.5vw, 2.8rem)',
               lineHeight: '1.2',
@@ -131,21 +128,14 @@ const JobList = () => {
             Job Opportunities
           </h2>
           <p
-            className="text-white opacity-90 mb-4"
+            className="text-black opacity-90 mb-4"
             style={{ fontSize: 'clamp(0.9rem, 3.5vw, 1.2rem)' }}
           >
             Find your next opportunity at top tech companies
           </p>
 
           {/* Stats badges */}
-          <div className="d-flex flex-wrap justify-content-center gap-2">
-            <div className="badge bg-white text-primary px-3 py-2 fw-semibold">
-              <i className="fas fa-briefcase me-1"></i> {jobs.length} Open Positions
-            </div>
-            <div className="badge bg-white text-primary px-3 py-2 fw-semibold">
-              <i className="fas fa-map-marker-alt me-1"></i> {locations.length} Locations
-            </div>
-          </div>
+          
         </div>
       </div>
 
@@ -281,7 +271,7 @@ const JobList = () => {
           <div className="row g-4">
             {jobs.length > 0 ? (
               jobs.map((job) => (
-                <div key={job.id} className="col-lg-4 col-md-6 col-sm-12">
+                <div key={job.id} className="col-lg-3 col-md-6 col-sm-12">
                   <JobCard job={job} />
                 </div>
               ))
@@ -297,7 +287,6 @@ const JobList = () => {
         )}
       </div>
 
-      <Footer />
     </Fragment>
   );
 };

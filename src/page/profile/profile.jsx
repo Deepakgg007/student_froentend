@@ -1,8 +1,6 @@
 // edukon/src/page/profile/profile.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import UserCertificates from '../../component/certification/UserCertificates';
 import api, { API_BASE_URL } from '../../services/api';
 import './profile.css';
@@ -12,19 +10,10 @@ const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
-  const [badges, setBadges] = useState([]);
   const [activities, setActivities] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    old_password: '',
-    new_password: '',
-    confirm_password: ''
-  });
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   useEffect(() => {
     fetchProfileData();
@@ -42,13 +31,9 @@ const Profile = () => {
         ? `/student/profile/${userId}/`
         : `/student/profile/me/`;
       
-      console.log('📡 Profile URL:', `${API_BASE_URL}/api${profileEndpoint}`);
       
       const profileRes = await api.get(profileEndpoint);
-      
-      console.log('📦 Profile Response Status:', profileRes.status);
-      console.log('✅ Profile Data:', profileRes.data);
-      
+            
       const profileData = profileRes.data;
       setProfile(profileData);
 
@@ -104,30 +89,32 @@ const Profile = () => {
         });
       }
 
-      // Fetch badges (optional - don't fail if not available)
-      try {
-        const badgesEndpoint = userId
-          ? `/student/badges/user/${userId}/`
-          : `/student/badges/user/${profileData.user.id}/`;
-        
-        const badgesRes = await api.get(badgesEndpoint);
-        setBadges(badgesRes.data.badges || badgesRes.data || []);
-      } catch (err) {
-        console.warn('⚠️ Badges not available:', err.message);
-        setBadges([]);
-      }
-
       // Fetch activities (optional - don't fail if not available)
       try {
-        const activitiesEndpoint = userId
-          ? `/student/profile/${userId}/activity/?limit=20`
-          : `/student/profile/${profileData.user.id}/activity/?limit=20`;
+        const userIdForActivities = userId || profileData.user.id;
+        const activitiesEndpoint = `/student/profile/${userIdForActivities}/activity/?limit=100`;
 
+        console.log('📋 Fetching activities from:', activitiesEndpoint);
         const activitiesRes = await api.get(activitiesEndpoint);
-        const activitiesData = activitiesRes.data.activities || activitiesRes.data.results || activitiesRes.data.data || activitiesRes.data || [];
-        setActivities(Array.isArray(activitiesData) ? activitiesData : []);
+        console.log('📋 Activities response:', activitiesRes.data);
+
+        // Handle different response formats from backend
+        let activitiesData = [];
+        if (activitiesRes.data.activities && Array.isArray(activitiesRes.data.activities)) {
+          activitiesData = activitiesRes.data.activities;
+        } else if (activitiesRes.data.results && Array.isArray(activitiesRes.data.results)) {
+          activitiesData = activitiesRes.data.results;
+        } else if (activitiesRes.data.data && Array.isArray(activitiesRes.data.data)) {
+          activitiesData = activitiesRes.data.data;
+        } else if (Array.isArray(activitiesRes.data)) {
+          activitiesData = activitiesRes.data;
+        }
+
+        console.log('📋 Processed activities:', activitiesData);
+        setActivities(activitiesData);
       } catch (err) {
         console.warn('⚠️ Activities not available:', err.message);
+        console.error('⚠️ Full error:', err);
         setActivities([]);
       }
 
@@ -135,16 +122,13 @@ const Profile = () => {
       try {
         // Prefer student namespace to avoid router differences
         const coursesRes = await api.get('/student/enrollments/');
-        console.log('✅ Enrolled courses response:', coursesRes.data);
         // Extract courses from enrollments
         const enrollments = coursesRes.data.results || coursesRes.data.data || coursesRes.data || [];
-        console.log('📚 Enrollments array:', enrollments);
 
         // Use progress from backend enrollment (already calculated via ContentProgress)
         const courses = enrollments.map(enrollment => {
           const course = enrollment.course || {};
           const courseId = course.id || enrollment.course_id;
-          console.log('📖 Course:', course.title, 'Progress:', enrollment.progress_percentage, '%');
 
           return {
             ...course,
@@ -159,7 +143,6 @@ const Profile = () => {
           };
         });
 
-        console.log('✅ Processed courses:', courses);
         setEnrolledCourses(courses);
 
         // Update stats with backend progress
@@ -197,64 +180,13 @@ const Profile = () => {
     return '#8b5cf6';
   };
 
-  const getRarityColor = (rarity) => {
-    const colors = {
-      'COMMON': '#94a3b8',
-      'RARE': '#3b82f6',
-      'EPIC': '#a855f7',
-      'LEGENDARY': '#f59e0b'
-    };
-    return colors[rarity] || '#94a3b8';
-  };
-
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    setPasswordError('');
-    setPasswordSuccess('');
-
-    // Validation
-    if (!passwordData.old_password || !passwordData.new_password || !passwordData.confirm_password) {
-      setPasswordError('All fields are required');
-      return;
-    }
-
-    if (passwordData.new_password !== passwordData.confirm_password) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-
-    if (passwordData.new_password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
-      return;
-    }
-
-    try {
-      await api.post('/auth/change-password/', {
-        old_password: passwordData.old_password,
-        new_password: passwordData.new_password
-      });
-      
-      setPasswordSuccess('Password changed successfully!');
-      setPasswordData({ old_password: '', new_password: '', confirm_password: '' });
-      
-      setTimeout(() => {
-        setShowPasswordModal(false);
-        setPasswordSuccess('');
-      }, 2000);
-    } catch (error) {
-      setPasswordError(error.response?.data?.message || 'Failed to change password');
-    }
-  };
-
   if (loading) {
     return (
       <>
-        <Header />
         <div className="profile-loading">
           <div className="spinner"></div>
           <p>Loading profile...</p>
         </div>
-        <Footer />
       </>
     );
   }
@@ -262,19 +194,16 @@ const Profile = () => {
   if (!profile) {
     return (
       <>
-        <Header />
         <div className="profile-error">
           <h2>Profile not found</h2>
           <button onClick={() => navigate('/leaderboard')}>View Leaderboard</button>
         </div>
-        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <Header />
       <div className="profile-page">
       {/* Header Section */}
       <div className="profile-header">
@@ -288,13 +217,12 @@ const Profile = () => {
               </div>
             )}
             <div className="profile-header-info">
-              <h1 className="profile-username">{profile.user.username}</h1>
-              <p className="profile-full-name">{profile.user.first_name} {profile.user.last_name}</p>
+              <h1 className="profile-full-name" style={{fontSize:`25px`}}>{profile.user.first_name} {profile.user.last_name}</h1>
               <p className="profile-college">
                 <i className="fas fa-university"></i> {profile.user.college_name}
               </p>
               <div className="profile-rank-badge" style={{ background: `linear-gradient(135deg, ${getRankColor(profile.global_rank)} 0%, ${getRankColor(profile.global_rank)}CC 100%)` }}>
-                {profile.rank_badge}
+                {profile.user.usn}
               </div>
             </div>
           </div>
@@ -302,42 +230,42 @@ const Profile = () => {
           {/* Stats Overview Cards */}
           <div className="profile-stats-grid">
             <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                <i className="fas fa-trophy"></i>
+              <div className="stat-icon" style={{ background: '#f86541ff', fontSize: '1.6rem' }}>
+                ⭐
               </div>
               <div className="stat-content">
-                <div className="stat-value">{profile.total_points}</div>
+                <div className="stat-value">{profile.total_points || 0}</div>
                 <div className="stat-label">Total Points</div>
               </div>
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
-                <i className="fas fa-medal"></i>
+              <div className="stat-icon" style={{ background: '#ecc2e2ff', fontSize: '1.6rem' }}>
+                ✅
               </div>
               <div className="stat-content">
-                <div className="stat-value">#{profile.global_rank || 'N/A'}</div>
-                <div className="stat-label">Global Rank</div>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                <i className="fas fa-check-circle"></i>
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{profile.challenges_solved}</div>
+                <div className="stat-value">{profile.challenges_solved || 0}</div>
                 <div className="stat-label">Solved</div>
               </div>
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
-                <i className="fas fa-fire"></i>
+              <div className="stat-icon" style={{ background: '#c6baf8ff', fontSize: '1.6rem' }}>
+                🔥
               </div>
               <div className="stat-content">
-                <div className="stat-value">{profile.current_streak}</div>
+                <div className="stat-value">{profile.current_streak || 0}</div>
                 <div className="stat-label">Day Streak</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#ffedcbff', fontSize: '1.6rem' }}>
+                💻
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{profile.total_submissions || 0}</div>
+                <div className="stat-label">Attempted</div>
               </div>
             </div>
           </div>
@@ -367,16 +295,6 @@ const Profile = () => {
           <i className="fas fa-book"></i> Courses ({enrolledCourses.length})
         </button>
         <button
-          className={`tab-btn ${activeTab === 'badges' ? 'active' : ''}`}
-          onClick={() => setActiveTab('badges')}
-          style={{
-            ':hover': { color: '#000' },
-            color: activeTab === 'badges' ? '#000' : undefined
-          }}
-        >
-          <i className="fas fa-award"></i> Badges ({badges.length})
-        </button>
-        <button
           className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`}
           onClick={() => setActiveTab('certificates')}
           style={{
@@ -396,18 +314,6 @@ const Profile = () => {
         >
           <i className="fas fa-history"></i> Activity
         </button>
-        {!userId && (
-          <button 
-            className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-            style={{ 
-              ':hover': { color: '#000' },
-              color: activeTab === 'settings' ? '#000' : undefined 
-            }}
-          >
-            <i className="fas fa-cog"></i> Settings
-          </button>
-        )}
       </div>
 
       {/* Tab Content */}
@@ -466,19 +372,19 @@ const Profile = () => {
                 <h3><i className="fas fa-code"></i> Submission Statistics</h3>
                 <div className="stats-list">
                   <div className="stats-item">
-                    <span className="stats-label">Total Submissions</span>
+                    <span className="stats-label"><i className="fas fa-arrow-up"></i> Total Submissions</span>
                     <span className="stats-value">{profile.total_submissions || 0}</span>
                   </div>
                   <div className="stats-item">
-                    <span className="stats-label">Accepted</span>
+                    <span className="stats-label"><i className="fas fa-check" style={{ color: '#10b981' }}></i> Accepted</span>
                     <span className="stats-value success">{profile.successful_submissions || 0}</span>
                   </div>
                   <div className="stats-item">
-                    <span className="stats-label">Accuracy</span>
+                    <span className="stats-label"><i className="fas fa-bullseye" style={{ color: '#f59e0b' }}></i> Accuracy</span>
                     <span className="stats-value">{profile.accuracy_percentage || 0}%</span>
                   </div>
                   <div className="stats-item">
-                    <span className="stats-label">Longest Streak</span>
+                    <span className="stats-label"><i className="fas fa-crown" style={{ color: '#fbbf24' }}></i> Longest Streak</span>
                     <span className="stats-value">{profile.longest_streak || 0} days</span>
                   </div>
                 </div>
@@ -490,87 +396,25 @@ const Profile = () => {
               <div className="stats-card">
                 <h3><i className="fas fa-book"></i> Course Overview</h3>
                 <div className="stats-list">
-                  <div className="stats-item"><span className="stats-label">Enrolled</span><span className="stats-value">{stats?.course_stats?.total_enrollments || 0}</span></div>
-                  <div className="stats-item"><span className="stats-label">Completed</span><span className="stats-value success">{stats?.course_stats?.completed_enrollments || 0}</span></div>
-                  <div className="stats-item"><span className="stats-label">Completion</span><span className="stats-value">{stats?.course_stats?.overall_course_completion_pct || 0}%</span></div>
+                  <div className="stats-item"><span className="stats-label"><i className="fas fa-plus-circle" style={{ color: '#3b82f6' }}></i> Enrolled</span><span className="stats-value">{stats?.course_stats?.total_enrollments || 0}</span></div>
+                  <div className="stats-item"><span className="stats-label"><i className="fas fa-flag-checkered" style={{ color: '#10b981' }}></i> Completed</span><span className="stats-value success">{stats?.course_stats?.completed_enrollments || 0}</span></div>
+                  <div className="stats-item"><span className="stats-label"><i className="fas fa-percentage" style={{ color: '#8b5cf6' }}></i> Completion</span><span className="stats-value">{stats?.course_stats?.overall_course_completion_pct || 0}%</span></div>
                 </div>
               </div>
 
               <div className="stats-card">
                 <h3><i className="fas fa-clock"></i> Learning Hours</h3>
                 <div className="stats-list">
-                  <div className="stats-item"><span className="stats-label">Total Planned</span><span className="stats-value">{stats?.course_stats?.total_course_hours || 0} h</span></div>
-                  <div className="stats-item"><span className="stats-label">Completed</span><span className="stats-value success">{stats?.course_stats?.completed_course_hours || 0} h</span></div>
-                  <div className="stats-item"><span className="stats-label">In-Progress</span><span className="stats-value">{stats?.course_stats?.inprogress_completed_hours || 0} h</span></div>
+                  <div className="stats-item"><span className="stats-label"><i className="fas fa-hourglass-start" style={{ color: '#f59e0b' }}></i> Total Planned</span><span className="stats-value">{stats?.course_stats?.total_course_hours || 0} h</span></div>
+                  <div className="stats-item"><span className="stats-label"><i className="fas fa-hourglass-end" style={{ color: '#10b981' }}></i> Completed</span><span className="stats-value success">{stats?.course_stats?.completed_course_hours || 0} h</span></div>
+                  <div className="stats-item"><span className="stats-label"><i className="fas fa-hourglass-half" style={{ color: '#3b82f6' }}></i> In-Progress</span><span className="stats-value">{stats?.course_stats?.inprogress_completed_hours || 0} h</span></div>
                 </div>
               </div>
             </div>
 
-            {/* Recent Submissions */}
-            {stats?.recent_submissions && stats.recent_submissions.length > 0 && (
-              <div className="recent-submissions">
-                <h3><i className="fas fa-history"></i> Recent Submissions</h3>
-                <div className="submissions-list">
-                  {stats.recent_submissions.map((submission, index) => (
-                    <div key={index} className="submission-item">
-                      <div className="submission-title">{submission.challenge__title}</div>
-                      <div className="submission-details">
-                        <span className={`submission-status ${submission.status.toLowerCase()}`}>
-                          {submission.status}
-                        </span>
-                        <span className="submission-language">{submission.language}</span>
-                        <span className="submission-date">
-                          {new Date(submission.submitted_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Badges Tab */}
-        {activeTab === 'badges' && (
-          <div className="badges-tab">
-            {badges.length > 0 ? (
-              <div className="badges-grid">
-                {badges.map((userBadge) => (
-                  <div
-                    key={userBadge.id}
-                    className="badge-card"
-                    style={{ borderColor: getRarityColor(userBadge.badge.rarity) }}
-                  >
-                    <div className="badge-icon" style={{ background: getRarityColor(userBadge.badge.rarity) }}>
-                      {userBadge.badge.icon}
-                    </div>
-                    <div className="badge-info">
-                      <h4 className="badge-name">{userBadge.badge.name}</h4>
-                      <p className="badge-description">{userBadge.badge.description}</p>
-                      <div className="badge-meta">
-                        <span className="badge-rarity" style={{ color: getRarityColor(userBadge.badge.rarity) }}>
-                          {userBadge.badge.rarity}
-                        </span>
-                        <span className="badge-date">
-                          {new Date(userBadge.earned_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {userBadge.badge.bonus_points > 0 && (
-                        <div className="badge-bonus">+{userBadge.badge.bonus_points} pts</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-badges">
-                <i className="fas fa-award"></i>
-                <p>No badges earned yet. Start solving challenges!</p>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Certificates Tab */}
         {activeTab === 'certificates' && (
@@ -606,7 +450,6 @@ const Profile = () => {
                     className="course-card"
                     onClick={() => {
                       if (course.id) {
-                        console.log('🚀 Navigating to course:', course.id);
                         navigate(`/course-view/${course.id}`);
                       } else {
                         console.error('❌ Course ID is missing:', course);
@@ -723,255 +566,36 @@ const Profile = () => {
         {/* Activity Tab */}
         {activeTab === 'activity' && (
           <div className="activity-tab">
-            <h2><i className="fas fa-history"></i> Recent Activity</h2>
-            
-            {/* Activity Analysis */}
-            {profile && (
-              <div className="activity-analysis">
-                <div className="analysis-card">
-                  <h3><i className="fas fa-chart-bar"></i> Activity Overview</h3>
-                  <div className="analysis-stats">
-                    <div className="analysis-stat">
-                      <div className="stat-circle" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                        <span>{profile.challenges_solved}</span>
-                      </div>
-                      <p>Challenges Solved</p>
-                    </div>
-                    <div className="analysis-stat">
-                      <div className="stat-circle" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                        <span>{profile.total_submissions || 0}</span>
-                      </div>
-                      <p>Total Submissions</p>
-                    </div>
-                    <div className="analysis-stat">
-                      <div className="stat-circle" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
-                        <span>{profile.current_streak}</span>
-                      </div>
-                      <p>Current Streak</p>
-                    </div>
-                    <div className="analysis-stat">
-                      <div className="stat-circle" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
-                        <span>{badges.length}</span>
-                      </div>
-                      <p>Badges Earned</p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Difficulty Breakdown */}
-                <div className="analysis-card">
-                  <h3><i className="fas fa-chart-pie"></i> Difficulty Breakdown</h3>
-                  <div className="difficulty-bars">
-                    <div className="difficulty-bar-item">
-                      <div className="difficulty-bar-header">
-                        <span className="difficulty-label easy">Easy</span>
-                        <span className="difficulty-count">{profile.easy_solved}</span>
-                      </div>
-                      <div className="difficulty-bar-track">
-                        <div 
-                          className="difficulty-bar-fill easy" 
-                          style={{ width: `${(profile.easy_solved / Math.max(profile.challenges_solved, 1)) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="difficulty-bar-item">
-                      <div className="difficulty-bar-header">
-                        <span className="difficulty-label medium">Medium</span>
-                        <span className="difficulty-count">{profile.medium_solved}</span>
-                      </div>
-                      <div className="difficulty-bar-track">
-                        <div 
-                          className="difficulty-bar-fill medium" 
-                          style={{ width: `${(profile.medium_solved / Math.max(profile.challenges_solved, 1)) * 100}%` }}
-                        ></div>
+            {/* Recent Submissions */}
+            {stats?.recent_submissions && stats.recent_submissions.length > 0 && (
+              <div className="recent-submissions">
+                <h3><i className="fas fa-history"></i> Recent Submissions</h3>
+                <div className="submissions-list">
+                  {stats.recent_submissions.map((submission, index) => (
+                    <div key={index} className="submission-item">
+                      <div className="submission-title">{submission.challenge__title}</div>
+                      <div className="submission-details">
+                        <span className={`submission-status ${submission.status.toLowerCase()}`}>
+                          {submission.status}
+                        </span>
+                        <span className="submission-language">{submission.language}</span>
+                        <span className="submission-date">
+                          {new Date(submission.submitted_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                    <div className="difficulty-bar-item">
-                      <div className="difficulty-bar-header">
-                        <span className="difficulty-label hard">Hard</span>
-                        <span className="difficulty-count">{profile.hard_solved}</span>
-                      </div>
-                      <div className="difficulty-bar-track">
-                        <div 
-                          className="difficulty-bar-fill hard" 
-                          style={{ width: `${(profile.hard_solved / Math.max(profile.challenges_solved, 1)) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Activity Timeline */}
-            <div className="activity-timeline-section">
-              <h3>Activity Timeline</h3>
-              
-              {!userId && activities.length === 0 && (
-                <div className="info-message" style={{
-                  background: '#f59e0b10',
-                  border: '1px solid #f59e0b',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  marginBottom: '1rem',
-                  color: '#f59e0b'
-                }}>
-                  <i className="fas fa-info-circle"></i> Your activity will appear here as you solve challenges and earn badges
-                </div>
-              )}
-              
-            {activities.length > 0 ? (
-              <div className="activity-timeline">
-                {activities.map((activity, index) => (
-                  <div key={activity.id || index} className="activity-item">
-                    <div className="activity-icon">
-                      {activity.activity_type === 'CHALLENGE_SOLVED' && <i className="fas fa-check-circle"></i>}
-                      {activity.activity_type === 'BADGE_EARNED' && <i className="fas fa-award"></i>}
-                      {activity.activity_type === 'SUBMISSION' && <i className="fas fa-code"></i>}
-                    </div>
-                    <div className="activity-content">
-                      <div className="activity-header">
-                        <span className="activity-type">{activity.activity_type_display || activity.activity_type}</span>
-                        {activity.points_earned > 0 && (
-                          <span className="activity-points">+{activity.points_earned} pts</span>
-                        )}
-                      </div>
-                      <div className="activity-details">
-                        {activity.details?.challenge_title && (
-                          <span>{activity.details.challenge_title}</span>
-                        )}
-                        {activity.details?.badge_name && (
-                          <span>{activity.details.badge_icon} {activity.details.badge_name}</span>
-                        )}
-                      </div>
-                      <div className="activity-date">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-activity">
-                <i className="fas fa-history"></i>
-                <p>No recent activity</p>
-              </div>
-            )}
-            </div>
-          </div>
-        )}
-
-        {/* Settings Tab */}
-        {activeTab === 'settings' && !userId && (
-          <div className="settings-tab">
-            <h2><i className="fas fa-cog"></i> Account Settings</h2>
             
-            <div className="settings-section">
-              <h3><i className="fas fa-lock"></i> Change Password</h3>
-              <p className="settings-description">Update your password to keep your account secure</p>
-              
-              <button className="btn-change-password" onClick={() => setShowPasswordModal(true)}>
-                <i className="fas fa-key"></i> Change Password
-              </button>
-            </div>
-
-            <div className="settings-section">
-              <h3><i className="fas fa-user"></i> Profile Information</h3>
-              <p className="settings-description">Your profile information</p>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>Username</label>
-                  <p>{profile.user.username}</p>
-                </div>
-                <div className="info-item">
-                  <label>Email</label>
-                  <p>{profile.user.email}</p>
-                </div>
-                <div className="info-item">
-                  <label>College</label>
-                  <p>{profile.user.college_name}</p>
-                </div>
-                <div className="info-item">
-                  <label>Member Since</label>
-                  <p>{new Date(profile.created_at).toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
 
-      {/* Password Change Modal */}
-      {showPasswordModal && (
-        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2><i className="fas fa-lock"></i> Change Password</h2>
-              <button className="modal-close" onClick={() => setShowPasswordModal(false)}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <form onSubmit={handlePasswordChange} className="password-form">
-              {passwordError && (
-                <div className="alert alert-error">
-                  <i className="fas fa-exclamation-circle"></i> {passwordError}
-                </div>
-              )}
-              
-              {passwordSuccess && (
-                <div className="alert alert-success">
-                  <i className="fas fa-check-circle"></i> {passwordSuccess}
-                </div>
-              )}
-
-              <div className="form-group">
-                <label>Current Password</label>
-                <input
-                  type="password"
-                  value={passwordData.old_password}
-                  onChange={(e) => setPasswordData({...passwordData, old_password: e.target.value})}
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>New Password</label>
-                <input
-                  type="password"
-                  value={passwordData.new_password}
-                  onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
-                  placeholder="Enter new password (min 8 characters)"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Confirm New Password</label>
-                <input
-                  type="password"
-                  value={passwordData.confirm_password}
-                  onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
-                  placeholder="Confirm new password"
-                  required
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowPasswordModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  <i className="fas fa-save"></i> Change Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
-    <Footer />
     </>
   );
 };

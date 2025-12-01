@@ -4,8 +4,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getCompanyBySlug, getConceptById, getConceptChallenges, getDifficultyColor } from '../../services/api';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import Swal from 'sweetalert2';
 
 const ConceptDetail = () => {
@@ -56,7 +54,6 @@ const ConceptDetail = () => {
   if (loading) {
     return (
       <Fragment>
-        <Header />
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
         <div className="text-center py-5">
@@ -66,7 +63,6 @@ const ConceptDetail = () => {
           <p className="mt-3 text-muted">Loading concept details...</p>
         </div>
       </div>
-      <Footer />
       </Fragment>
     );
   }
@@ -74,7 +70,6 @@ const ConceptDetail = () => {
   if (!concept) {
     return (
       <Fragment>
-        <Header />
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
         <div className="text-center py-5">
@@ -85,7 +80,6 @@ const ConceptDetail = () => {
           </button>
         </div>
       </div>
-      <Footer />
       </Fragment>
     );
   }
@@ -94,7 +88,6 @@ const ConceptDetail = () => {
 
   return (
     <Fragment>
-      <Header />
       
       {/* Page Header with proper spacing */}
       <div style={{ paddingTop: '100px' }}></div>
@@ -301,7 +294,6 @@ const ConceptDetail = () => {
         </div>
       </div>
     </div>
-    <Footer />
     </Fragment>
   );
 };

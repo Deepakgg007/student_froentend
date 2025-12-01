@@ -1,8 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { getCompanies } from '../../services/api';
 import CompanyCard from '../../component/cards/CompanyCard';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import Swal from 'sweetalert2';
 
 const CompanyList = () => {
@@ -103,23 +101,21 @@ const CompanyList = () => {
 
   return (
     <Fragment>
-      <Header />
 
-      {/* 🟪 Header Section (Unchanged for Desktop) */}
       <div
         className="page-header-content text-center position-relative overflow-hidden"
         style={{
           paddingTop: '120px',
           paddingBottom: '60px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+          background: 'linear-gradient(135deg, #f8f8f8ff 0%, #fcf3f3ff 100%)',
         }}
       >
         <div className="container position-relative" style={{ zIndex: 2 }}>
-          <h2 className="display-5 text-white mb-3 fw-bold">
+          <h2 className="display-5  mb-3 fw-bold">
             Explore Company Challenges
           </h2>
           <p
-            className="text-white mb-4"
+            className="mb-4"
             style={{
               fontSize: '1.1rem',
               opacity: 0.9,
@@ -129,20 +125,6 @@ const CompanyList = () => {
           >
             Take on real-world coding challenges, showcase your skills, and unlock exciting career opportunities.
           </p>
-          <div className="d-flex justify-content-center gap-3 flex-wrap">
-            <div className="badge bg-white bg-opacity-25 px-4 py-2 rounded-pill">
-              <i className="fas fa-building me-2 text-white"></i>
-              <span className="text-white">{companies.length} Active Companies</span>
-            </div>
-            <div className="badge bg-white bg-opacity-25 px-4 py-2 rounded-pill">
-              <i className="fas fa-code me-2 text-white"></i>
-              <span className="text-white">Technical Challenges</span>
-            </div>
-            <div className="badge bg-white bg-opacity-25 px-4 py-2 rounded-pill">
-              <i className="fas fa-industry me-2 text-white"></i>
-              <span className="text-white">{industries.length} Industries</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -350,7 +332,7 @@ const CompanyList = () => {
             {companies.length > 0 ? (
               <div className="row g-4">
                 {companies.map((company) => (
-                  <div key={company.id} className="col-lg-4 col-md-6 col-sm-12">
+                  <div key={company.id} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
                     <CompanyCard company={company} />
                   </div>
                 ))}
@@ -369,7 +351,6 @@ const CompanyList = () => {
         )}
       </div>
 
-      <Footer />
     </Fragment>
   );
 };

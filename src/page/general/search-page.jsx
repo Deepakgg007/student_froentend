@@ -1,8 +1,5 @@
 import { Fragment } from "react";
 import { Link } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
-import PageHeader from "../../component/layout/pageheader";
 
 
 const searchTitle = "Need a new search?";
@@ -86,8 +83,6 @@ const searchList = [
 const SearchPage = () => {
     return (
         <Fragment>
-            <Header />
-            <PageHeader title={'4 Results found for: Business'} curPage={'Search Result'} />
             <div className="blog-section padding-tb section-bg">
                 <div className="container">
                     <div className="row justify-content-center">
@@ -133,7 +128,6 @@ const SearchPage = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </Fragment>
     );
 }

@@ -1,0 +1,229 @@
+/* Universal Loader Styles */
+
+.universal-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    pointer-events: auto;
+}
+
+.universal-loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    animation: fadeInLoader 0.3s ease-in-out;
+}
+
+@keyframes fadeInLoader {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Spinner with rings */
+.loader-spinner {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner-ring {
+    position: absolute;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    border-top-color: #667eea;
+    border-right-color: #667eea;
+    animation: spinRing 1.5s linear infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+    width: 45px;
+    height: 45px;
+    animation-delay: 0.15s;
+    border-top-color: #764ba2;
+    border-right-color: #764ba2;
+}
+
+.spinner-ring:nth-child(3) {
+    width: 30px;
+    height: 30px;
+    animation-delay: 0.3s;
+    border-top-color: #f093fb;
+    border-right-color: #f093fb;
+}
+
+.spinner-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+@keyframes spinRing {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseDot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* Loading message */
+.loader-message {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
+    letter-spacing: 0.5px;
+    animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Progress bar */
+.loader-progress-bar {
+    width: 200px;
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #667eea);
+    background-size: 200% 100%;
+    border-radius: 2px;
+    animation: progressMove 1.5s ease-in-out infinite;
+}
+
+@keyframes progressMove {
+    0% {
+        width: 0%;
+    }
+    50% {
+        width: 100%;
+    }
+    100% {
+        width: 0%;
+    }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .universal-loader-container {
+        gap: 20px;
+    }
+
+    .loader-spinner {
+        width: 50px;
+        height: 50px;
+    }
+
+    .spinner-ring:nth-child(1) {
+        width: 50px;
+        height: 50px;
+    }
+
+    .spinner-ring:nth-child(2) {
+        width: 35px;
+        height: 35px;
+    }
+
+    .spinner-ring:nth-child(3) {
+        width: 20px;
+        height: 20px;
+    }
+
+    .loader-message {
+        font-size: 14px;
+    }
+
+    .loader-progress-bar {
+        width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .universal-loader-overlay {
+        background: rgba(255, 255, 255, 0.99);
+    }
+
+    .universal-loader-container {
+        gap: 15px;
+    }
+
+    .loader-spinner {
+        width: 40px;
+        height: 40px;
+    }
+
+    .spinner-ring:nth-child(1) {
+        width: 40px;
+        height: 40px;
+    }
+
+    .spinner-ring:nth-child(2) {
+        width: 25px;
+        height: 25px;
+    }
+
+    .spinner-ring:nth-child(3) {
+        width: 15px;
+        height: 15px;
+    }
+
+    .loader-message {
+        font-size: 12px;
+    }
+
+    .loader-progress-bar {
+        width: 120px;
+        height: 3px;
+    }
+}

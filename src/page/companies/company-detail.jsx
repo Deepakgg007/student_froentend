@@ -6,8 +6,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getCompanyBySlug, getCompanyConcepts, getCompanyJobs } from '../../services/api';
 import ConceptCard from '../../component/cards/ConceptCard';
 import JobCard from '../../component/cards/JobCard';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import Swal from 'sweetalert2';
 
 const CompanyDetail = () => {
@@ -64,7 +62,6 @@ const CompanyDetail = () => {
   if (loading) {
     return (
       <Fragment>
-        <Header />
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
         <div className="text-center py-5">
@@ -74,7 +71,6 @@ const CompanyDetail = () => {
           <p className="mt-3 text-muted">Loading company details...</p>
         </div>
       </div>
-      <Footer />
       </Fragment>
     );
   }
@@ -82,7 +78,6 @@ const CompanyDetail = () => {
   if (!company) {
     return (
       <Fragment>
-        <Header />
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
         <div className="text-center py-5">
@@ -93,14 +88,12 @@ const CompanyDetail = () => {
           </button>
         </div>
       </div>
-      <Footer />
       </Fragment>
     );
   }
 
   return (
     <Fragment>
-      <Header />
       
       {/* Page Header with proper spacing */}
       <div style={{ paddingTop: '100px' }}></div>
@@ -317,7 +310,6 @@ const CompanyDetail = () => {
         </div>
       </div>
     </div>
-    <Footer />
     </Fragment>
   );
 };

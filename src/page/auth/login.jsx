@@ -2,9 +2,8 @@
 
 import { Fragment, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
 import { loginUser } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const title = "Login";
 const btnText = "Login Now";
@@ -25,6 +24,7 @@ const EyeOffIcon = ({ size = 18 }) => (
 );
 
 const LoginPage = () => {
+    const { setAuth } = useAuth();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
@@ -89,6 +89,7 @@ const LoginPage = () => {
         localStorage.setItem("student_access_token", responseData.access);
         localStorage.setItem("student_refresh_token", responseData.refresh);
         localStorage.setItem("student_user", JSON.stringify(user));
+        setAuth(true);
 
         navigate("/");
     } catch (err) {
@@ -101,7 +102,6 @@ const LoginPage = () => {
 
     return (
         <Fragment>
-            <Header />
             <div className="login-section padding-tb section-bg">
                 <div className="container">
                     <div className="account-wrapper" style={{ maxWidth: 500, margin: "0 auto" }}>
@@ -200,7 +200,6 @@ const LoginPage = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
 
             {/* Enhanced attractive styles */}
             <style>{`

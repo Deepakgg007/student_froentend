@@ -46,13 +46,11 @@ const CompanyCard = ({ company }) => {
         flexDirection: 'column',
       }}
     >
-      {/* Company Logo Banner */}
+      {/* Company Logo Banner - Full Width Image Display */}
       <div
         style={{
           height: '120px',
-          background: isHovered
-            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            : 'linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%)',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -77,10 +75,11 @@ const CompanyCard = ({ company }) => {
             alt={name}
             onError={handleImageError}
             style={{
-              width: '80px',
-              height: '80px',
+              width: '100%',
+              height: '100%',
               objectFit: 'contain',
-              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
+              padding: '10px',
+              filter: isHovered ? 'brightness(1.05)' : 'brightness(1)',
               transition: 'all 0.3s ease',
               zIndex: 2,
             }}
@@ -88,22 +87,20 @@ const CompanyCard = ({ company }) => {
         ) : (
           <div
             style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.3)',
+              width: '100%',
+              height: '100%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backdropFilter: 'blur(4px)',
+              background: 'linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%)',
               zIndex: 2,
             }}
           >
             <i
               className="fas fa-building"
               style={{
-                fontSize: '2.5rem',
-                color: isHovered ? 'white' : '#6c757d',
+                fontSize: '3.5rem',
+                color: '#6c757d',
               }}
             />
           </div>

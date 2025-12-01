@@ -1,8 +1,5 @@
 import { Fragment } from "react";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
-import AchievementTwo from "../../component/section/achievement-2";
-import Skill from "../../component/section/skill";
+import Achievement from "../../component/section/achievement";
 import Student from "../../component/section/student";
 
 
@@ -42,7 +39,6 @@ const aboutList = [
 const AboutPage = () => {
     return ( 
         <Fragment>
-            <Header />
             <div className="about-section style-3 padding-tb section-bg">
                 <div className="container">
                     <div className="row justify-content-center row-cols-xl-2 row-cols-1 align-items-center">
@@ -87,10 +83,8 @@ const AboutPage = () => {
                     </div>
                 </div>
             </div>
+            <Achievement />
             <Student />
-            <Skill />
-            <AchievementTwo />
-            <Footer />
         </Fragment>
     );
 }

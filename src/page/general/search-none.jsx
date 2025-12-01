@@ -1,7 +1,4 @@
 import { Fragment } from "react";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
-import PageHeader from "../../component/layout/pageheader";
 
 const subTitle = "Couldn't find what you're looking for!"
 const title = "Oops!"
@@ -13,8 +10,6 @@ const searchDesc = "If you didn't find what you were looking for, try a new sear
 const SearchNone = () => {
     return (
         <Fragment>
-            <Header />
-            <PageHeader title={'Results Not found for: Business'} curPage={'Search None'} />
             <div className="blog-section padding-tb section-bg">
                 <div className="container">
                     <div className="row justify-content-center">
@@ -51,7 +46,6 @@ const SearchNone = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </Fragment>
     );
 }

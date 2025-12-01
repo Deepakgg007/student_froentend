@@ -47,15 +47,25 @@ const Sponsor = () => {
     checkUser();
   }, []);
 
-  // 🟢 Fetch sponsor logos
+  // 🟢 Fetch sponsor logos (colleges)
   useEffect(() => {
     const fetchSponsors = async () => {
       try {
-        const response = await api.get("/companies");
-        const data = response.data.results || [];
-        setCompanies(data);
+        // Try colleges endpoint first, fallback to companies
+        let response;
+        try {
+          response = await api.get("/colleges");
+        } catch {
+          response = await api.get("/companies");
+        }
+
+        const data = response.data.results || response.data.data || response.data || [];
+        // Ensure we have an array
+        const collegelist = Array.isArray(data) ? data : [];
+        setCompanies(collegelist);
       } catch (error) {
         console.error("Error fetching sponsors:", error);
+        setCompanies([]); // Set empty array on error
       }
     };
 
@@ -72,6 +82,14 @@ const Sponsor = () => {
   return (
     <div className="sponsor-section section-bg py-5">
       <div className="container">
+        <div className="section-header text-center mb-5">
+          <h2 style={{ fontSize: "50px", fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
+            Our Clients
+          </h2>
+          <p style={{ fontSize: "20px", color: "#666" }}>
+            Trusted by leading educational institutions
+          </p>
+        </div>
         <div className="section-wrapper">
           <div className="sponsor-slider">
             <Swiper
@@ -91,51 +109,50 @@ const Sponsor = () => {
             >
               {companies.length > 0 ? (
                 companies.map((company, index) => {
-                  const imageUrl =
-                    company.image ||
+                  // Handle multiple logo field names (colleges vs companies)
+                  let imageUrl =
                     company.logo ||
+                    company.image ||
                     company.logo_url ||
                     company.logoUrl ||
+                    company.college_logo ||
+                    company.company_logo ||
                     "";
+
+                  // If URL is relative, prepend API base URL
+                  if (imageUrl && !imageUrl.startsWith("http")) {
+                    imageUrl = `http://16.16.76.74:8000${imageUrl}`;
+                  }
+
+                  const displayName = company.name || company.college_name || "Organization";
 
                   return (
                     <SwiperSlide key={index}>
-                      <div
-                        className="sponsor-item d-flex justify-content-center align-items-center"
-                        style={{
-                          backgroundColor: "#f5f5f5",
-                          borderRadius: "12px",
-                          padding: "20px",
-                          boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-                          transition: "transform 0.3s ease",
-                        }}
-                      >
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={company.name || "Company"}
-                            style={{
-                              width: "120px",
-                              height: "80px",
-                              objectFit: "contain",
-                              background: "#fff",
-                              padding: "10px",
-                              borderRadius: "8px",
-                              border: "1px solid #ddd",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className="bg-light rounded d-flex justify-content-center align-items-center"
-                            style={{
-                              width: "120px",
-                              height: "80px",
-                            }}
-                          >
-                            <i className="fas fa-building text-muted fa-2x"></i>
-                          </div>
-                        )}
-                      </div>
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={displayName}
+                          style={{
+                            width: "100%",
+                            height: "100px",
+                            objectFit: "contain",
+                            transition: "transform 0.3s ease",
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="d-flex justify-content-center align-items-center"
+                          style={{
+                            width: "100%",
+                            height: "100px",
+                          }}
+                        >
+                          <i className="fas fa-building text-muted fa-2x"></i>
+                        </div>
+                      )}
                     </SwiperSlide>
                   );
                 })

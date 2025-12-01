@@ -1,7 +1,5 @@
 import { Fragment, useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
 import api from "../../services/api";
 
 const CourseSingle = () => {
@@ -28,7 +26,7 @@ const CourseSingle = () => {
             const [courseResponse, syllabusResponse, enrollmentResponse] = await Promise.all([
                 api.get(`/courses/${id}/`),
                 api.get(`/syllabi/?course=${id}`).catch(() => ({ data: { results: [] } })),
-                api.get(`/enrollments/?course=${id}`).catch(() => ({ data: { results: [] } }))
+                api.get(`/student/enrollments/?course=${id}`).catch(() => ({ data: { data: [] } }))
             ]);
 
             const courseData = courseResponse.data.data || courseResponse.data;
@@ -39,9 +37,26 @@ const CourseSingle = () => {
                 setSyllabus(syllabusData);
             }
 
-            const enrollmentData = enrollmentResponse.data.results?.[0] || enrollmentResponse.data.data?.[0] || enrollmentResponse.data[0];
+            // Handle enrollment response - check different formats
+            let enrollmentList = [];
+            if (enrollmentResponse.data && enrollmentResponse.data.data) {
+                // StandardResponseMixin format: { success: true, data: [...], pagination: {...} }
+                enrollmentList = Array.isArray(enrollmentResponse.data.data)
+                    ? enrollmentResponse.data.data
+                    : [];
+            } else if (enrollmentResponse.data && enrollmentResponse.data.results) {
+                // Alternative format with results
+                enrollmentList = Array.isArray(enrollmentResponse.data.results)
+                    ? enrollmentResponse.data.results
+                    : [];
+            }
+
+            // Set enrollment if user is enrolled in this course
+            const enrollmentData = enrollmentList?.[0];
             if (enrollmentData) {
                 setEnrollment(enrollmentData);
+            } else {
+                setEnrollment(null);
             }
         } catch (err) {
             console.error('Failed to fetch course details:', err);
@@ -92,7 +107,6 @@ const CourseSingle = () => {
     if (loading) {
         return (
             <Fragment>
-                <Header />
                 <div className="course-single-section padding-tb section-bg">
                     <div className="container">
                         <div className="text-center py-5">
@@ -103,7 +117,6 @@ const CourseSingle = () => {
                         </div>
                     </div>
                 </div>
-                <Footer />
             </Fragment>
         );
     }
@@ -111,7 +124,6 @@ const CourseSingle = () => {
     if (error) {
         return (
             <Fragment>
-                <Header />
                 <div className="course-single-section padding-tb section-bg">
                     <div className="container">
                         <div className="alert alert-danger" role="alert">
@@ -122,7 +134,6 @@ const CourseSingle = () => {
                         </Link>
                     </div>
                 </div>
-                <Footer />
             </Fragment>
         );
     }
@@ -130,7 +141,6 @@ const CourseSingle = () => {
     if (!course) {
         return (
             <Fragment>
-                <Header />
                 <div className="course-single-section padding-tb section-bg">
                     <div className="container">
                         <div className="alert alert-warning" role="alert">
@@ -141,14 +151,12 @@ const CourseSingle = () => {
                         </Link>
                     </div>
                 </div>
-                <Footer />
             </Fragment>
         );
     }
 
     return (
         <Fragment>
-            <Header />
             <div className="pageheader-section style-2" style={{paddingTop: '100px'}}>
                 <div className="container">
                     <div className="row justify-content-center justify-content-lg-between align-items-center flex-row-reverse">
@@ -207,10 +215,10 @@ const CourseSingle = () => {
                                 )}
 
                                 {enrollment ? (
-                                    <div className="d-flex gap-2 flex-wrap">
+                                    <div className="d-flex gap-2 flex-wrap align-items-center">
                                         <Link to={`/course-view/${id}`} className="lab-btn">
                                             <i className="icofont-play-alt-2 me-2"></i>
-                                            <span>Go to Course</span>
+                                            <span>Continue Learning</span>
                                         </Link>
                                         <span className="badge bg-success align-self-center px-3 py-2">
                                             <i className="icofont-check-circled me-1"></i> Enrolled
@@ -411,7 +419,6 @@ const CourseSingle = () => {
                 </div>
             </div>
             
-            <Footer />
         </Fragment>
     );
 }

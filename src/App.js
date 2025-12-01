@@ -3,11 +3,18 @@ import {BrowserRouter, Routes, Route } from "react-router-dom";
 import 'swiper/css';
 
 import ScrollToTop from "./component/layout/ScrollToTop";
+import Header from "./component/layout/header.jsx";
+import Footer from "./component/layout/footer.jsx";
 import ProtectedRoute from "./component/ProtectedRoute";
 import CollegeRouteWrapper from "./component/CollegeRouteWrapper";
 import PageTransition from "./component/PageTransition";
+import UniversalLoader from "./component/UniversalLoader";
 import useSessionValidator from "./hooks/useSessionValidator";
+import { LoadingProvider } from "./context/LoadingContext";
+import { AuthProvider } from "./context/AuthContext";
+import { HeaderVisibilityProvider } from "./context/HeaderVisibilityContext";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './assets/css/universal-loader.css';
 
 // Auth Pages
 import LoginPage from "./page/auth/login";
@@ -60,175 +67,184 @@ function App() {
 	useSessionValidator(30000);
 
 	return (
-		<BrowserRouter>
-			<ScrollToTop />
-			<CollegeRouteWrapper>
-			<PageTransition>
-			<Routes>
-				{/* Public Routes */}
-				<Route path="/" element={<Home />} />
-				<Route path=":collegeSlug/" element={<Home />} />
-				<Route path="about" element={<AboutPage />} />
-				<Route path="instructor" element={<InstructorPage />} />
-				<Route path="search-page" element={<SearchPage />} />
-				<Route path="search-none" element={<SearchNone />} />
-				<Route path="contact" element={<ContactPage />} />
+		<AuthProvider>
+			<LoadingProvider>
+				<BrowserRouter>
+					<HeaderVisibilityProvider>
+						<UniversalLoader />
+						<ScrollToTop />
+						<Header />
+						<CollegeRouteWrapper>
+							<PageTransition>
+								<Routes>
+							{/* Public Routes */}
+							<Route path="/" element={<Home />} />
+							<Route path=":collegeSlug/" element={<Home />} />
+							<Route path="about" element={<AboutPage />} />
+							<Route path="instructor" element={<InstructorPage />} />
+							<Route path="search-page" element={<SearchPage />} />
+							<Route path="search-none" element={<SearchNone />} />
+							<Route path="contact" element={<ContactPage />} />
 
-				{/* Auth Routes */}
-				<Route path="login" element={<LoginPage />} />
-				<Route path="signup" element={<SignupPage />} />
-				<Route path="forgetpass" element={<ForgetPass />} />
+							{/* Auth Routes */}
+							<Route path="login" element={<LoginPage />} />
+							<Route path="signup" element={<SignupPage />} />
+							<Route path="forgetpass" element={<ForgetPass />} />
 
-				{/* College-specific routes with slug */}
-				<Route path=":collegeSlug/course" element={
-					<ProtectedRoute>
-						<CoursePage />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/course-single/:id" element={
-					<ProtectedRoute>
-						<CourseSingle />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/course-view/:courseId" element={
-					<ProtectedRoute>
-						<CourseView />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/challenges" element={
-					<ProtectedRoute>
-						<ChallengeList />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/challenge/:slug" element={
-					<ProtectedRoute>
-						<SolveChallenge />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/companies" element={
-					<ProtectedRoute>
-						<CompanyList />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/companies/:slug" element={
-					<ProtectedRoute>
-						<CompanyDetail />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/companies/:companySlug/concepts/:conceptSlug" element={
-					<ProtectedRoute>
-						<ConceptDetail />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/companies/:companySlug/concepts/:conceptSlug/challenges/:challengeSlug/solve" element={
-					<ProtectedRoute>
-						<SolveCompanyChallenge />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/jobs" element={
-					<ProtectedRoute>
-						<JobList />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/jobs/:slug" element={
-					<ProtectedRoute>
-						<JobDetail />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/profile" element={
-					<ProtectedRoute>
-						<Profile />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/profile/:userId" element={
-					<ProtectedRoute>
-						<Profile />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/leaderboard" element={
-					<ProtectedRoute>
-						<Leaderboard />
-					</ProtectedRoute>
-				} />
-				<Route path=":collegeSlug/certification/:certificationId" element={
-					<ProtectedRoute>
-						<CertificationPage />
-					</ProtectedRoute>
-				} />
-				<Route path="certification/:certificationId" element={
-					<ProtectedRoute>
-						<CertificationPage />
-					</ProtectedRoute>
-				} />
+							{/* College-specific routes with slug */}
+							<Route path=":collegeSlug/course" element={
+								<ProtectedRoute>
+									<CoursePage />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/course-single/:id" element={
+								<ProtectedRoute>
+									<CourseSingle />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/course-view/:courseId" element={
+								<ProtectedRoute>
+									<CourseView />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/challenges" element={
+								<ProtectedRoute>
+									<ChallengeList />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/challenge/:slug" element={
+								<ProtectedRoute>
+									<SolveChallenge />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/companies" element={
+								<ProtectedRoute>
+									<CompanyList />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/companies/:slug" element={
+								<ProtectedRoute>
+									<CompanyDetail />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/companies/:companySlug/concepts/:conceptSlug" element={
+								<ProtectedRoute>
+									<ConceptDetail />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/companies/:companySlug/concepts/:conceptSlug/challenges/:challengeSlug/solve" element={
+								<ProtectedRoute>
+									<SolveCompanyChallenge />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/jobs" element={
+								<ProtectedRoute>
+									<JobList />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/jobs/:slug" element={
+								<ProtectedRoute>
+									<JobDetail />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/profile" element={
+								<ProtectedRoute>
+									<Profile />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/profile/:userId" element={
+								<ProtectedRoute>
+									<Profile />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/leaderboard" element={
+								<ProtectedRoute>
+									<Leaderboard />
+								</ProtectedRoute>
+							} />
+							<Route path=":collegeSlug/certification/:certificationId" element={
+								<ProtectedRoute>
+									<CertificationPage />
+								</ProtectedRoute>
+							} />
+							<Route path="certification/:certificationId" element={
+								<ProtectedRoute>
+									<CertificationPage />
+								</ProtectedRoute>
+							} />
 
-				{/* Backward compatibility routes without college slug - will redirect */}
-				<Route path="course" element={
-					<ProtectedRoute>
-						<CoursePage />
-					</ProtectedRoute>
-				} />
-				<Route path="course-single/:id" element={
-					<ProtectedRoute>
-						<CourseSingle />
-					</ProtectedRoute>
-				} />
-				<Route path="course-view/:courseId" element={
-					<ProtectedRoute>
-						<CourseView />
-					</ProtectedRoute>
-				} />
-				<Route path="challenges" element={
-					<ProtectedRoute>
-						<ChallengeList />
-					</ProtectedRoute>
-				} />
-				<Route path="challenge/:slug" element={
-					<ProtectedRoute>
-						<SolveChallenge />
-					</ProtectedRoute>
-				} />
-				<Route path="companies" element={
-					<ProtectedRoute>
-						<CompanyList />
-					</ProtectedRoute>
-				} />
-				<Route path="companies/:slug" element={
-					<ProtectedRoute>
-						<CompanyDetail />
-					</ProtectedRoute>
-				} />
-				<Route path="jobs" element={
-					<ProtectedRoute>
-						<JobList />
-					</ProtectedRoute>
-				} />
-				<Route path="jobs/:slug" element={
-					<ProtectedRoute>
-						<JobDetail />
-					</ProtectedRoute>
-				} />
-				<Route path="profile" element={
-					<ProtectedRoute>
-						<Profile />
-					</ProtectedRoute>
-				} />
-				<Route path="profile/:userId" element={
-					<ProtectedRoute>
-						<Profile />
-					</ProtectedRoute>
-				} />
-				<Route path="leaderboard" element={
-					<ProtectedRoute>
-						<Leaderboard />
-					</ProtectedRoute>
-				} />
+							{/* Backward compatibility routes without college slug - will redirect */}
+							<Route path="course" element={
+								<ProtectedRoute>
+									<CoursePage />
+								</ProtectedRoute>
+							} />
+							<Route path="course-single/:id" element={
+								<ProtectedRoute>
+									<CourseSingle />
+								</ProtectedRoute>
+							} />
+							<Route path="course-view/:courseId" element={
+								<ProtectedRoute>
+									<CourseView />
+								</ProtectedRoute>
+							} />
+							<Route path="challenges" element={
+								<ProtectedRoute>
+									<ChallengeList />
+								</ProtectedRoute>
+							} />
+							<Route path="challenge/:slug" element={
+								<ProtectedRoute>
+									<SolveChallenge />
+								</ProtectedRoute>
+							} />
+							<Route path="companies" element={
+								<ProtectedRoute>
+									<CompanyList />
+								</ProtectedRoute>
+							} />
+							<Route path="companies/:slug" element={
+								<ProtectedRoute>
+									<CompanyDetail />
+								</ProtectedRoute>
+							} />
+							<Route path="jobs" element={
+								<ProtectedRoute>
+									<JobList />
+								</ProtectedRoute>
+							} />
+							<Route path="jobs/:slug" element={
+								<ProtectedRoute>
+									<JobDetail />
+								</ProtectedRoute>
+							} />
+							<Route path="profile" element={
+								<ProtectedRoute>
+									<Profile />
+								</ProtectedRoute>
+							} />
+							<Route path="profile/:userId" element={
+								<ProtectedRoute>
+									<Profile />
+								</ProtectedRoute>
+							} />
+							<Route path="leaderboard" element={
+								<ProtectedRoute>
+									<Leaderboard />
+								</ProtectedRoute>
+							} />
 
-				{/* 404 Route - must be last */}
-				<Route path="*" element={<ErrorPage />} />
-			</Routes>
-			</PageTransition>
-			</CollegeRouteWrapper>
-		</BrowserRouter>
+							{/* 404 Route - must be last */}
+							<Route path="/" element={<ErrorPage />} />
+								</Routes>
+							</PageTransition>
+						</CollegeRouteWrapper>
+						<Footer />
+					</HeaderVisibilityProvider>
+				</BrowserRouter>
+			</LoadingProvider>
+		</AuthProvider>
 	);
 }
 

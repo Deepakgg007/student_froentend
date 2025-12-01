@@ -1,7 +1,5 @@
 import { Fragment, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
 import api from "../../services/api";
 
 const title = "Register Now";
@@ -231,7 +229,6 @@ const SignupPage = () => {
 
   return (
     <Fragment>
-      <Header />
       <div className="login-section padding-tb section-bg">
         <div className="container">
           <div className="account-wrapper" style={{ maxWidth: 650, margin: "0 auto" }}>
@@ -437,7 +434,6 @@ const SignupPage = () => {
         </div>
       </div>
 
-      <Footer />
 
       {/* Enhanced styles with modern design - FIXED DROPDOWN STYLES */}
       <style>{`

@@ -4,8 +4,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobBySlug, getCompanyBySlug, formatSalary, getJobTypeDisplay, getExperienceLevelDisplay, getDaysRemaining, isDeadlinePassed } from '../../services/api';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import Swal from 'sweetalert2';
 
 const JobDetail = () => {
@@ -90,7 +88,6 @@ const JobDetail = () => {
   if (loading) {
     return (
       <Fragment>
-        <Header />
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
         <div className="text-center py-5">
@@ -100,7 +97,6 @@ const JobDetail = () => {
           <p className="mt-3 text-muted">Loading job details...</p>
         </div>
       </div>
-      <Footer />
       </Fragment>
     );
   }
@@ -108,7 +104,6 @@ const JobDetail = () => {
   if (!job) {
     return (
       <Fragment>
-        <Header />
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
         <div className="text-center py-5">
@@ -119,7 +114,6 @@ const JobDetail = () => {
           </button>
         </div>
       </div>
-      <Footer />
       </Fragment>
     );
   }
@@ -129,7 +123,6 @@ const JobDetail = () => {
 
   return (
     <Fragment>
-      <Header />
       
       {/* Page Header with proper spacing */}
       <div style={{ paddingTop: '100px' }}></div>
@@ -453,7 +446,6 @@ const JobDetail = () => {
         </div>
       </div>
     </div>
-    <Footer />
     </Fragment>
   );
 };

@@ -4,7 +4,7 @@ import api from "../../services/api";
 
 const title = "Our Courses";
 const btnText = "Get Started Now";
-const staticCategories = ["Java", "Python"];
+const staticCategories = [];
 
 const CourseFour = () => {
   const [courses, setCourses] = useState([]);
@@ -30,11 +30,20 @@ const CourseFour = () => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/courses/");
+      // Fetch courses ordered by updated_at from backend (oldest first)
+      const response = await api.get("/courses/?ordering=updated_at");
       const data = response.data;
-      const coursesData = Array.isArray(data)
+      let coursesData = Array.isArray(data)
         ? data
         : data.results || data.data || [];
+
+      // Sort courses by updated_at (oldest first) - backup sort if backend doesn't do it
+      coursesData = coursesData.sort((a, b) => {
+        const dateA = new Date(a.updated_at || a.created_at || 0);
+        const dateB = new Date(b.updated_at || b.created_at || 0);
+        return dateA - dateB;
+      });
+
       setCourses(coursesData);
       setFilteredCourses(coursesData);
     } catch (err) {
@@ -154,15 +163,6 @@ const CourseFour = () => {
                   gap: "8px",
                 }}
               >
-                <li
-                  style={{
-                    ...styles.filterBtn,
-                    ...(activeFilter === "All" ? styles.filterBtnActive : {}),
-                  }}
-                  onClick={() => filterItem("All")}
-                >
-                  All
-                </li>
                 {staticCategories.map((cat, idx) => (
                   <li
                     key={idx}

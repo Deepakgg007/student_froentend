@@ -1,10 +1,9 @@
 import { Fragment, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
+import { Link, useParams } from "react-router-dom";
 import api from "../../services/api";
 
 const CoursePage = () => {
+    const { collegeSlug } = useParams();
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -13,18 +12,27 @@ const CoursePage = () => {
 
     useEffect(() => {
         fetchCourses();
-    }, []);
+    }, [collegeSlug]);
 
     const fetchCourses = async () => {
         try {
             setLoading(true);
             setError('');
-            const response = await api.get('/courses/');
+            // Fetch courses and order by updated_at from backend (oldest first)
+            const response = await api.get('/courses/?ordering=-updated_at');
 
             const data = response.data;
-            const coursesData = Array.isArray(data)
+            let coursesData = Array.isArray(data)
                 ? data
                 : data.results || data.data || [];
+
+            // Sort courses by updated_at (oldest first) - backup sort if backend doesn't do it
+            coursesData = coursesData.sort((a, b) => {
+                const dateA = new Date(a.updated_at || a.created_at || 0);
+                const dateB = new Date(b.updated_at || b.created_at || 0);
+                return dateA - dateB;
+            });
+
             setCourses(coursesData);
         } catch (err) {
             console.error('Failed to fetch courses:', err);
@@ -51,20 +59,19 @@ const CoursePage = () => {
 
     return (
         <Fragment>
-            <Header />
 
             {/* Page Header with proper spacing */}
             <div className="page-header-content text-center" style={{
                 paddingTop: '120px',
                 paddingBottom: '40px',
-                background: 'linear-gradient(135deg, #e96b39ff 0%, #ddc8c0ff 100%)'
+                background: 'linear-gradient(135deg, #f3f1f0ff 0%, #faf5f2ff 100%)'
             }}>
                 <div className="container">
-                    <h2 className="title text-white">All Courses</h2>
+                    <h2 className="title">All Courses</h2>
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb justify-content-center">
-                            <li className="breadcrumb-item"><Link to="/" className="text-white">Home</Link></li>
-                            <li className="breadcrumb-item active text-white" aria-current="page">Courses</li>
+                            <li className="breadcrumb-item"><Link to="/" >Home</Link></li>
+                            <li className="breadcrumb-item active" aria-current="page">Courses</li>
                         </ol>
                     </nav>
                 </div>
@@ -190,7 +197,6 @@ const CoursePage = () => {
                     )}
                 </div>
             </div>
-            <Footer />
 
             <style>{`
                 .hover-card {

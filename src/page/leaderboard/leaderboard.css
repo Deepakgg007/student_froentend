@@ -360,14 +360,12 @@
   margin-bottom: 0.5rem;
   align-items: center;
   transition: all 0.3s ease;
-  cursor: pointer;
   border: 1px solid #f1f5f9;
 }
 
 .table-row:hover {
   background: #f8fafc;
   border-color: #e2e8f0;
-  transform: translateX(5px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 

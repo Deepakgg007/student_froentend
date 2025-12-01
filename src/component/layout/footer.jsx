@@ -98,11 +98,11 @@ const Footer = () => {
             )}
 
             {/* Always show this section */}
-            <div className="footer-bottom style-2">
+            <div className="footer-bottom style-2 pt-2">
                 <div className="container">
-                    <div className="section-wrapper">
+                    <div className="section-wrapper pt-1">
                         <p>
-                            &copy; 2025 <Link to="/">Haegl Educate</Link> Designed by{" "}
+                            &copy; 2025 <Link to="/">Z1</Link> Designed by{" "}
                             <a href="#" target="_blank" rel="noreferrer">
                                 Haegl
                             </a>

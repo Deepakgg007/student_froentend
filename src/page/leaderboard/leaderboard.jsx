@@ -1,50 +1,118 @@
 // edukon/src/page/leaderboard/leaderboard.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../component/layout/header';
-import Footer from '../../component/layout/footer';
 import api from '../../services/api';
 import './leaderboard.css';
 
 const Leaderboard = () => {
-  const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('global');
   const [userPosition, setUserPosition] = useState(null);
   const [totalUsers, setTotalUsers] = useState(0);
   const [limit, setLimit] = useState(100);
+  const [userCollegeId, setUserCollegeId] = useState(null);
+
+  useEffect(() => {
+    // Fetch user's college info on mount
+    fetchUserCollege();
+  }, []);
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [activeTab, limit]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab, limit, userCollegeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchUserCollege = async () => {
+    try {
+      const response = await api.get('/student/profile/me/');
+      if (response.data && response.data.user && response.data.user.college_id) {
+        // Extract college ID from the user data
+        setUserCollegeId(response.data.user.college_id);
+        console.log('User college ID:', response.data.user.college_id);
+      } else {
+        console.warn('No college found for user:', response.data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user college:', error);
+    }
+  };
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      
-      let endpoint = `/student/leaderboard/${activeTab}/`;
+
+      let endpoint = `/student/leaderboard/`;
+      const params = { limit };
+
       if (activeTab === 'global') {
         endpoint = `/student/leaderboard/global/`;
+      } else if (activeTab === 'college') {
+        // For college leaderboard, pass the user's college ID
+        if (userCollegeId) {
+          endpoint = `/student/leaderboard/college/${userCollegeId}/`;
+        } else {
+          // If no college found, fall back to general leaderboard
+          endpoint = `/student/leaderboard/`;
+          params.type = 'college';
+        }
       }
-      
-      const response = await api.get(endpoint, {
-        params: { limit }
-      });
-      
+
+      console.log(`Fetching leaderboard from: ${endpoint}`, { activeTab, userCollegeId, params });
+
+      const response = await api.get(endpoint, { params });
+
       const data = response.data;
-      
-      if (activeTab === 'global' || activeTab === 'college') {
-        setLeaderboard(Array.isArray(data) ? data : data.leaderboard || []);
-        if (data.user_position) setUserPosition(data.user_position);
+
+      console.log('Leaderboard response:', data);
+
+      // Handle both direct array response and object with leaderboard key
+      if (Array.isArray(data)) {
+        setLeaderboard(data);
+        setUserPosition(null);
+        setTotalUsers(0);
+      } else if (data.leaderboard) {
+        const leaderboardData = Array.isArray(data.leaderboard) ? data.leaderboard : [];
+        setLeaderboard(leaderboardData);
+
+        // Log sample user data for debugging
+        if (leaderboardData.length > 0) {
+          console.log('Sample user from leaderboard:', {
+            username: leaderboardData[0].username,
+            total_points: leaderboardData[0].total_points,
+            challenges_solved: leaderboardData[0].challenges_solved,
+            current_streak: leaderboardData[0].current_streak,
+            easy_solved: leaderboardData[0].easy_solved,
+            medium_solved: leaderboardData[0].medium_solved,
+            hard_solved: leaderboardData[0].hard_solved,
+            first_name: leaderboardData[0].first_name,
+            last_name: leaderboardData[0].last_name,
+            college_name: leaderboardData[0].college_name,
+          });
+        }
+
+        if (data.user_position) {
+          console.log('User position:', data.user_position);
+          setUserPosition(data.user_position);
+        }
+        if (data.total_users) setTotalUsers(data.total_users);
+      } else if (data.results) {
+        // Handle paginated response
+        setLeaderboard(Array.isArray(data.results) ? data.results : []);
+        if (data.user_position) {
+          console.log('User position:', data.user_position);
+          setUserPosition(data.user_position);
+        }
         if (data.total_users) setTotalUsers(data.total_users);
       } else {
-        setLeaderboard(Array.isArray(data) ? data : []);
+        console.warn('Unexpected response format:', data);
+        setLeaderboard([]);
+        setUserPosition(null);
+        setTotalUsers(0);
       }
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
+      setLeaderboard([]);
       setLoading(false);
     }
   };
@@ -70,19 +138,16 @@ const Leaderboard = () => {
   if (loading) {
     return (
       <>
-        <Header />
         <div className="leaderboard-loading">
           <div className="spinner"></div>
           <p>Loading leaderboard...</p>
         </div>
-        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <Header />
       <div className="leaderboard-page">
       {/* Header */}
       <div className="leaderboard-header">
@@ -96,17 +161,25 @@ const Leaderboard = () => {
             </p>
           </div>
 
-          {/* User Position Card */}
-          {userPosition && (
+          {/* User Position Card - Show current user's ranking from leaderboard */}
+          {userPosition && userPosition.rank && (
             <div className="user-position-card">
-              <div className="position-label">Your Ranking</div>
+              <div className="position-label">
+                <i className="fas fa-user-circle me-2"></i>Your Ranking
+              </div>
               <div className="position-stats">
                 <div className="position-rank" style={{ color: getRankColor(userPosition.rank) }}>
-                  #{userPosition.rank || 'N/A'}
+                  {getRankMedal(userPosition.rank)} #{userPosition.rank}
                 </div>
                 <div className="position-details">
-                  <span><i className="fas fa-trophy"></i> {userPosition.total_points} pts</span>
-                  <span><i className="fas fa-check-circle"></i> {userPosition.challenges_solved} solved</span>
+                  <span>
+                    <i className="fas fa-star me-1"></i>
+                    <strong>{userPosition.total_points || 0}</strong> pts
+                  </span>
+                  <span>
+                    <i className="fas fa-check-circle me-1"></i>
+                    <strong>{userPosition.challenges_solved || 0}</strong> solved
+                  </span>
                 </div>
               </div>
             </div>
@@ -132,83 +205,6 @@ const Leaderboard = () => {
 
       {/* Leaderboard Content */}
       <div className="leaderboard-content">
-        {/* Top 3 Podium */}
-        {leaderboard.length >= 3 && (
-          <div className="podium-section">
-            {/* 2nd Place */}
-            <div className="podium-card second">
-              <div className="podium-rank">🥈</div>
-              <div 
-                className="podium-avatar"
-                onClick={() => navigate(`/profile/${leaderboard[1].user}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                {leaderboard[1].profile_picture ? (
-                  <img src={leaderboard[1].profile_picture} alt={leaderboard[1].username} />
-                ) : (
-                  <div className="avatar-placeholder">
-                    {leaderboard[1].username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <h3 className="podium-username">{leaderboard[1].username}</h3>
-              <p className="podium-college">{leaderboard[1].college_name}</p>
-              <div className="podium-stats">
-                <div className="podium-points">{formatNumber(leaderboard[1].total_points)} pts</div>
-                <div className="podium-solved">{leaderboard[1].challenges_solved} solved</div>
-              </div>
-            </div>
-
-            {/* 1st Place */}
-            <div className="podium-card first">
-              <div className="podium-rank">🥇</div>
-              <div className="podium-crown">👑</div>
-              <div 
-                className="podium-avatar"
-                onClick={() => navigate(`/profile/${leaderboard[0].user}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                {leaderboard[0].profile_picture ? (
-                  <img src={leaderboard[0].profile_picture} alt={leaderboard[0].username} />
-                ) : (
-                  <div className="avatar-placeholder">
-                    {leaderboard[0].username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <h3 className="podium-username">{leaderboard[0].username}</h3>
-              <p className="podium-college">{leaderboard[0].college_name}</p>
-              <div className="podium-stats">
-                <div className="podium-points">{formatNumber(leaderboard[0].total_points)} pts</div>
-                <div className="podium-solved">{leaderboard[0].challenges_solved} solved</div>
-              </div>
-            </div>
-
-            {/* 3rd Place */}
-            <div className="podium-card third">
-              <div className="podium-rank">🥉</div>
-              <div 
-                className="podium-avatar"
-                onClick={() => navigate(`/profile/${leaderboard[2].user}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                {leaderboard[2].profile_picture ? (
-                  <img src={leaderboard[2].profile_picture} alt={leaderboard[2].username} />
-                ) : (
-                  <div className="avatar-placeholder">
-                    {leaderboard[2].username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <h3 className="podium-username">{leaderboard[2].username}</h3>
-              <p className="podium-college">{leaderboard[2].college_name}</p>
-              <div className="podium-stats">
-                <div className="podium-points">{formatNumber(leaderboard[2].total_points)} pts</div>
-                <div className="podium-solved">{leaderboard[2].challenges_solved} solved</div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Ranking Table */}
         <div className="ranking-table-container">
@@ -237,65 +233,77 @@ const Leaderboard = () => {
               <div className="col-difficulty">Difficulty</div>
             </div>
 
-            {leaderboard.slice(3).map((user, index) => {
-              const rank = index + 4;
-              const isCurrentUser = userPosition && user.user === userPosition.user_id;
-              
+            {leaderboard.map((user, index) => {
+              const rank = index + 1;
+              const userId = user.user || user.id; // Handle both user and id fields
+              const isCurrentUser = userPosition && userId === userPosition.user_id;
+
+              // Provide fallback values for all fields
+              const totalPoints = user.total_points || 0;
+              const challengesSolved = user.challenges_solved || 0;
+              const currentStreak = user.current_streak || 0;
+              const easySolved = user.easy_solved || 0;
+              const mediumSolved = user.medium_solved || 0;
+              const hardSolved = user.hard_solved || 0;
+              const userName = user.first_name && user.last_name
+                ? `${user.first_name} ${user.last_name}`
+                : user.username || 'N/A';
+              const collegeName = user.college_name || 'N/A';
+
               return (
-                <div 
-                  key={user.user} 
+                <div
+                  key={userId}
                   className={`table-row ${isCurrentUser ? 'current-user' : ''}`}
-                  onClick={() => navigate(`/profile/${user.user}`)}
                 >
                   <div className="col-rank">
-                    <span 
+                    <span
                       className="rank-number"
                       style={{ color: getRankColor(rank) }}
                     >
                       {getRankMedal(rank) || `#${rank}`}
                     </span>
                   </div>
-                  
+
                   <div className="col-user">
                     <div className="user-info">
                       {user.profile_picture ? (
-                        <img 
-                          src={user.profile_picture} 
-                          alt={user.username}
+                        <img
+                          src={user.profile_picture}
+                          alt={userName}
                           className="user-avatar-small"
                         />
                       ) : (
                         <div className="user-avatar-small placeholder">
-                          {user.username.charAt(0).toUpperCase()}
+                          {userName.charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="user-details">
-                        <div className="user-name">{user.username}</div>
-                        <div className="user-college">{user.college_name}</div>
+                        <div className="user-name">{userName}</div>
+                        <div className="user-college">{collegeName}</div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="col-points">
-                    <span className="points-value">{formatNumber(user.total_points)}</span>
+                    <span className="points-value">{formatNumber(totalPoints)}</span>
                   </div>
-                  
+
                   <div className="col-solved">
-                    <span className="solved-value">{user.challenges_solved}</span>
+                    <span className="solved-value">{challengesSolved}</span>
                   </div>
-                  
+
                   <div className="col-streak">
                     <span className="streak-value">
-                      {user.current_streak > 0 && <i className="fas fa-fire"></i>}
-                      {user.current_streak}
+                      {currentStreak > 0 && <i className="fas fa-fire"></i>}
+                      {currentStreak}
                     </span>
                   </div>
-                  
+
                   <div className="col-difficulty">
                     <div className="difficulty-chips">
-                      <span className="chip easy">{user.easy_solved}E</span>
-                      <span className="chip medium">{user.medium_solved}M</span>
-                      <span className="chip hard">{user.hard_solved}H</span>
+                      <span className="chip easy">{easySolved}E</span>
+                      <span className="chip medium">{mediumSolved}M</span>
+                      <span className="chip hard">{hardSolved}H</span>
                     </div>
                   </div>
                 </div>
@@ -312,7 +320,6 @@ const Leaderboard = () => {
         )}
       </div>
     </div>
-    <Footer />
     </>
   );
 };

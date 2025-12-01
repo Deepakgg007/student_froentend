@@ -18,7 +18,7 @@ import 'ace-builds/src-noconflict/theme-tomorrow_night';
 import 'ace-builds/src-noconflict/ext-language_tools';
 import '../challenge/solve-challenge.css';
 import api from '../../services/api';
-import { getCompanyBySlug, getConceptById } from '../../services/api';
+import { getCompanyBySlug, getConceptById, getConceptChallenges, getConceptChallengesList } from '../../services/api';
 
 // Configure Ace Editor
 ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');
@@ -33,6 +33,7 @@ const SolveCompanyChallenge = () => {
   const [company, setCompany] = useState(null);
   const [concept, setConcept] = useState(null);
   const [challenge, setChallenge] = useState(null);
+  const [conceptChallenge, setConceptChallenge] = useState(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
   const [theme, setTheme] = useState('monokai');
@@ -47,6 +48,7 @@ const SolveCompanyChallenge = () => {
   const [customInput, setCustomInput] = useState('');
   const [selectedTestCase, setSelectedTestCase] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [showHintVideo, setShowHintVideo] = useState(false);
 
   const languageModes = {
     python: 'python',
@@ -79,6 +81,22 @@ const SolveCompanyChallenge = () => {
       const challengeResponse = await api.get(`/challenges/${challengeSlug}/`);
       const challengeData = challengeResponse.data.data || challengeResponse.data;
       setChallenge(challengeData);
+
+      // Fetch concept challenge data to get hint video info
+      try {
+        const conceptChallengesResponse = await getConceptChallenges(conceptSlug);
+        const conceptChallenges = Array.isArray(conceptChallengesResponse.data)
+          ? conceptChallengesResponse.data
+          : conceptChallengesResponse.data?.results || [];
+
+        // Find the matching concept challenge for this challenge slug
+        const matching = conceptChallenges.find(cc => cc.challenge_details?.slug === challengeSlug);
+        if (matching) {
+          setConceptChallenge(matching);
+        }
+      } catch (error) {
+        console.error('Error fetching concept challenge:', error);
+      }
 
       const codes = {};
       challengeData.starter_codes?.forEach((sc) => {
@@ -327,11 +345,26 @@ const SolveCompanyChallenge = () => {
         {/* Problem Panel */}
         <div className="problem-panel">
           <div className="problem-content-area">
-            {/* Problem Statement */}
-            <div className="problem-section">
-              <h3>Problem Statement</h3>
-              <div className="problem-content">{challenge.description}</div>
-            </div>
+            {/* Hint Video Button - Show only if hint video exists */}
+            {conceptChallenge?.has_hint_video && (
+              <div className="hint-video-section mb-3">
+                <button
+                  className={`btn ${showHintVideo ? 'btn-warning' : 'btn-info'} w-100`}
+                  onClick={() => setShowHintVideo(!showHintVideo)}
+                >
+                  <i className={`fas fa-${showHintVideo ? 'book' : 'video'} me-2`}></i>
+                  {showHintVideo ? 'Back to Problem' : 'Watch Hint Video'}
+                </button>
+              </div>
+            )}
+
+            {/* Problem Statement - Show when hint video is not displayed */}
+            {!showHintVideo ? (
+              <>
+                <div className="problem-section">
+                  <h3>Problem Statement</h3>
+                  <div className="problem-content">{challenge.description}</div>
+                </div>
 
             {/* Input/Output Format */}
             <div className="row">
@@ -378,6 +411,56 @@ const SolveCompanyChallenge = () => {
               <div className="problem-section">
                 <h3>Explanation</h3>
                 <div className="problem-content">{challenge.explanation}</div>
+              </div>
+            )}
+              </>
+            ) : (
+              /* Hint Video Display */
+              <div className="hint-video-display">
+                <div className="problem-section">
+                  <div className="hint-video-header mb-3">
+                    <h3>
+                      <i className="fas fa-lightbulb me-2 text-warning"></i>
+                      {conceptChallenge?.hint_video_title || 'Hint Video'}
+                    </h3>
+                    {conceptChallenge?.hint_video_description && (
+                      <p className="text-muted mb-0">{conceptChallenge.hint_video_description}</p>
+                    )}
+                  </div>
+
+                  {/* YouTube Video */}
+                  {conceptChallenge?.youtube_embed_id && (
+                    <div className="ratio ratio-16x9 mb-3">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${conceptChallenge.youtube_embed_id}`}
+                        title={conceptChallenge.hint_video_title || 'Hint Video'}
+                        allowFullScreen
+                        className="rounded"
+                      ></iframe>
+                    </div>
+                  )}
+
+                  {/* Uploaded Video File */}
+                  {conceptChallenge?.hint_video_file && !conceptChallenge?.youtube_embed_id && (
+                    <div className="video-container mb-3">
+                      <video
+                        width="100%"
+                        height="auto"
+                        controls
+                        className="rounded"
+                        style={{ maxHeight: '500px', objectFit: 'contain' }}
+                      >
+                        <source src={conceptChallenge.hint_video_file} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  )}
+
+                  <div className="alert alert-info mt-3">
+                    <i className="fas fa-info-circle me-2"></i>
+                    <strong>Tip:</strong> Watch the hint video above to understand the problem better. Click "Back to Problem" to return to the problem statement.
+                  </div>
+                </div>
               </div>
             )}
           </div>

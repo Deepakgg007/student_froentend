@@ -318,7 +318,7 @@
                         a {
                             @extend %p-0;
                             @extend %title-color;
-                            font-weight: 700;
+                            font-weight: 500;
                             &::before {
                                 @extend %d-none;
                             }

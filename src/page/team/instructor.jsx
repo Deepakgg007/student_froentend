@@ -1,7 +1,5 @@
 import { Fragment } from "react";
 import { Link } from "react-router-dom";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
 import Achievement from "../../component/section/achievement";
 const subTitle = "Teach on edulon";
 const title = "Discover Your Potential. Make A Global Impact.";
@@ -33,7 +31,6 @@ let categoryItemList = [
 const InstructorPage = () => {
     return (
         <Fragment>
-            <Header />
             <div className="category-section padding-tb section-bg style-3">
                 <div className="container">
                     <div className="section-header text-center">
@@ -65,7 +62,6 @@ const InstructorPage = () => {
                 </div>
             </div>
             <Achievement />
-            <Footer />
         </Fragment>
     );
 }

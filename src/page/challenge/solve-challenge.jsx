@@ -16,6 +16,7 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 import './solve-challenge.css';
 import api from '../../services/api';
 
+
 // Configure Ace Editor
 ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');
 ace.config.set('modePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');

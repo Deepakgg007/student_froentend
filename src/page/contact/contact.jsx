@@ -1,6 +1,4 @@
 import { Component, Fragment } from "react";
-import Footer from "../../component/layout/footer";
-import Header from "../../component/layout/header";
 import GoogleMap from "../../component/sidebar/googlemap";
 
 const subTitle = "Get in touch with us";
@@ -38,7 +36,6 @@ const contactList = [
 const ContactPage = () => {
     return ( 
         <Fragment>
-            <Header />
             <div className="map-address-section padding-tb section-bg">
                 <div className="container">
                     <div className="section-header text-center">
@@ -69,7 +66,6 @@ const ContactPage = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </Fragment>
     );
 }
