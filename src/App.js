@@ -60,6 +60,9 @@ import SearchPage from "./page/general/search-page";
 import SearchNone from "./page/general/search-none";
 import ErrorPage from "./page/general/404";
 
+//AppSection
+import AppSection from "./component/section/appsection";
+
 
 
 function App() {
@@ -85,6 +88,7 @@ function App() {
 							<Route path="search-page" element={<SearchPage />} />
 							<Route path="search-none" element={<SearchNone />} />
 							<Route path="contact" element={<ContactPage />} />
+							<Route path="appsection" element={<AppSection/>} />
 
 							{/* Auth Routes */}
 							<Route path="login" element={<LoginPage />} />

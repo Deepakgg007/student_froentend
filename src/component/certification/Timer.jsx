@@ -123,7 +123,7 @@ const Timer = ({ initialMinutes, onTimeExpired, isActive = true }) => {
           fontSize: '16px',
           fontWeight: 'bold',
           color: getTimerColor(),
-          fontFamily: 'monospace',
+          fontFamily: 'Satoshi, Verdana, sans-serif',
           minWidth: '50px',
           textAlign: 'center'
         }}

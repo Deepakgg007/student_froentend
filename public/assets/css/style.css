@@ -219,7 +219,7 @@ footer.style-2 .footer-bottom .section-wrapper .footer-bottom-list a:hover, foot
 }
 
 .news-letter .section-wrapper .news-form form .nf-list::after, .form-message.success, .skill-section .section-header .lab-btn span {
-  color: #26c976;
+  color: #2ecc71;
 }
 
 .widget.widget-tags ul.widget-wrapper li a.active, .widget.widget-tags ul.widget-wrapper li a:hover, .blog-single .section-wrapper .post-item .post-inner .post-content .tags-section .tags li a:hover, .blog-single .section-wrapper .post-item .post-inner .post-content .tags-section .tags li a .active, .blog-single .section-wrapper .post-item .post-inner .post-content blockquote, .course-side-cetagory .csc-title, .course-side-detail .csd-title, .shop-cart .section-wrapper .cart-bottom .shiping-box .calculate-shiping button, .shop-cart .section-wrapper .cart-bottom .shiping-box .calculate-shiping .outline-select .select-icon, .shop-cart .section-wrapper .cart-bottom .cart-checkout-box .coupon input[type=submit], .shop-cart .section-wrapper .cart-top table thead tr, .shop-single .review .review-content .review-showing .client-review .review-form form button, .shop-single .review .review-content .review-showing .client-review .review-form .review-title h5::before, .shop-single .review .review-nav li.active, .shop-single .product-details .post-content form .lab-btn, .shop-page .shop-product-wrap .product-item .product-thumb .product-action-link a, .shop-page .shop-product-wrap .product-list-item .product-thumb .product-action-link a, .group-select-section, .clients-section.style-2 .section-wrapper .clients .client-list .client-thumb::after, .clients-section.style-2 .section-wrapper .clients .client-list .client-thumb::before, .feature-section.style-3 .section-wrapper .feature-register form .lab-btn:hover, .newsletters-section .newsletter-area .news-mass::after, .newsletters-section .newsletter-area .news-mass::before, .newsletters-section .newsletter-area .news-mass, .workshop-join .section-wrapper .workshop-title h5, .about-section.style-3 .about-left .about-left-content, .pageheader-section.style-2 .pageheader-content .course-category .course-offer, .banner-section .cbs-content-list ul li.ccl-shape a::after, .banner-section .cbs-content-list ul li.ccl-shape a, .menu-search-form form button, .header-bar span, .header-wrapper .menu-area .signup, .header-section.style-3 .header-top, .feature-item .feature-inner .feature-content .lab-btn-text span::after, .feature-item .feature-inner .feature-content .lab-btn-text span::before, .feature-item .feature-inner .feature-content .lab-btn-text span, .count-item .count-inner .count-icon i, .post-item.style-3 .post-inner .post-content .lab-btn:hover, .post-item .post-inner .post-footer .pf-right .comment-count, .course-item.style-3 .course-inner .course-content .lab-btn:hover, .course-item.style-3 .course-inner .course-thumb .course-info li span.price, .course-item .course-inner .course-price, .course-item .course-inner .course-content .course-category .course-cate a, .scrollToTop i, .cart-plus-minus .qtybutton:hover, .social-icons li a, .or, .clients-slider-nav:hover, .course-navi {
@@ -227,7 +227,7 @@ footer.style-2 .footer-bottom .section-wrapper .footer-bottom-list a:hover, foot
 }
 
 .news-letter .section-wrapper .news-form form .nf-list input[type=submit], .footer-top .footer-item .footer-inner .footer-content .title h4::after, .course-side-detail .csd-content .course-enroll .lab-btn, .skill-section::before, .achieve-part .col:last-child .achieve-item .achieve-inner .achieve-content .lab-btn, .achievement-section.style-3 .counter-part .col:nth-child(2) .count-item .count-inner .count-icon i, .instructor-section.style-2 .section-wrapper .count-item:nth-child(3n+2) .count-inner .count-icon i, .about-section.style-4 .about-item .counter-part .count-item:nth-child(3n+2) .count-inner .count-icon i, .course-video .course-video-content .accordion-item .accordion-header button, .pageheader-section.style-2 .pageheader-content .course-category .course-cate, .banner-section .cbs-content-list ul li.shape-1 a::after, .post-item.qute-post .post-inner .post-thumb, .course-navi:hover, .course-navi.active {
-  background: #26c976;
+  background: #2ecc71;
 }
 
 .widget.widget-search .search-wrapper button, .widget.widget-search .search-wrapper input, .comment-respond .add-comment .comment-form input, .comment-respond .add-comment .comment-form textarea, .newsletters-section .newsletter-area::after {
@@ -433,7 +433,7 @@ footer.style-2 .footer-top .footer-item.twitter-post .footer-inner .footer-conte
 }
 
 .choose-section .section-header ul li i, .register-section .section-header .subtitle, .feature-section.style-3 .section-wrapper .feature-item .feature-inner .feature-content .lab-btn-text:hover, .feature-section.style-2 .section-wrapper .feature-item .feature-inner .feature-icon, .feature-section.style-2 .section-wrapper .feature-item .feature-inner:hover .feature-content h5, .instructor-section.style-3 .section-wrapper .instructor-bottom .instructor-item:hover .instructor-inner .instructor-content h5, .offer-section .section-wrapper .date li .count-title, .offer-section .section-wrapper .title span, .contact-info-section .section-wrapper .cinfo-item .cinfo-inner .cinfo-content h6, .contact-info-section .section-header .title span, .video-section .section-wrapper .video-thumb a i, .category-section.style-4 .section-wrapper .category-item .category-inner:hover .category-content h6, .category-section.style-4 .section-header .subtitle, .banner-section.style-6 .section-wrapper .banner-content .subtitle, .banner-section.style-4 .banner-content ul li i, .banner-section.style-4 .banner-content h2 span, .header-section.style-7 .header-bottom .header-wrapper .menu-area .login, .header-section.style-5 .header-bottom .menu > ul > li.active > a, .instructor-item.style-2 .instructor-inner .instructor-content .ins-info li i, .instructor-item.style-2:hover .instructor-inner .instructor-content h4, .course-item.style-5 .course-inner .course-content .course-footer .ratting, .course-item.style-5 .course-inner:hover .course-content h5, .course-item.style-4 .course-inner .course-content .course-footer .ca-name:hover, .course-item.style-4 .course-inner .course-content .course-footer .course-price, .course-item.style-4 .course-inner:hover .course-content h5, .yellow-color-section .post-item.style-3 .post-inner .post-content .meta-post ul li i, .yellow-color-section .post-item.style-3 .post-inner:hover .post-content h4, .yellow-color-section.style-2 .footer-bottom .section-wrapper .footer-bottom-list a:hover, .yellow-color-section.style-2 .footer-bottom .section-wrapper p a:hover, .yellow-color-section.style-2 .footer-top .footer-item.twitter-post .footer-inner .footer-content .content ul li a, .yellow-color-section.style-2 .footer-top .footer-item.our-address .footer-inner .footer-content .content .office-address li i, .yellow-color-section .section-wrapper .course-item.style-3 .course-inner .course-content .course-details .couse-count i, .yellow-color-section .section-wrapper .course-item.style-3 .course-inner .course-content .course-details .couse-topic i, .yellow-color-section .section-wrapper .course-item.style-3 .course-inner .course-thumb ul li .ratting, .yellow-color-section .section-wrapper .course-item.style-3 .course-inner:hover .course-content h4, .lab-btn-text.yellow-color:hover, .lab-btn-text.yellow-color i, .yellow-color, .section-header .subtitle.yellow-color {
-  color: #ffdf40;
+  color: #1d61bf;
 }
 
 .social-icons li a.facebook {
@@ -465,7 +465,7 @@ footer.style-2 .footer-top .footer-item.twitter-post .footer-inner .footer-conte
 }
 
 .course-side-detail .csd-content .sidebar-social .ss-content ul li a.rss, .app-section .section-header .lab-btn:hover, .register-section .section-wrapper .register-form .lab-btn, .clients-section.style-3 .section-wrapper .clients-slider-nav:hover, .clients-section.style-3 .section-wrapper .client-item .client-inner .client-thumb .quote, .feature-section.style-3 .section-wrapper .feature-register, .feature-section.style-3 .section-wrapper .feature-item .feature-inner .feature-content .lab-btn-text span::after, .feature-section.style-3 .section-wrapper .feature-item .feature-inner .feature-content .lab-btn-text span::before, .feature-section.style-3 .section-wrapper .feature-item .feature-inner .feature-content .lab-btn-text span, .feature-section.style-2 .section-wrapper .feature-item .feature-inner:hover .feature-icon, .newsletters-section.style-2 .newsletter-area .section-wrapper .newsletter-form button, .event-section.style-2 .section-wrapper .event-navi-item:hover, .event-section.style-2 .section-wrapper .event-navi-item.active, .instructor-section.style-3 .section-wrapper .instructor-bottom .instructor-slider .instructor-navi.active, .instructor-section.style-3 .section-wrapper .instructor-bottom .instructor-slider .instructor-navi:hover, .instructor-section.style-2 .section-wrapper .count-item:nth-child(3n+3) .count-inner .count-icon i, .instructor-section.style-2::after, .offer-section .section-wrapper .lab-btn, .contact-info-section .section-wrapper .cinfo-or, .about-section.style-4 .about-item .counter-part .count-item:nth-child(3n+3) .count-inner .count-icon i, .course-section.style-4, .course-section.style-3 .section-header .course-filter-group ul li.active, .course-section.style-3 .section-header .course-filter-group ul li:hover, .category-section.style-4 .section-wrapper .lab-btn:hover, .category-section.style-4 .section-wrapper .category-item .category-inner .category-content .cate-icon, .banner-section.style-7 .section-wrapper .banner-top .banner-content .lab-btn:hover, .header-section.style-7 .header-bottom .header-wrapper .menu-area .signup, .header-section.style-5 .header-bottom .lab-btn, .header-section.style-5 .header-bottom .menu > ul > li ul li a:hover, .header-section.style-5 .header-bottom .menu > ul > li ul li a.active, .header-section.style-4 .lab-btn, .header-section.style-4 .menu > ul li ul li a:hover, .header-section.style-4 .menu > ul li ul li a.active, .event-item.style-2 .event-inner .event-content .lab-btn, .event-item.style-2 .event-inner .event-content h5, .scrollToTop.yellow-color i, .yellow-color-section .post-item.style-3 .post-inner .post-content .lab-btn:hover, .yellow-color-section .section-wrapper .course-item.style-3 .course-inner .course-content .lab-btn, .yellow-color-section .section-wrapper .course-item.style-3 .course-inner .course-thumb ul li .price, .yellow-color-section .section-header .course-navi {
-  background: #ffdf40;
+  background: #1d61bf;
 }
 
 .social-icons li a.pinterest {
@@ -1184,7 +1184,7 @@ button {
 }
 .yellow-color-section .post-item.style-3 .post-inner .post-content .lab-btn {
   background: transparent;
-  border: 2px solid #ffdf40;
+  border: 2px solid #1d61bf;
 }
 .yellow-color-section .post-item.style-3 .post-inner .post-content .lab-btn:hover {
   box-shadow: 0 5px 10px rgba(255, 223, 64, 0.5);
@@ -2250,14 +2250,14 @@ button {
 }
 @media (max-width: 991px) {
   .header-section.style-4 .menu > ul {
-    background: #ffdf40;
+    background: #1d61bf;
   }
   .header-section.style-4 .menu > ul li a {
     color: #101115;
     border-top: 1px solid rgba(16, 17, 21, 0.1);
   }
   .header-section.style-4 .menu > ul li a:hover {
-    background: #ffdf40;
+    background: #1d61bf;
   }
 }
 .header-section.style-4 .lab-btn:hover {
@@ -2268,7 +2268,7 @@ button {
 }
 @media (min-width: 992px) {
   .header-section.style-5 .header-bottom .menu > ul > li > a::after {
-    background: #ffdf40;
+    background: #1d61bf;
   }
 }
 .header-section.style-5 .header-bottom .lab-btn:hover {
@@ -2303,7 +2303,7 @@ button {
 }
 @media (min-width: 992px) {
   .header-section.style-7 .header-top-area .social-icons li a {
-    color: #ffdf40;
+    color: #1d61bf;
   }
 }
 @media (min-width: 992px) {
@@ -2315,7 +2315,7 @@ button {
     color: #101115;
   }
   .header-section.style-7 .menu > ul li ul li a:hover, .header-section.style-7 .menu > ul li ul li a.active {
-    background: #ffdf40;
+    background: #1d61bf;
     color: #101115;
   }
   .header-section.style-7 .menu > ul li ul li a.active::after, .header-section.style-7 .menu > ul li ul li a.active::before {
@@ -2324,7 +2324,7 @@ button {
 }
 @media (max-width: 991px) {
   .header-section.style-7 .menu > ul {
-    background: #ffdf40;
+    background: #1d61bf;
   }
   .header-section.style-7 .menu > ul li a {
     color: #101115;
@@ -3319,7 +3319,7 @@ button {
   padding: 14px 30px;
 }
 .banner-section.style-7 .section-wrapper .banner-top .banner-content .lab-btn:hover {
-  border-color: #ffdf40;
+  border-color: #1d61bf;
   box-shadow: 0 5px 10px rgba(255, 223, 64, 0.5);
 }
 .banner-section.style-7 .section-wrapper .banner-bottom {
@@ -3497,7 +3497,7 @@ button {
 }
 .category-section.style-4 .section-wrapper .lab-btn {
   background: transparent;
-  border: 2px solid #ffdf40;
+  border: 2px solid #1d61bf;
 }
 .category-section.style-4 .section-wrapper .lab-btn:hover {
   box-shadow: 0 5px 10px rgba(255, 223, 64, 0.5);
@@ -3890,7 +3890,7 @@ button {
 .contact-info-section .section-wrapper .cinfo-item .cinfo-inner .cinfo-thumb {
   width: 120px;
   height: 120px;
-  border: 2px solid #ffdf40;
+  border: 2px solid #1d61bf;
   line-height: 116px;
   margin: 0 auto 30px;
   z-index: 1;
@@ -4476,7 +4476,7 @@ button {
   width: 80px;
   height: 80px;
   line-height: 80px;
-  border: 1px solid #ffdf40;
+  border: 1px solid #1d61bf;
   font-size: 1.875rem;
   -webkit-border-radius: 100%;
   -moz-border-radius: 100%;
@@ -4678,7 +4678,7 @@ button {
   bottom: 50%;
   right: 50%;
   z-index: 3;
-  border: 2px solid #ffdf40;
+  border: 2px solid #1d61bf;
   font-weight: 700;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
@@ -4828,7 +4828,7 @@ button {
 }
 .app-section .section-header .lab-btn {
   background: transparent;
-  border: 2px solid #ffdf40;
+  border: 2px solid #1d61bf;
 }
 .app-section .section-header .lab-btn:hover {
   box-shadow: 0 5px 10px rgba(255, 223, 64, 0.5);

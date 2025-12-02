@@ -467,7 +467,6 @@ const CourseView = () => {
 
     return (
         <Fragment>
-            {/* Header */}
             <div className="course-header bg-white border-bottom shadow-sm" style={{ padding: '20px 0', paddingTop: '20px' }}>
                 <div className="container-fluid" style={{ maxWidth: '1600px' }}>
                     <div className="row align-items-center">

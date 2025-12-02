@@ -520,7 +520,7 @@ const SignupPage = () => {
           outline: none;
           background: white;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: 'Satoshi', Verdana, sans-serif;
           box-sizing: border-box; /* Important for width calculation */
           max-width: 100%; /* Prevent overflow */
         }

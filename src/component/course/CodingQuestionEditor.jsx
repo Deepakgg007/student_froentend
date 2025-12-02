@@ -479,7 +479,7 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
                         </div>
                         <pre className="mb-0 text-white" style={{
                             fontSize: '13px',
-                            fontFamily: 'monospace',
+                            fontFamily: 'Satoshi, Verdana, sans-serif',
                             whiteSpace: 'pre-wrap',
                             wordWrap: 'break-word'
                         }}>

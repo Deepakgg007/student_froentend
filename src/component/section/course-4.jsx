@@ -234,10 +234,18 @@ const CourseFour = () => {
 
           {/* Get Started Button */}
           <div className="text-center mt-5">
-            <Link to="/course" className="lab-btn">
-              <span>{btnText}</span>
-            </Link>
-          </div> 
+  <Link
+    to="/course"
+    className="lab-btn"
+    style={{
+      background: "#1d61bf",
+      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.25)",
+      borderRadius: "8px"
+    }}
+  >
+    <span>{btnText}</span>
+  </Link>
+</div>
         </div>
       </div>
     </div>
