@@ -162,7 +162,7 @@ const Leaderboard = () => {
           </div>
 
           {/* User Position Card - Show current user's ranking from leaderboard */}
-          {userPosition && userPosition.rank && (
+          {/* {userPosition && userPosition.rank && (
             <div className="user-position-card">
               <div className="position-label">
                 <i className="fas fa-user-circle me-2"></i>Your Ranking
@@ -183,7 +183,7 @@ const Leaderboard = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

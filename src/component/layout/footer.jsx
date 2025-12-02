@@ -2,116 +2,108 @@ import { Link, useLocation } from "react-router-dom";
 
 const Footer = () => {
     const location = useLocation();
+    const isAuthPage =
+        location.pathname === "/login" ||
+        location.pathname === "/signup" ||
+        location.pathname === "/forgetpass";
 
-    // Check if current page is login or signup
-    const isAuthPage = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/forgetpass";
+    const linkStyle = { color: "#fff" }; // <-- Uniform white color for all links
+
     return (
         <div className="news-footer-wrap">
-            <div className="fs-shape">
-                <img src="/assets/images/shape-img/03.png" alt="fst" className="fst-1" />
-                <img src="/assets/images/shape-img/04.png" alt="fst" className="fst-2" />
-            </div>
 
-            {/* Show this only if NOT on login or signup */}
             {!isAuthPage && (
                 <div className="footer-top padding-tb pt-0">
                     <div className="container">
-                        <div className="row g-4 row-cols-xl-4 row-cols-md-2 row-cols-1 justify-content-center">
-                            <div className="col ">
+                        <div className="row g-4 d-flex align-items-start">
+
+                            {/* LEFT SIDE - 40% */}
+                            <div className="col-lg-5 col-md-12">
                                 <div className="footer-item">
                                     <div className="footer-inner">
                                         <div className="footer-content">
-                                            <div className="title"><h4>Quick Links</h4></div>
-                                            <div className="content">
-                                                <ul className="lab-ul">
-                                                    <li style={{ position: "relative", zIndex: 2 }}><Link to="/course">Courses</Link></li>
-                                                    <li><Link to="/challenges">Challenges</Link></li>
-                                                    <li><Link to="/jobs">Jobs</Link></li>
-                                                    <li><Link to="/leaderboard">Leaderboard</Link></li>
-                                                    <li><Link to="/companies">Companies</Link></li>
-                                                </ul>
+
+                                            {/* Add your LOGO */}
+                                            <div className="mb-3">
+                                                <img
+                                                    src="/assets/images/z1logo.png"
+                                                    alt="Z1 Logo"
+                                                    style={{ width: "160px" }}
+                                                />
                                             </div>
+
+                                            {/* Short about text */}
+                                            <p style={{ color: "#fff", fontSize: "15px", lineHeight: "1.6" }}>
+                                                Z1   Empowers students and developers with structured learning,
+                                                real-world challenges, jobs, and achievements — all in one
+                                                platform.
+                                            </p>
+
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="col">
-                                <div className="footer-item">
-                                    <div className="footer-inner">
-                                        <div className="footer-content">
-                                            <div className="title"><h4>Student Resources</h4></div>
-                                            <div className="content">
-                                                <ul className="lab-ul">
-                                                    <li><Link to="/profile/learning">My Learning</Link></li>
-                                                    <li><Link to="/profile">My Profile</Link></li>
-                                                    <li><Link to="/profile/certificates">Certificates</Link></li>
-                                                    <li><Link to="/profile/achievements">Achievements</Link></li>
-                                                    <li><Link to="/profile/saved">Saved Courses</Link></li>
-                                                </ul>
+                            {/* RIGHT SIDE - 60% */}
+                            <div className="col-lg-7 col-md-12">
+                                <div className="row g-4">
+
+                                    {/* Quick Links */}
+                                    <div className="col-sm-6">
+                                        <div className="footer-item">
+                                            <div className="footer-inner">
+                                                <div className="footer-content">
+                                                    <div className="title"><h4 style={{ color: "#fff" }}>Quick Links</h4></div>
+                                                    <ul className="lab-ul">
+                                                        <li><Link to="/course" style={linkStyle}>Courses</Link></li>
+                                                        <li><Link to="/challenges" style={linkStyle}>Challenges</Link></li>
+                                                        <li><Link to="/jobs" style={linkStyle}>Jobs</Link></li>
+                                                        <li><Link to="/leaderboard" style={linkStyle}>Leaderboard</Link></li>
+                                                        <li><Link to="/companies" style={linkStyle}>Companies</Link></li>
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Student Resources */}
+                                    <div className="col-sm-6">
+                                        <div className="footer-item">
+                                            <div className="footer-inner">
+                                                <div className="footer-content">
+                                                    <div className="title"><h4 style={{ color: "#fff" }}>Student Resources</h4></div>
+                                                    <ul className="lab-ul">
+                                                        <li><Link to="/profile/learning" style={linkStyle}>My Learning</Link></li>
+                                                        <li><Link to="/profile" style={linkStyle}>My Profile</Link></li>
+                                                        <li><Link to="/profile/certificates" style={linkStyle}>Certificates</Link></li>
+                                                        <li><Link to="/profile/achievements" style={linkStyle}>Achievements</Link></li>
+                                                        <li><Link to="/profile/saved" style={linkStyle}>Saved Courses</Link></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
-                            <div className="col">
-                                <div className="footer-item">
-                                    <div className="footer-inner">
-                                        <div className="footer-content">
-                                            <div className="title"><h4>Community</h4></div>
-                                            <div className="content">
-                                                <ul className="lab-ul">
-                                                    <li><a href="https://facebook.com/edukon" target="_blank" rel="noreferrer">Facebook</a></li>
-                                                    <li><a href="https://twitter.com/edukon" target="_blank" rel="noreferrer">Twitter</a></li>
-                                                    <li><a href="https://discord.gg/edukon" target="_blank" rel="noreferrer">Discord</a></li>
-                                                    <li><a href="https://youtube.com/edukon" target="_blank" rel="noreferrer">YouTube</a></li>
-                                                    <li><a href="https://github.com/edukon" target="_blank" rel="noreferrer">Github</a></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col">
-                                <div className="footer-item">
-                                    <div className="footer-inner">
-                                        <div className="footer-content">
-                                            <div className="title"><h4>Learning Support</h4></div>
-                                            <div className="content">
-                                                <ul className="lab-ul">
-                                                    <li><Link to="/support/student">Student Support</Link></li>
-                                                    <li><Link to="/learning-paths">Learning Paths</Link></li>
-                                                    <li><Link to="/resources">Resources</Link></li>
-                                                    <li><Link to="/faq">FAQ</Link></li>
-                                                    <li><Link to="/support">Get Help</Link></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Always show this section */}
-            <div className="footer-bottom style-2 pt-2">
-                <div className="container">
-                    <div className="section-wrapper pt-1">
-                        <p>
-                            &copy; 2025 <Link to="/">Z1</Link> Designed by{" "}
-                            <a href="#" target="_blank" rel="noreferrer">
-                                Haegl
-                            </a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
+            {/* Always show bottom bar */} 
+            <div className="footer-bottom style-2 pt-2"> 
+                <div className="container"> 
+                    <div className="section-wrapper pt-1"> 
+                        <p> &copy; 2025 <Link to="/">Z1</Link> Designed by{" "} 
+                            <a href="#" target="_blank" rel="noreferrer">Haegl</a> 
+                        </p> 
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+    ); 
+}; 
 
 export default Footer;

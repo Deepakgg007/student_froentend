@@ -178,9 +178,9 @@ const UnifiedHeader = () => {
         <>
             <style>{`
                 .active-link {
-                    color: #ff6600 !important;
+                    color: #1d61bf !important;
                     font-weight: 600;
-                    border-bottom: 2px solid #ff6600;
+                    border-bottom: 2px solid #1d61bf;
                     transition: all 0.3s ease;
                 }
                 .menu a {
@@ -189,12 +189,12 @@ const UnifiedHeader = () => {
                     transition: color 0.3s ease;
                 }
                 .menu a:hover {
-                    color: #ff6600;
+                    color: #1d61bf;
                 }
                 .menu-item-has-children.active-parent > a {
-                    color: #ff6600 !important;
+                    color: #1d61bf !important;
                     font-weight: 600;
-                    border-bottom: 2px solid #ff6600;
+                    border-bottom: 2px solid #1d61bf;
                 }
 
                 /* Logo Styling */
@@ -213,17 +213,17 @@ const UnifiedHeader = () => {
                     font-weight: 600;
                     text-decoration: none;
                     transition: all 0.3s ease;
-                    border: 2px solid #ff6600;
+                    border: 2px solid #1d61bf;
                     border-radius: 8px;
                     background: transparent;
-                    color: #ff6600;
+                    color: #1d61bf;
                     cursor: pointer;
                     white-space: nowrap;
                     font-size: 14px;
                 }
 
                 .login-btn:hover, .logout-btn:hover {
-                    background: #ff6600;
+                    background: #1d61bf;
                     color: white;
                     transform: translateX(5px);
                 }
@@ -249,7 +249,7 @@ const UnifiedHeader = () => {
                         transition: transform 0.3s ease;
                     }
                     .menu-item-has-children.open > a::after {
-                        color: #ff6600;
+                        color: #1d61bf;
                     }
 
                     .mobile-auth-btn {
@@ -483,7 +483,7 @@ const UnifiedHeader = () => {
                                                     onClick={closeMenu}
                                                     className="login-btn"
                                                 >
-                                                    <i className="icofont-arrow-right"></i> Login
+                                                    <i className="icofont-arrow-right" style={{ color: "#007bff" }}></i> Login
                                                 </NavLink>
                                             )}
                                         </li>
@@ -498,11 +498,11 @@ const UnifiedHeader = () => {
                                             onClick={handleLogout}
                                             className="logout-btn"
                                         >
-                                            <i className="icofont-logout"></i> Logout
+                                            <i className="icofont-logout" style={{ color: "#007bff" }}></i> Logout
                                         </button>
                                     ) : (
                                         <Link to="/login" className="login-btn">
-                                            <i className="icofont-arrow-right"></i> Login
+                                            <i className="icofont-arrow-right" style={{ color: "#007bff" }}></i> Login
                                         </Link>
                                     )}
                                 </div>
