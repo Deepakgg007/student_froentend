@@ -43,7 +43,6 @@ const CertificationExam = ({
           attemptResponse = await startCertificationAttempt(certificationId);
         }
 
-        console.log('Attempt response received:', attemptResponse);
 
         // Parse attempt response - handle multiple response formats
         let attemptInfo = attemptResponse.data.data || attemptResponse.data;
@@ -60,7 +59,6 @@ const CertificationExam = ({
           attemptInfo.id = attemptInfo.attempt_id;
         }
 
-        console.log('Attempt info to be set:', attemptInfo);
         setAttempt(attemptInfo);
 
         // Fetch questions
@@ -135,13 +133,11 @@ const CertificationExam = ({
           selected_options: [selectedOptionId]
         }));
 
-      console.log('Submitting exam with attempt ID:', attempt.id, 'Answers:', answersArray);
 
       // Submit attempt
       const response = await submitCertificationAttempt(attempt.id, answersArray);
       const result = response.data.data || response.data;
 
-      console.log('Exam submission successful:', result);
 
       // Call completion callback
       if (onComplete) {

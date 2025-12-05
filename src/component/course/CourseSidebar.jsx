@@ -9,7 +9,8 @@ const CourseSidebar = ({
     currentContentId,
     courseId,
     onContentSelect,
-    progress = 0
+    progress = 0,
+    isDarkMode = false
 }) => {
     const [expandedTopics, setExpandedTopics] = useState({});
     const [expandedTasks, setExpandedTasks] = useState({});
@@ -68,9 +69,13 @@ const CourseSidebar = ({
     /* ----------  render  ---------- */
     if (!isOpen) {
         return (
-            <div className="d-none d-lg-block" style={{ width: '300px', background: 'white', borderRight: '1px solid #e5e5e5' }}>
+            <div className="d-none d-lg-block" style={{
+                width: '300px',
+                background: isDarkMode ? '#1e1e1e' : 'white',
+                borderRight: isDarkMode ? '1px solid #333' : '1px solid #e5e5e5'
+            }}>
                 <div className="p-3">
-                    <small className="text-muted">Click menu to open sidebar</small>
+                    <small style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>Click menu to open sidebar</small>
                 </div>
             </div>
         );
@@ -80,12 +85,12 @@ const CourseSidebar = ({
         return (
             <div className="d-flex flex-column" style={{
                 width: '300px',
-                background: 'white',
-                borderRight: '1px solid #e5e5e5',
+                background: isDarkMode ? '#1e1e1e' : 'white',
+                borderRight: isDarkMode ? '1px solid #333' : '1px solid #e5e5e5',
                 overflowY: 'hidden'
             }}>
                 <div className="p-3">
-                    <small className="text-muted">No topics available</small>
+                    <small style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>No topics available</small>
                 </div>
             </div>
         );
@@ -122,8 +127,8 @@ const CourseSidebar = ({
             <div className="sidebar-wrapper d-flex flex-column"
                  style={{
                      width: '320px',
-                     background: 'white',
-                     borderRight: '1px solid #e5e5e5',
+                     background: isDarkMode ? '#1e1e1e' : 'white',
+                     borderRight: isDarkMode ? '1px solid #333' : '1px solid #e5e5e5',
                  }}>
 
                 {/* ----  Scrollable content area  ---- */}
@@ -139,9 +144,10 @@ const CourseSidebar = ({
                                     className="text-uppercase small mb-2 d-flex justify-content-between align-items-center p-2 rounded"
                                     style={{
                                         cursor: 'pointer',
-                                        border: '1px solid #dee2e6',
+                                        border: isDarkMode ? '1px solid #444' : '1px solid #dee2e6',
                                         fontWeight: '600',
-                                        color: '#495057',
+                                        color: isDarkMode ? '#e0e0e0' : '#495057',
+                                        backgroundColor: isDarkMode ? '#2d2d2d' : 'transparent',
                                         transition: 'all 0.2s ease'
                                     }}
                                     onClick={() => toggleTopic(topicIdStr)}
@@ -159,7 +165,7 @@ const CourseSidebar = ({
 
                                 {/* Tasks / Content */}
                                 <Collapse in={isExpanded}>
-                                    <div>
+                                    <div style={{ marginLeft: '16px' }}>
                                         {topic.tasks?.map((task) => {
                                             const taskIdStr = task.id.toString();
                                             const hasContent = task.contentItems && task.contentItems.length > 0;
@@ -176,13 +182,19 @@ const CourseSidebar = ({
                                                                 return (
                                                                     <div
                                                                         key={contentIdStr}
-                                                                        className={`content-item p-2 rounded small mb-1 d-flex justify-content-between align-items-center ${
-                                                                            active ? 'bg-primary-subtle text-primary' : 'text-muted'
-                                                                        } ${isCompleted ? 'completed' : ''}`}
+                                                                        className={`content-item p-2 rounded small mb-1 d-flex justify-content-between align-items-center ${isCompleted ? 'completed' : ''}`}
                                                                         style={{
                                                                             cursor: 'pointer',
                                                                             fontSize: '0.875rem',
-                                                                            border: active ? '1px solid var(--bs-primary)' : '1px solid #e5e5e5',
+                                                                            border: active
+                                                                                ? (isDarkMode ? '1px solid #6ec1e4' : '1px solid var(--bs-primary)')
+                                                                                : (isDarkMode ? '1px solid #444' : '1px solid #e5e5e5'),
+                                                                            backgroundColor: active
+                                                                                ? (isDarkMode ? '#1a3a4a' : '#cfe2ff')
+                                                                                : (isDarkMode ? '#2d2d2d' : 'transparent'),
+                                                                            color: active
+                                                                                ? (isDarkMode ? '#6ec1e4' : '#0d6efd')
+                                                                                : (isDarkMode ? '#adb5bd' : '#6c757d'),
                                                                             transition: 'all 0.2s'
                                                                         }}
                                                                         onClick={(e) => handleContentClick(e, taskIdStr, content.type, contentIdStr)}
@@ -239,7 +251,9 @@ const CourseSidebar = ({
                                                     )}
 
                                                     {!hasContent && (
-                                                        <div className="ms-3 mt-2 text-muted small">
+                                                        <div className="ms-3 mt-2 small" style={{
+                                                            color: isDarkMode ? '#adb5bd' : '#6c757d'
+                                                        }}>
                                                             No content items available
                                                         </div>
                                                     )}

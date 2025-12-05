@@ -19,6 +19,7 @@ import jsPDF from 'jspdf';
  */
 export const downloadCertificateAsPDF = async (certificateRef, certificateTitle = 'Certificate') => {
   if (!certificateRef || !certificateRef.current) {
+    console.error('Certificate reference is invalid');
     throw new Error('Certificate reference is invalid');
   }
 
@@ -26,11 +27,11 @@ export const downloadCertificateAsPDF = async (certificateRef, certificateTitle 
     // Step 1: Convert certificate DOM to canvas image
     const canvas = await html2canvas(certificateRef.current, {
       scale: 2, // Higher scale for better quality
-      useCORS: true, // Allow cross-origin images (college logos, signatures)
-      allowTaint: false, // Security: only allow clean images
+      useCORS: true, // Enable CORS for base64 images
+      allowTaint: false, // Disable taint to allow toDataURL export
       backgroundColor: '#ffffff', // White background
-      logging: false, // Disable console logging
-      imageTimeout: 0, // No timeout for loading images
+      logging: false, // Disable logging
+      imageTimeout: 15000, // 15 second timeout for loading images
       ignoreElements: (element) => {
         // Ignore elements with data-no-download attribute
         return element.hasAttribute('data-no-download');
@@ -49,35 +50,41 @@ export const downloadCertificateAsPDF = async (certificateRef, certificateTitle 
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
     // Convert canvas to image data
-    const imgData = canvas.toDataURL('image/png');
+    try {
+      const imgData = canvas.toDataURL('image/png');
 
-    // Calculate scaling to fit PDF
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const ratio = canvasWidth / canvasHeight;
+      // Calculate scaling to fit PDF
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasWidth / canvasHeight;
 
-    let finalWidth = pdfWidth;
-    let finalHeight = pdfWidth / ratio;
+      let finalWidth = pdfWidth;
+      let finalHeight = pdfWidth / ratio;
 
-    if (finalHeight > pdfHeight) {
-      finalHeight = pdfHeight;
-      finalWidth = pdfHeight * ratio;
+      if (finalHeight > pdfHeight) {
+        finalHeight = pdfHeight;
+        finalWidth = pdfHeight * ratio;
+      }
+
+      // Center image on PDF
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      const yOffset = (pdfHeight - finalHeight) / 2;
+
+      // Step 4: Add image to PDF
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
+
+      // Step 5: Save PDF file
+      const fileName = `${certificateTitle}-Certificate.pdf`;
+      pdf.save(fileName);
+
+      return {
+        success: true,
+        message: 'Certificate downloaded successfully',
+      };
+    } catch (canvasError) {
+      console.error('Error converting canvas to data URL:', canvasError);
+      throw canvasError;
     }
-
-    // Center image on PDF
-    const xOffset = (pdfWidth - finalWidth) / 2;
-    const yOffset = (pdfHeight - finalHeight) / 2;
-
-    // Step 4: Add image to PDF
-    pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
-
-    // Step 5: Save PDF file
-    pdf.save(`${certificateTitle}-Certificate.pdf`);
-
-    return {
-      success: true,
-      message: 'Certificate downloaded successfully',
-    };
   } catch (error) {
     console.error('Error downloading certificate as PDF:', error);
     throw new Error(`Failed to download certificate: ${error.message}`);

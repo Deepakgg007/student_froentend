@@ -7,24 +7,36 @@ import "swiper/css";
 import api from "../../services/api";
 
 const Sponsor = () => {
-  const [companies, setCompanies] = useState([]);
+  const [colleges, setColleges] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const fetchSponsors = async () => {
-      try {
-        const response = await api.get("/companies"); // Adjust endpoint if needed
-        console.log("Sponsor API response:", response.data);
+    // Check if user is logged in
+    const token = localStorage.getItem('student_access_token');
+    setIsLoggedIn(!!token);
 
-        // ✅ Extract data from results
-        const data = response.data.results || [];
-        setCompanies(data);
-      } catch (error) {
-        console.error("Error fetching sponsor logos:", error);
-      }
-    };
+    // Only fetch colleges if user is NOT logged in
+    if (!token) {
+      const fetchColleges = async () => {
+        try {
+          const response = await api.get("/colleges/");
 
-    fetchSponsors();
+          // ✅ Extract data from results
+          const data = response.data.results || response.data || [];
+          setColleges(data);
+        } catch (error) {
+          console.error("Error fetching college logos:", error);
+        }
+      };
+
+      fetchColleges();
+    }
   }, []);
+
+  // Don't render if user is logged in
+  if (isLoggedIn) {
+    return null;
+  }
 
   return (
     <div className="sponsor-section section-bg py-5">
@@ -32,7 +44,7 @@ const Sponsor = () => {
         <div className="section-wrapper">
             <Swiper
               spaceBetween={20}
-              loop={true}
+              loop={colleges.length > 5}
               autoplay={{
                 delay: 3000,
                 disableOnInteraction: false,
@@ -45,17 +57,16 @@ const Sponsor = () => {
                 1024: { slidesPerView: 5, spaceBetween: 30 },
               }}
             >
-              {companies.length > 0 ? (
-                companies.map((company, index) => {
+              {colleges.length > 0 ? (
+                colleges.map((college, index) => {
                   const imageUrl =
-                    company.image ||
-                    company.logo ||
-                    company.logo_url ||
-                    company.logoUrl ||
+                    college.logo ||
+                    college.image ||
+                    college.logo_url ||
                     "";
 
                   return (
-                    <SwiperSlide key={index}>
+                    <SwiperSlide key={college.id || index}>
                       <div
                         className="sponsor-item d-flex justify-content-center align-items-center"
                         style={{
@@ -68,8 +79,8 @@ const Sponsor = () => {
                         {imageUrl ? (
                           <img
                             src={imageUrl}
-                            alt={company.name || "Company"}
-                            title={company.name || ""}
+                            alt={college.name || "College"}
+                            title={college.name || ""}
                             style={{
                               width: "100%",
                               height: "120px",
@@ -90,7 +101,7 @@ const Sponsor = () => {
                               height: "80px",
                             }}
                           >
-                            <i className="fas fa-building text-muted fa-2x"></i>
+                            <i className="fas fa-university text-muted fa-2x"></i>
                           </div>
                         )}
                       </div>
@@ -99,7 +110,7 @@ const Sponsor = () => {
                 })
               ) : (
                 <div className="text-center text-muted py-5">
-                  <i className="fas fa-spinner fa-spin me-2"></i> Loading sponsor logos...
+                  <i className="fas fa-spinner fa-spin me-2"></i> Loading colleges...
                 </div>
               )}
             </Swiper>

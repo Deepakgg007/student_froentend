@@ -1,6 +1,5 @@
 
 import { Link } from "react-router-dom";
-import Rating from "../sidebar/rating";
 
 
 const subTitle = "Loved by 200,000+ students";
@@ -58,7 +57,13 @@ const Student = () => {
                                                 </div>
                                             </div>
                                             <div className="sft-right">
-                                                <Rating />
+                                                <div className="rating">
+                                                    <i className="icofont-star"></i>
+                                                    <i className="icofont-star"></i>
+                                                    <i className="icofont-star"></i>
+                                                    <i className="icofont-star"></i>
+                                                    <i className="icofont-star"></i>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="stu-feed-bottom">

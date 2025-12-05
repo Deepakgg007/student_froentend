@@ -13,7 +13,7 @@ import Swal from "sweetalert2";
  * - Saves answers to backend
  * - Shows correct/incorrect answers and explanations
  */
-const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPrev }) => {
+const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPrev, isDarkMode = false }) => {
   const { courseId } = useParams();
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
@@ -126,7 +126,6 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
           if (answers[question.id]) {
             try {
               await markContentComplete('question', question.id, task.id, parseInt(courseId));
-              console.log(`✅ MCQ question ${question.id} marked as complete`);
             } catch (err) {
               console.warn(`Failed to mark question ${question.id} complete:`, err);
             }
@@ -270,6 +269,7 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
         refreshKey={overviewRefreshKey}
         hasAttemptProp={showResult}
         submissions={submissions}
+        isDarkMode={isDarkMode}
         onStartQuiz={() => {
           setShowOverview(false);
           // Starting fresh quiz - clear state
@@ -291,28 +291,28 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
   return (
     <div className="mcq-content" style={{ maxWidth: '900px', margin: '0 auto' }}>
       {/* Quiz Header - Clean & Minimal */}
-      <div className="mb-4 pb-3" style={{ borderBottom: '2px solid #e9ecef' }}>
+      <div className="mb-4 pb-3" style={{ borderBottom: isDarkMode ? '2px solid #444' : '2px solid #e9ecef' }}>
         <div className="d-flex align-items-center justify-content-between">
           <div>
-            <h4 className="mb-1" style={{ fontSize: '20px', fontWeight: '600', color: '#212529' }}>
+            <h4 className="mb-1" style={{ fontSize: '20px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529' }}>
               {task?.title}
             </h4>
-            <p className="mb-0" style={{ fontSize: '14px', color: '#6c757d' }}>
+            <p className="mb-0" style={{ fontSize: '14px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>
               Multiple Choice Quiz • {totalQuestions} {totalQuestions === 1 ? 'Question' : 'Questions'}
             </p>
           </div>
           <div>
             {!showResult && (
               <div className="text-end">
-                <div style={{ fontSize: '13px', color: '#6c757d', marginBottom: '4px' }}>Progress</div>
-                <div style={{ fontSize: '18px', fontWeight: '600', color: '#212529' }}>
+                <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginBottom: '4px' }}>Progress</div>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529' }}>
                   {answeredQuestions} / {totalQuestions}
                 </div>
               </div>
             )}
             {showResult && (
               <div className="text-end">
-                <div style={{ fontSize: '13px', color: '#6c757d', marginBottom: '4px' }}>Score</div>
+                <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginBottom: '4px' }}>Score</div>
                 <div style={{ fontSize: '20px', fontWeight: '600', color: correctAnswers === totalQuestions ? '#28a745' : correctAnswers >= totalQuestions * 0.7 ? '#ffc107' : '#dc3545' }}>
                   {correctAnswers}/{totalQuestions}
                   <span style={{ fontSize: '14px', marginLeft: '8px', fontWeight: '500' }}>
@@ -350,8 +350,9 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
             className="card mb-3"
             style={{
               borderRadius: '8px',
-              border: '1px solid #e0e0e0',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+              border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
+              boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.05)',
+              background: isDarkMode ? 'transparent' : '#ffffff'
             }}
           >
             {/* Question Header */}
@@ -359,9 +360,11 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
               className="card-header"
               style={{
                 background: showResult
-                  ? (isCorrect ? '#d4edda' : '#f8d7da')
-                  : '#f8f9fa',
-                borderBottom: '1px solid #e0e0e0',
+                  ? (isCorrect
+                      ? (isDarkMode ? 'rgba(40, 167, 69, 0.15)' : '#d4edda')
+                      : (isDarkMode ? 'rgba(220, 53, 69, 0.15)' : '#f8d7da'))
+                  : isDarkMode ? 'transparent' : '#f8f9fa',
+                borderBottom: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
                 padding: '12px 16px'
               }}
             >
@@ -372,12 +375,12 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                     style={{
                       fontSize: '15px',
                       fontWeight: '600',
-                      color: showResult ? (isCorrect ? '#28a745' : '#dc3545') : '#495057'
+                      color: showResult ? (isCorrect ? '#28a745' : '#dc3545') : isDarkMode ? '#e0e0e0' : '#495057'
                     }}
                   >
                     Q{qIdx + 1}.
                   </span>
-                  <h6 className="mb-0" style={{ fontSize: '15px', fontWeight: '500', color: '#212529' }}>
+                  <h6 className="mb-0" style={{ fontSize: '15px', fontWeight: '500', color: isDarkMode ? '#ffffff' : '#212529' }}>
                     {q.question_text}
                   </h6>
                 </div>
@@ -416,12 +419,15 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                           border: `1.5px solid ${
                             showCorrect ? '#28a745' :
                             showIncorrect ? '#dc3545' :
-                            isSelected && !showResult ? '#6c757d' : '#dee2e6'
+                            isSelected && !showResult ? (isDarkMode ? '#6ec1e4' : '#6c757d') : (isDarkMode ? '#444' : '#dee2e6')
                           }`,
-                          background: showCorrect ? '#d4edda' :
-                            showIncorrect ? '#f8d7da' :
-                            isSelected && !showResult ? '#f8f9fa' :
-                            '#ffffff'
+                          background: showCorrect
+                            ? (isDarkMode ? 'rgba(40, 167, 69, 0.15)' : '#d4edda')
+                            : showIncorrect
+                              ? (isDarkMode ? 'rgba(220, 53, 69, 0.15)' : '#f8d7da')
+                              : isSelected && !showResult
+                                ? (isDarkMode ? '#1a3a4a' : '#f8f9fa')
+                                : isDarkMode ? 'transparent' : '#ffffff'
                         }}
                       >
                         <div className="d-flex align-items-center">
@@ -446,7 +452,7 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                               fontSize: '14px',
                               fontWeight: '600',
                               color: showCorrect ? '#28a745' :
-                                showIncorrect ? '#dc3545' : '#212529',
+                                showIncorrect ? '#dc3545' : isDarkMode ? '#e0e0e0' : '#212529',
                               flexShrink: 0
                             }}
                           >
@@ -459,7 +465,7 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                             style={{
                               cursor: showResult ? 'default' : 'pointer',
                               fontSize: '14px',
-                              color: '#212529'
+                              color: isDarkMode ? '#e0e0e0' : '#212529'
                             }}
                           >
                             {ch.text}
@@ -484,15 +490,17 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                 <div
                   className="mt-3 p-2 rounded"
                   style={{
-                    background: '#f8f9fa',
-                    borderLeft: '3px solid #6c757d'
+                    background: isDarkMode ? 'transparent' : '#f8f9fa',
+                    borderLeft: isDarkMode ? '3px solid #6ec1e4' : '3px solid #6c757d',
+                    border: isDarkMode ? '1px solid #444' : 'none',
+                    borderLeft: isDarkMode ? '3px solid #6ec1e4' : '3px solid #6c757d'
                   }}
                 >
                   <div className="d-flex align-items-start">
-                    <i className="icofont-info-circle me-2 mt-1" style={{ fontSize: '16px', flexShrink: 0, color: '#6c757d' }}></i>
+                    <i className="icofont-info-circle me-2 mt-1" style={{ fontSize: '16px', flexShrink: 0, color: isDarkMode ? '#6ec1e4' : '#6c757d' }}></i>
                     <div>
-                      <strong style={{ fontSize: '13px', color: '#212529' }}>Explanation:</strong>
-                      <p className="mb-0 mt-1" style={{ fontSize: '13px', color: '#495057' }}>
+                      <strong style={{ fontSize: '13px', color: isDarkMode ? '#ffffff' : '#212529' }}>Explanation:</strong>
+                      <p className="mb-0 mt-1" style={{ fontSize: '13px', color: isDarkMode ? '#e0e0e0' : '#495057' }}>
                         {mcq.solution_explanation}
                       </p>
                     </div>
@@ -504,7 +512,7 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
         );
       })}
 
-      <div className="mt-5 pt-4" style={{ borderTop: '1px solid #e9ecef' }}>
+      <div className="mt-5 pt-4" style={{ borderTop: isDarkMode ? '1px solid #444' : '1px solid #e9ecef' }}>
         {!showResult ? (
           <div className="d-flex justify-content-between align-items-center">
             <button
@@ -513,7 +521,15 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                 setOverviewRefreshKey(prev => prev + 1);
                 setShowOverview(true);
               }}
-              style={{ padding: '10px 24px', fontSize: '14px', borderRadius: '6px', fontWeight: '500' }}
+              style={{
+                padding: '10px 24px',
+                fontSize: '14px',
+                borderRadius: '6px',
+                fontWeight: '500',
+                backgroundColor: isDarkMode ? 'transparent' : '#fff',
+                color: isDarkMode ? '#adb5bd' : '#6c757d',
+                borderColor: isDarkMode ? '#444' : '#6c757d'
+              }}
             >
               <i className="icofont-arrow-left me-2"></i>
               Back to Overview
@@ -554,7 +570,15 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
                 setOverviewRefreshKey(prev => prev + 1);
                 setShowOverview(true);
               }}
-              style={{ padding: '10px 28px', fontSize: '14px', borderRadius: '6px', fontWeight: '500' }}
+              style={{
+                padding: '10px 28px',
+                fontSize: '14px',
+                borderRadius: '6px',
+                fontWeight: '500',
+                backgroundColor: isDarkMode ? 'transparent' : '#fff',
+                color: isDarkMode ? '#adb5bd' : '#6c757d',
+                borderColor: isDarkMode ? '#444' : '#6c757d'
+              }}
             >
               <i className="icofont-arrow-left me-2"></i>
               Back to Overview

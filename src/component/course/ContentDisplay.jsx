@@ -18,15 +18,16 @@ try {
     markContentComplete = null;
 }
 
-const ContentDisplay = ({ 
-    taskId, 
-    contentType, 
-    contentId, 
-    topics, 
-    courseId, 
-    onContentComplete, 
-    onContentNavigation, 
-    refreshCourse 
+const ContentDisplay = ({
+    taskId,
+    contentType,
+    contentId,
+    topics,
+    courseId,
+    isDarkMode = false,
+    onContentComplete,
+    onContentNavigation,
+    refreshCourse
 }) => {
     const [currentContent, setCurrentContent] = useState(null);
     const [task, setTask] = useState(null);
@@ -123,7 +124,7 @@ const ContentDisplay = ({
         if (!task || !currentContent) return;
 
         const allContents = getAllContentsSequence();
-        const currentIndex = allContents.findIndex(item => 
+        const currentIndex = allContents.findIndex(item =>
             item.taskId.toString() === taskId.toString() &&
             item.id.toString() === currentContent.id.toString() &&
             item.type === currentContent.type  // Use currentContent.type for reliability
@@ -132,8 +133,6 @@ const ContentDisplay = ({
         const nextItem = allContents[currentIndex + 1];
         if (nextItem) {
             onContentNavigation(nextItem.taskId.toString(), nextItem.type, nextItem.id.toString());
-        } else {
-            console.log('No next content');
         }
     };
 
@@ -141,7 +140,7 @@ const ContentDisplay = ({
         if (!task || !currentContent) return;
 
         const allContents = getAllContentsSequence();
-        const currentIndex = allContents.findIndex(item => 
+        const currentIndex = allContents.findIndex(item =>
             item.taskId.toString() === taskId.toString() &&
             item.id.toString() === currentContent.id.toString() &&
             item.type === currentContent.type
@@ -150,21 +149,15 @@ const ContentDisplay = ({
         const prevItem = allContents[currentIndex - 1];
         if (prevItem) {
             onContentNavigation(prevItem.taskId.toString(), prevItem.type, prevItem.id.toString());
-        } else {
-            console.log('No previous content');
         }
     };
 
     const handleContentComplete = async () => {
         try {
-            console.log(`🎯 ContentDisplay: Marking ${contentType} ${contentId} as complete`);
-
             // Call parent handler (course-view's handleContentComplete)
             if (onContentComplete) {
                 try {
-                    console.log(`📤 Calling parent onContentComplete with contentId=${contentId}, contentType=${contentType}`);
                     await onContentComplete(contentId, contentType);
-                    console.log(`✅ Parent handler completed successfully`);
                 } catch (legacyError) {
                     console.error('❌ Parent completion handler failed:', legacyError);
                     throw legacyError; // Re-throw to trigger error handling in child components
@@ -174,7 +167,6 @@ const ContentDisplay = ({
             }
 
             setCompletionSuccess(true);
-            console.log(`✅ Completion success state set to true`);
 
             // Show success message for 3 seconds
             setTimeout(() => setCompletionSuccess(false), 3000);
@@ -186,7 +178,9 @@ const ContentDisplay = ({
 
     if (loading) {
         return (
-            <div className="container-fluid h-100 d-flex align-items-center justify-content-center">
+            <div className="container-fluid h-100 d-flex align-items-center justify-content-center" style={{
+                backgroundColor: isDarkMode ? '#1e1e1e' : 'transparent'
+            }}>
                 <div className="spinner-border text-primary" role="status">
                     <span className="sr-only">Loading...</span>
                 </div>
@@ -196,8 +190,14 @@ const ContentDisplay = ({
 
     if (error || !currentContent) {
         return (
-            <div className="container-fluid h-100 d-flex align-items-center justify-content-center">
-                <div className="alert alert-warning text-center">
+            <div className="container-fluid h-100 d-flex align-items-center justify-content-center" style={{
+                backgroundColor: isDarkMode ? '#1e1e1e' : 'transparent'
+            }}>
+                <div className="alert text-center" style={{
+                    backgroundColor: isDarkMode ? '#2d2d2d' : '#fff3cd',
+                    color: isDarkMode ? '#ffc107' : '#856404',
+                    borderColor: isDarkMode ? '#444' : '#ffc107'
+                }}>
                     <p>Select a different item from the sidebar.</p>
                 </div>
             </div>
@@ -208,9 +208,10 @@ const ContentDisplay = ({
         switch (currentContent.type) {
             case 'page':
                 return (
-                    <PageContent 
+                    <PageContent
                         content={currentContent}  // Standardized prop name
                         task={task}
+                        isDarkMode={isDarkMode}
                         onComplete={handleContentComplete}
                         onNext={handleNextContent}
                         onPrev={handlePrevContent}
@@ -219,9 +220,10 @@ const ContentDisplay = ({
 
             case 'video':
                 return (
-                    <VideoContent 
-                        content={currentContent} 
+                    <VideoContent
+                        content={currentContent}
                         task={task}
+                        isDarkMode={isDarkMode}
                         onComplete={handleContentComplete}
                         onNext={handleNextContent}
                         onPrev={handlePrevContent}
@@ -230,9 +232,10 @@ const ContentDisplay = ({
 
             case 'document':
                 return (
-                    <DocumentContent 
-                        content={currentContent} 
+                    <DocumentContent
+                        content={currentContent}
                         task={task}
+                        isDarkMode={isDarkMode}
                         onComplete={handleContentComplete}
                         onNext={handleNextContent}
                         onPrev={handlePrevContent}
@@ -244,6 +247,7 @@ const ContentDisplay = ({
                     <MCQContent
                         questions={currentContent.questions || []}
                         task={task}
+                        isDarkMode={isDarkMode}
                         onComplete={(contentId, contentType) => onContentComplete(contentId || currentContent.id, contentType || 'mcq_group')}
                         onRefresh={refreshCourse}
                         onNext={handleNextContent}
@@ -256,14 +260,21 @@ const ContentDisplay = ({
                     <CodingQuestionContent
                         question={currentContent.question}
                         task={task}
+                        isDarkMode={isDarkMode}
                         onComplete={refreshCourse}
                     />
                 );
 
             default:
                 return (
-                    <div className="container-fluid h-100 d-flex align-items-center justify-content-center">
-                        <div className="alert alert-info">
+                    <div className="container-fluid h-100 d-flex align-items-center justify-content-center" style={{
+                        backgroundColor: isDarkMode ? '#1e1e1e' : 'transparent'
+                    }}>
+                        <div className="alert" style={{
+                            backgroundColor: isDarkMode ? '#2d2d2d' : '#d1ecf1',
+                            color: isDarkMode ? '#6ec1e4' : '#0c5460',
+                            borderColor: isDarkMode ? '#444' : '#bee5eb'
+                        }}>
                             <h5>Content Type Not Supported</h5>
                             <p>This content type ({currentContent.type}) is not yet implemented.</p>
                         </div>
@@ -285,8 +296,16 @@ const ContentDisplay = ({
         <div className="container-fluid h-100">
             {/* Success Toast */}
             {completionSuccess && (
-                <div className="alert alert-success alert-dismissible fade show position-fixed" 
-                     style={{ top: '100px', right: '20px', zIndex: 1050, minWidth: '300px' }}
+                <div className="alert alert-dismissible fade show position-fixed"
+                     style={{
+                         top: '100px',
+                         right: '20px',
+                         zIndex: 1050,
+                         minWidth: '300px',
+                         backgroundColor: isDarkMode ? '#2d5016' : '#d4edda',
+                         color: isDarkMode ? '#90ee90' : '#155724',
+                         borderColor: isDarkMode ? '#4caf50' : '#c3e6cb'
+                     }}
                      role="alert">
                     <i className="icofont-check-circled me-2"></i>
                     Content marked as complete!
@@ -296,33 +315,49 @@ const ContentDisplay = ({
             <div className="row h-100">
                 <div className="col-12">
 
-                   
+
 
                     {/* Main Content Area - NO AUTO-SCROLL */}
-                    <div id="main-content-area" className="content-area bg-white rounded shadow-sm p-2" 
-                         style={{ minHeight: '600px', overflow: 'visible' }}>
+                    <div id="main-content-area" className="content-area rounded shadow-sm p-2"
+                         style={{
+                             minHeight: '600px',
+                             overflow: 'visible',
+                             backgroundColor: isDarkMode ? '#2d2d2d' : '#fff'
+                         }}>
                         {renderContent()}
                     </div>
 
                      {/* Enhanced Navigation Bar */}
-                    <div className="mb-4 p-2 bg-white rounded shadow-sm">
+                    <div className="mb-4 p-2 rounded shadow-sm" style={{
+                        backgroundColor: isDarkMode ? '#2d2d2d' : '#fff'
+                    }}>
                         <div className="d-flex justify-content-between align-items-center">
                             <div className="d-flex align-items-center">
-                                <button 
-                                    className="btn btn-outline-secondary me-3"
+                                <button
+                                    className="btn me-3"
                                     onClick={handlePrevContent}
                                     disabled={!hasPrev}
-                                    style={{ minWidth: '100px' }}
+                                    style={{
+                                        minWidth: '100px',
+                                        backgroundColor: isDarkMode ? '#1e1e1e' : '#fff',
+                                        color: isDarkMode ? '#adb5bd' : '#6c757d',
+                                        borderColor: isDarkMode ? '#444' : '#6c757d'
+                                    }}
                                 >
                                     <i className="icofont-arrow-left me-2"></i>
                                     Previous
                                 </button>
                             </div>
-                            <button 
-                                className="btn btn-primary"
+                            <button
+                                className="btn"
                                 onClick={handleNextContent}
                                 disabled={!hasNext}
-                                style={{ minWidth: '100px' }}
+                                style={{
+                                    minWidth: '100px',
+                                    backgroundColor: isDarkMode ? '#1a3a4a' : '#0d6efd',
+                                    color: '#fff',
+                                    borderColor: isDarkMode ? '#6ec1e4' : '#0d6efd'
+                                }}
                             >
                                 Next
                                 <i className="icofont-arrow-right ms-2"></i>

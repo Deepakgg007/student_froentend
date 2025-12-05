@@ -3,6 +3,7 @@
 import { Fragment, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const title = "Login";
 const btnText = "Login Now";
@@ -24,6 +25,7 @@ const EyeOffIcon = ({ size = 18 }) => (
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const { setAuth } = useAuth();
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -36,11 +38,11 @@ const LoginPage = () => {
     useEffect(() => {
         const rememberedEmail = localStorage.getItem('student_remembered_email');
         const rememberedPassword = localStorage.getItem('student_remembered_password');
-        if (rememberedEmail && rememberedPassword) {
+        if (rememberedEmail) {
             setFormData(prev => ({
                 ...prev,
                 email: rememberedEmail,
-                password: rememberedPassword,
+                password: rememberedPassword || '',
                 rememberMe: true
             }));
         }
@@ -82,6 +84,10 @@ const LoginPage = () => {
             localStorage.setItem('student_refresh_token', refreshToken);
             localStorage.setItem('student_user', JSON.stringify(user));
 
+            // Update AuthContext state
+            setAuth(true);
+
+            // Remember email and password if "Remember Me" is checked
             if (formData.rememberMe) {
                 localStorage.setItem('student_remembered_email', formData.email);
                 localStorage.setItem('student_remembered_password', formData.password);

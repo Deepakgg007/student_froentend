@@ -59,11 +59,11 @@ const UnifiedHeader = () => {
     useEffect(() => {
         if (isAuthenticated && user) {
             const pageName = getPageName(currentPath);
-            const collegeName = user.college_details?.name || user.college_name || "Edukon";
+            const collegeName = user.college_details?.name || user.college_name || "Z1";
             document.title = `${collegeName} - ${pageName}`;
         } else {
             const pageName = getPageName(currentPath);
-            document.title = `Edukon - ${pageName}`;
+            document.title = `Z1 - ${pageName}`;
         }
     }, [user, currentPath, isAuthenticated]);
 
@@ -124,8 +124,21 @@ const UnifiedHeader = () => {
 
     const handleLogout = () => {
         try {
+            // Save remembered credentials before clearing localStorage
+            const rememberedEmail = localStorage.getItem('student_remembered_email');
+            const rememberedPassword = localStorage.getItem('student_remembered_password');
+
             setUser(null);
             localStorage.clear();
+
+            // Restore remembered credentials after clearing
+            if (rememberedEmail) {
+                localStorage.setItem('student_remembered_email', rememberedEmail);
+            }
+            if (rememberedPassword) {
+                localStorage.setItem('student_remembered_password', rememberedPassword);
+            }
+
             setAuth(false);
             setTimeout(() => {
                 navigate("/login", { replace: true });
@@ -179,8 +192,7 @@ const UnifiedHeader = () => {
             <style>{`
                 .active-link {
                     color: #1d61bf !important;
-                    font-weight: 600;
-                    border-bottom: 2px solid #1d61bf;
+                    font-weight: 400;
                     transition: all 0.3s ease;
                 }
                 .menu a {
@@ -194,7 +206,6 @@ const UnifiedHeader = () => {
                 .menu-item-has-children.active-parent > a {
                     color: #1d61bf !important;
                     font-weight: 600;
-                    border-bottom: 2px solid #1d61bf;
                 }
 
                 /* Logo Styling */
@@ -407,6 +418,19 @@ const UnifiedHeader = () => {
                                                             >
                                                                 <i className="icofont-user-alt-5"></i> Profile
                                                             </NavLink>
+                                                        </li>
+                                                        <li>
+                                                            <a
+                                                                href="https://z1-complier.haegl.in/"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={closeMenu}
+                                                            >
+                                                                <i className="icofont-settings"></i> Online Compiler
+                                                            </a>
+
+
+
                                                         </li>
                                                     </ul>
                                                 </li>

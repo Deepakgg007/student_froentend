@@ -78,6 +78,13 @@ export const logoutUser = () => {
 };
 
 /**
+ * Get current user profile with college details
+ */
+export const getCurrentUserProfile = () => {
+  return api.get('/student/profile/');
+};
+
+/**
  * Register new user
  * @param {Object} userData - User registration data
  */
@@ -420,6 +427,39 @@ export const getCertificationAttempts = async (certificationId) => {
     return response;
   } catch (err) {
     console.error('Error fetching attempts:', err);
+    throw err;
+  }
+};
+
+/**
+ * Get a specific certification attempt with full details (including college info)
+ * @param {number} certificationId - Certification ID
+ * @param {number} attemptId - Attempt ID
+ */
+export const getCertificationAttemptById = async (certificationId, attemptId) => {
+  try {
+    // Try direct attempts endpoint first (returns full details including college)
+    try {
+      const response = await api.get(`/student/certifications/attempts/${attemptId}/`);
+      return response;
+    } catch (err) {
+    }
+    
+    // Fallback: try the nested route (via my_attempts action)
+    const response = await api.get(`/student/certifications/certifications/${certificationId}/my_attempts/`);
+    
+    // Extract the specific attempt from the list
+    let attempts = response.data.results || response.data.data || response.data;
+    if (Array.isArray(attempts)) {
+      const attempt = attempts.find(a => a.id === attemptId);
+      if (attempt) {
+        return { data: attempt };
+      }
+    }
+    
+    throw new Error('Could not find attempt in either endpoint');
+  } catch (err) {
+    console.error('Error fetching attempt details:', err);
     throw err;
   }
 };

@@ -29,14 +29,12 @@ const ConceptDetail = () => {
 
       // Fetch concept details by slug
       const conceptResponse = await getConceptById(conceptSlug);
-      console.log('Concept Response:', conceptResponse.data);
       setConcept(conceptResponse.data);
 
       // Fetch challenges for this concept using the slug
       const challengesResponse = await getConceptChallenges(conceptSlug);
-      console.log('Concept Challenges Response:', challengesResponse.data);
-      const challengesData = Array.isArray(challengesResponse.data) 
-        ? challengesResponse.data 
+      const challengesData = Array.isArray(challengesResponse.data)
+        ? challengesResponse.data
         : challengesResponse.data?.results || [];
       setChallenges(challengesData);
     } catch (error) {

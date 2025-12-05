@@ -27,7 +27,6 @@ const Leaderboard = () => {
       if (response.data && response.data.user && response.data.user.college_id) {
         // Extract college ID from the user data
         setUserCollegeId(response.data.user.college_id);
-        console.log('User college ID:', response.data.user.college_id);
       } else {
         console.warn('No college found for user:', response.data.user);
       }
@@ -56,13 +55,9 @@ const Leaderboard = () => {
         }
       }
 
-      console.log(`Fetching leaderboard from: ${endpoint}`, { activeTab, userCollegeId, params });
-
       const response = await api.get(endpoint, { params });
 
       const data = response.data;
-
-      console.log('Leaderboard response:', data);
 
       // Handle both direct array response and object with leaderboard key
       if (Array.isArray(data)) {
@@ -73,24 +68,7 @@ const Leaderboard = () => {
         const leaderboardData = Array.isArray(data.leaderboard) ? data.leaderboard : [];
         setLeaderboard(leaderboardData);
 
-        // Log sample user data for debugging
-        if (leaderboardData.length > 0) {
-          console.log('Sample user from leaderboard:', {
-            username: leaderboardData[0].username,
-            total_points: leaderboardData[0].total_points,
-            challenges_solved: leaderboardData[0].challenges_solved,
-            current_streak: leaderboardData[0].current_streak,
-            easy_solved: leaderboardData[0].easy_solved,
-            medium_solved: leaderboardData[0].medium_solved,
-            hard_solved: leaderboardData[0].hard_solved,
-            first_name: leaderboardData[0].first_name,
-            last_name: leaderboardData[0].last_name,
-            college_name: leaderboardData[0].college_name,
-          });
-        }
-
         if (data.user_position) {
-          console.log('User position:', data.user_position);
           setUserPosition(data.user_position);
         }
         if (data.total_users) setTotalUsers(data.total_users);
@@ -98,7 +76,6 @@ const Leaderboard = () => {
         // Handle paginated response
         setLeaderboard(Array.isArray(data.results) ? data.results : []);
         if (data.user_position) {
-          console.log('User position:', data.user_position);
           setUserPosition(data.user_position);
         }
         if (data.total_users) setTotalUsers(data.total_users);

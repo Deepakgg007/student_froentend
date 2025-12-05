@@ -26,6 +26,7 @@ const CourseView = () => {
     const [error, setError] = useState('');
     const [progress, setProgress] = useState(0);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
     const taskId = searchParams.get('taskId');
     const contentType = searchParams.get('contentType');
@@ -361,6 +362,10 @@ const CourseView = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
+    const toggleDarkMode = () => {
+        setIsDarkMode(!isDarkMode);
+    };
+
     const handleContentComplete = async (contentId, contentType) => {
         try {
             const response = await api.post(`/student/content/mark-complete/`, {
@@ -467,14 +472,23 @@ const CourseView = () => {
 
     return (
         <Fragment>
-            <div className="course-header bg-white border-bottom shadow-sm" style={{ padding: '20px 0', paddingTop: '20px' }}>
+            <div className="course-header border-bottom shadow-sm" style={{
+                padding: '20px 0',
+                paddingTop: '20px',
+                backgroundColor: isDarkMode ? '#1e1e1e' : '#fff'
+            }}>
                 <div className="container-fluid" style={{ maxWidth: '1600px' }}>
                     <div className="row align-items-center">
                         <div className="col-md-8 d-flex align-items-center">
                             <button
                                 className="btn btn-outline-secondary me-2"
                                 onClick={() => navigate('/course')}
-                                style={{ padding: '10px 16px' }}
+                                style={{
+                                    padding: '10px 16px',
+                                    backgroundColor: isDarkMode ? '#2d2d2d' : '#fff',
+                                    color: isDarkMode ? '#fff' : '#6c757d',
+                                    borderColor: isDarkMode ? '#444' : '#6c757d'
+                                }}
                                 title="Back to Course List"
                             >
                                 <i className="icofont-arrow-left"></i>
@@ -482,16 +496,34 @@ const CourseView = () => {
                             <button
                                 className="btn btn-outline-primary me-3"
                                 onClick={toggleSidebar}
-                                style={{ padding: '10px 10px' }}
+                                style={{
+                                    padding: '10px 10px',
+                                    backgroundColor: isDarkMode ? '#2d2d2d' : '#fff',
+                                    color: isDarkMode ? '#6ec1e4' : '#0d6efd',
+                                    borderColor: isDarkMode ? '#444' : '#0d6efd'
+                                }}
                                 title={sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
                             >
                                 <i className={`icofont-${sidebarOpen ? 'close' : 'navigation-menu'}`}></i>
                             </button>
+                            <button
+                                className="btn btn-outline-secondary me-3"
+                                onClick={toggleDarkMode}
+                                style={{
+                                    padding: '10px 10px',
+                                    backgroundColor: isDarkMode ? '#2d2d2d' : '#fff',
+                                    color: isDarkMode ? '#ffd700' : '#6c757d',
+                                    borderColor: isDarkMode ? '#444' : '#6c757d'
+                                }}
+                                title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                            >
+                                <i className={`icofont-${isDarkMode ? 'sun' : 'moon'}`}></i>
+                            </button>
                             <div>
-                                <h4 className="mb-1 text-dark">{course?.title}</h4>
-                                <small className="text-muted">
+                                <h4 className="mb-1" style={{ color: isDarkMode ? '#fff' : '#212529' }}>{course?.title}</h4>
+                                <small style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>
                                     <i className="icofont-users me-1"></i>
-                                    {course?.current_enrollments} students • 
+                                    {course?.current_enrollments} students •
                                     <i className="icofont-chart-bar-graph ms-2 me-1"></i>
                                     {course?.difficulty_level}
                                 </small>
@@ -499,10 +531,13 @@ const CourseView = () => {
                         </div>
                         <div className="col-md-4">
                             <div className="text-end">
-                                <small className="text-muted d-block mb-1">
+                                <small className="d-block mb-1" style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>
                                     Course Progress: {Math.round(progress)}%
                                 </small>
-                                <div className="progress" style={{ height: '10px' }}>
+                                <div className="progress" style={{
+                                    height: '10px',
+                                    backgroundColor: isDarkMode ? '#2d2d2d' : '#e9ecef'
+                                }}>
                                     <div
                                         className="progress-bar bg-success"
                                         role="progressbar"
@@ -519,7 +554,10 @@ const CourseView = () => {
             </div>
 
             {/* Layout */}
-            <div className="d-flex" style={{ minHeight: 'calc(100vh - 140px)', background: '#f8f9fa' }}>
+            <div className="d-flex" style={{
+                minHeight: 'calc(100vh - 140px)',
+                background: isDarkMode ? '#121212' : '#f8f9fa'
+            }}>
                 {sidebarOpen && (
                     <div style={{ position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', width: '320px', flexShrink: 0 }}>
                         <CourseSidebar
@@ -530,13 +568,14 @@ const CourseView = () => {
                             currentContentId={contentId}
                             courseId={courseId}
                             progress={progress}
+                            isDarkMode={isDarkMode}
                             onContentSelect={handleContentNavigation}
                         />
                     </div>
                 )}
 
                 <div className="flex-grow-1" style={{
-        background: '#fafafa',
+        background: isDarkMode ? '#1e1e1e' : '#fafafa',
         padding: '24px',
         width: sidebarOpen ? 'auto' : '100%'
     }}>
@@ -546,6 +585,7 @@ const CourseView = () => {
                         contentId={contentId}
                         topics={topics}
                         courseId={courseId}
+                        isDarkMode={isDarkMode}
                         onContentComplete={handleContentComplete}
                         onContentNavigation={handleContentNavigation}
                         refreshCourse={fetchCourseContent}

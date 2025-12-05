@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
  * Left: Problem description and test cases
  * Right: Code editor and output
  */
-const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
+const CodingQuestionEditor = ({ question, task, onComplete, onBack, isDarkMode = false }) => {
     const { courseId } = useParams();
     const [code, setCode] = useState('');
     const [output, setOutput] = useState('');
@@ -253,7 +253,6 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
                 if (markContentComplete && courseId) {
                     try {
                         await markContentComplete('question', question.id, task.id, parseInt(courseId));
-                        console.log(`✅ Coding question ${question.id} marked as complete`);
                     } catch (err) {
                         console.warn(`Failed to mark question ${question.id} complete:`, err);
                     }
@@ -306,37 +305,66 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
     };
 
     return (
-        <div className="coding-question-editor" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="coding-question-editor" style={{
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff'
+        }}>
             {/* Header */}
-            <div className="border-bottom bg-white" style={{ padding: '16px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <div className="border-bottom" style={{
+                padding: '16px 24px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                backgroundColor: isDarkMode ? '#2d2d2d' : '#ffffff',
+                borderBottomColor: isDarkMode ? '#444' : '#dee2e6'
+            }}>
                 <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-3">
                         {onBack && (
-                            <button className="btn btn-outline-secondary btn-sm" onClick={onBack}>
+                            <button className="btn btn-sm" style={{
+                                backgroundColor: 'transparent',
+                                color: isDarkMode ? '#adb5bd' : '#6c757d',
+                                border: isDarkMode ? '1px solid #444' : '1px solid #6c757d'
+                            }} onClick={onBack}>
                                 <i className="icofont-arrow-left me-2"></i>
                                 Back to Overview
                             </button>
                         )}
                         <div>
-                            <h5 className="mb-0 fw-bold">{question?.question_text}</h5>
-                            <small className="text-muted">{language} • {question?.marks} points</small>
+                            <h5 className="mb-0 fw-bold" style={{ color: isDarkMode ? '#ffffff' : '#212529' }}>{question?.question_text}</h5>
+                            <small style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>{language} • {question?.marks} points</small>
                         </div>
                     </div>
                     <div className="d-flex gap-2 align-items-center">
                         {testResults && testResults.total > 0 && (
-                            <span className={`badge ${testResults.passed === testResults.total ? 'bg-success' : 'bg-danger'}`} style={{ fontSize: '12px', padding: '6px 10px' }}>
+                            <span className="badge" style={{
+                                fontSize: '12px',
+                                padding: '6px 10px',
+                                backgroundColor: testResults.passed === testResults.total ? '#28a745' : '#dc3545',
+                                color: 'white'
+                            }}>
                                 {testResults.passed}/{testResults.total} Tests Passed
                             </span>
                         )}
                         <button
-                            className="btn btn-outline-primary"
+                            className="btn"
+                            style={{
+                                backgroundColor: 'transparent',
+                                color: isDarkMode ? '#6ec1e4' : '#0d6efd',
+                                border: isDarkMode ? '1px solid #6ec1e4' : '1px solid #0d6efd'
+                            }}
                             onClick={handleRunCode}
                             disabled={running}>
                             <i className="icofont-play me-2"></i>
                             {running ? 'Running...' : 'Run Code'}
                         </button>
                         <button
-                            className={`btn ${testResults && testResults.passed === testResults.total && testResults.total > 0 ? 'btn-success' : 'btn-secondary'}`}
+                            className="btn"
+                            style={{
+                                backgroundColor: testResults && testResults.passed === testResults.total && testResults.total > 0 ? '#28a745' : '#6c757d',
+                                color: 'white',
+                                border: 'none'
+                            }}
                             onClick={handleSubmit}
                             disabled={submitting || !testResults || testResults.passed !== testResults.total || testResults.total === 0}
                             title={!testResults || testResults.passed !== testResults.total ? 'Run code and pass all tests first' : 'Submit your solution'}>
@@ -350,11 +378,18 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
             {/* Split Screen Layout */}
             <div className="d-flex flex-grow-1" style={{ overflow: 'hidden' }}>
                 {/* Left Panel - Problem Description */}
-                <div className="border-end" style={{ width: '45%', overflowY: 'auto', overflowX: 'hidden', padding: '24px' }}>
+                <div className="border-end" style={{
+                    width: '45%',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    padding: '24px',
+                    borderRightColor: isDarkMode ? '#444' : '#dee2e6',
+                    backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff'
+                }}>
                     {/* Problem Description */}
                     <div className="mb-4">
-                        <h6 className="fw-bold text-primary mb-3">Problem Description</h6>
-                        <p style={{ fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
+                        <h6 className="fw-bold mb-3" style={{ color: isDarkMode ? '#6ec1e4' : '#0d6efd' }}>Problem Description</h6>
+                        <p style={{ fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-wrap', color: isDarkMode ? '#e0e0e0' : '#495057' }}>
                             {codingDetails?.problem_description}
                         </p>
                     </div>
@@ -362,20 +397,34 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
                     {/* Input/Output Format */}
                     <div className="row g-3 mb-4">
                         <div className="col-12">
-                            <div className="card border-0" style={{ background: '#f8f9fa' }}>
+                            <div className="card" style={{
+                                background: isDarkMode ? 'transparent' : '#f8f9fa',
+                                border: isDarkMode ? '1px solid #444' : 'none'
+                            }}>
                                 <div className="card-body p-3">
-                                    <h6 className="fw-bold mb-2" style={{ fontSize: '13px' }}>Input Format</h6>
-                                    <pre className="mb-0" style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                                    <h6 className="fw-bold mb-2" style={{ fontSize: '13px', color: isDarkMode ? '#ffffff' : '#212529' }}>Input Format</h6>
+                                    <pre className="mb-0" style={{
+                                        fontSize: '12px',
+                                        whiteSpace: 'pre-wrap',
+                                        color: isDarkMode ? '#e0e0e0' : '#495057'
+                                    }}>
 {codingDetails?.input_description}
                                     </pre>
                                 </div>
                             </div>
                         </div>
                         <div className="col-12">
-                            <div className="card border-0" style={{ background: '#f8f9fa' }}>
+                            <div className="card" style={{
+                                background: isDarkMode ? 'transparent' : '#f8f9fa',
+                                border: isDarkMode ? '1px solid #444' : 'none'
+                            }}>
                                 <div className="card-body p-3">
-                                    <h6 className="fw-bold mb-2" style={{ fontSize: '13px' }}>Output Format</h6>
-                                    <pre className="mb-0" style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                                    <h6 className="fw-bold mb-2" style={{ fontSize: '13px', color: isDarkMode ? '#ffffff' : '#212529' }}>Output Format</h6>
+                                    <pre className="mb-0" style={{
+                                        fontSize: '12px',
+                                        whiteSpace: 'pre-wrap',
+                                        color: isDarkMode ? '#e0e0e0' : '#495057'
+                                    }}>
 {codingDetails?.output_description}
                                     </pre>
                                 </div>
@@ -385,12 +434,20 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
 
                      {/* Constraints */}
                     {codingDetails?.constraints && (
-                        <div className="card border-0 mb-3" style={{ background: '#fff3cd' }}>
+                        <div className="card mb-3" style={{
+                            background: isDarkMode ? 'transparent' : '#fff3cd',
+                            border: isDarkMode ? '1px solid #ffc107' : 'none'
+                        }}>
                             <div className="card-body p-3">
-                                <h6 className="fw-bold mb-2" style={{ fontSize: '13px' }}>
+                                <h6 className="fw-bold mb-2" style={{ fontSize: '13px', color: isDarkMode ? '#ffc107' : '#856404' }}>
                                     Constraints
                                 </h6>
-                                <div style={{ fontSize: '12px', whiteSpace: 'pre-wrap' , lineHeight: '1.7'}}>
+                                <div style={{
+                                    fontSize: '12px',
+                                    whiteSpace: 'pre-wrap',
+                                    lineHeight: '1.7',
+                                    color: isDarkMode ? '#e0e0e0' : '#856404'
+                                }}>
                                     {codingDetails.constraints}
                                 </div>
                             </div>
@@ -398,25 +455,32 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
                     )}
 
                     {/* Sample Test Case */}
-                    <div className="card border-0 mb-4" style={{ background: '#e7f3ff' }}>
+                    <div className="card mb-4" style={{
+                        background: isDarkMode ? 'transparent' : '#e7f3ff',
+                        border: isDarkMode ? '1px solid #17a2b8' : 'none'
+                    }}>
                         <div className="card-body p-3">
-                           
+
                             <div className="mb-2">
-                                <small className="text-muted fw-bold">INPUT</small>
+                                <small className="fw-bold" style={{ color: isDarkMode ? '#17a2b8' : '#004085' }}>INPUT</small>
                                 <pre className="mt-1 p-2 rounded" style={{
-                                    background: 'white',
+                                    background: isDarkMode ? '#2d2d2d' : 'white',
                                     fontSize: '12px',
-                                    whiteSpace: 'pre-wrap'
+                                    whiteSpace: 'pre-wrap',
+                                    color: isDarkMode ? '#e0e0e0' : '#212529',
+                                    border: isDarkMode ? '1px solid #444' : 'none'
                                 }}>
 {codingDetails?.sample_input}
                                 </pre>
                             </div>
                             <div>
-                                <small className="text-muted fw-bold">EXPECTED OUTPUT</small>
+                                <small className="fw-bold" style={{ color: isDarkMode ? '#17a2b8' : '#004085' }}>EXPECTED OUTPUT</small>
                                 <pre className="mt-1 p-2 rounded" style={{
-                                    background: 'white',
+                                    background: isDarkMode ? '#2d2d2d' : 'white',
                                     fontSize: '12px',
-                                    whiteSpace: 'pre-wrap'
+                                    whiteSpace: 'pre-wrap',
+                                    color: isDarkMode ? '#e0e0e0' : '#212529',
+                                    border: isDarkMode ? '1px solid #444' : 'none'
                                 }}>
 {codingDetails?.sample_output}
                                 </pre>
@@ -428,13 +492,20 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
 
                     {/* Hints */}
                     {codingDetails?.hints && (
-                        <div className="card border-0" style={{ background: '#d1ecf1' }}>
+                        <div className="card" style={{
+                            background: isDarkMode ? 'transparent' : '#d1ecf1',
+                            border: isDarkMode ? '1px solid #17a2b8' : 'none'
+                        }}>
                             <div className="card-body p-3">
-                                <h6 className="fw-bold mb-2" style={{ fontSize: '13px' }}>
-                                    <i className="icofont-bulb-alt text-info me-2"></i>
+                                <h6 className="fw-bold mb-2" style={{ fontSize: '13px', color: isDarkMode ? '#17a2b8' : '#0c5460' }}>
+                                    <i className="icofont-bulb-alt me-2"></i>
                                     Hints
                                 </h6>
-                                <div style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                                <div style={{
+                                    fontSize: '12px',
+                                    whiteSpace: 'pre-wrap',
+                                    color: isDarkMode ? '#e0e0e0' : '#0c5460'
+                                }}>
                                     {codingDetails.hints}
                                 </div>
                             </div>
@@ -443,13 +514,16 @@ const CodingQuestionEditor = ({ question, task, onComplete, onBack }) => {
                 </div>
 
                 {/* Right Panel - Code Editor */}
-                <div className="d-flex flex-column" style={{ width: '55%' }}>
+                <div className="d-flex flex-column" style={{
+                    width: '55%',
+                    backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff'
+                }}>
                     {/* Code Editor */}
                     <div className="flex-grow-1" style={{ position: 'relative' }}>
                         <Editor
                             height="100%"
                             language={language}
-                            theme="vs-dark"
+                            theme={isDarkMode ? "vs-dark" : "light"}
                             value={code}
                             onChange={(value) => setCode(value || '')}
                             options={{
@@ -496,7 +570,8 @@ CodingQuestionEditor.propTypes = {
     question: PropTypes.object.isRequired,
     task: PropTypes.object.isRequired,
     onComplete: PropTypes.func,
-    onBack: PropTypes.func.isRequired
+    onBack: PropTypes.func.isRequired,
+    isDarkMode: PropTypes.bool,
 };
 
 export default CodingQuestionEditor;

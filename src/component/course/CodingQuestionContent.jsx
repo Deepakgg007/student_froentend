@@ -8,7 +8,7 @@ import api from '../../services/api';
  * CodingQuestionContent - Wrapper component for coding questions
  * Manages state between overview and editor views
  */
-const CodingQuestionContent = ({ question, task, onComplete, onBack }) => {
+const CodingQuestionContent = ({ question, task, onComplete, onBack, isDarkMode = false }) => {
     const [showEditor, setShowEditor] = useState(false);
     const [hasSubmission, setHasSubmission] = useState(false);
     const [submission, setSubmission] = useState(null);
@@ -64,7 +64,7 @@ const CodingQuestionContent = ({ question, task, onComplete, onBack }) => {
     if (loading) {
         return (
             <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
+                <div className="spinner-border" style={{ color: '#0d6efd' }} role="status">
                     <span className="visually-hidden">Loading...</span>
                 </div>
             </div>
@@ -80,13 +80,14 @@ const CodingQuestionContent = ({ question, task, onComplete, onBack }) => {
                 right: 0,
                 bottom: 0,
                 zIndex: 9999,
-                background: 'white'
+                background: isDarkMode ? '#1e1e1e' : 'white'
             }}>
                 <CodingQuestionEditor
                     question={question}
                     task={task}
                     onComplete={handleComplete}
                     onBack={handleBackToOverview}
+                    isDarkMode={isDarkMode}
                 />
             </div>
         );
@@ -99,6 +100,7 @@ const CodingQuestionContent = ({ question, task, onComplete, onBack }) => {
             onStartCoding={handleStartCoding}
             hasSubmission={hasSubmission}
             submission={submission}
+            isDarkMode={isDarkMode}
         />
     );
 };
@@ -107,7 +109,8 @@ CodingQuestionContent.propTypes = {
     question: PropTypes.object.isRequired,
     task: PropTypes.object.isRequired,
     onComplete: PropTypes.func,
-    onBack: PropTypes.func
+    onBack: PropTypes.func,
+    isDarkMode: PropTypes.bool,
 };
 
 export default CodingQuestionContent;

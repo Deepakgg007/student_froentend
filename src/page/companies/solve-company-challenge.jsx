@@ -45,7 +45,6 @@ const SolveCompanyChallenge = () => {
   const [submitting, setSubmitting] = useState(false);
   const [starterCodes, setStarterCodes] = useState({});
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [customInput, setCustomInput] = useState('');
   const [selectedTestCase, setSelectedTestCase] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [showHintVideo, setShowHintVideo] = useState(false);
@@ -158,7 +157,6 @@ const SolveCompanyChallenge = () => {
       const response = await api.post('/student/submissions/run/', {
         code: code,
         language: language,
-        input: customInput,
         challenge_slug: challengeSlug,
       });
 
@@ -725,18 +723,7 @@ const SolveCompanyChallenge = () => {
 
                 {/* Action Bar */}
                 <div className="action-bar">
-                  <div className="custom-input-section">
-                    <label className="form-label text-muted">Custom Input (optional):</label>
-                    <textarea
-                      className="form-control form-control-sm"
-                      rows="2"
-                      value={customInput}
-                      onChange={(e) => setCustomInput(e.target.value)}
-                      placeholder="Enter custom test input..."
-                    />
-                  </div>
-                  <div className="action-buttons">
-                    <button className="btn-run" onClick={handleRunCode} disabled={running}>
+                  <button className="btn-run" onClick={handleRunCode} disabled={running}>
                       {running ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-2"></span>
@@ -762,7 +749,6 @@ const SolveCompanyChallenge = () => {
                         </>
                       )}
                     </button>
-                  </div>
                 </div>
               </>
             )}

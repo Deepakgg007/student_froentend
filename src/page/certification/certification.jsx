@@ -17,12 +17,9 @@ const CertificationPage = () => {
     const loadCertification = async () => {
       try {
         setError('');
-        console.log('📖 Loading certification ID:', certificationId);
         const response = await getCertificationById(certificationId);
-        console.log('📖 Certification response:', response);
 
         const data = response.data.data || response.data;
-        console.log('📖 Certification data:', data);
 
         if (!data || !data.title) {
           throw new Error('Invalid certification data received');
@@ -171,6 +168,7 @@ const CertificationPage = () => {
         {examState === 'result' && result && (
           <CertificationResult
             result={result}
+            certification={certification}
             onRetake={handleRetake}
           />
         )}

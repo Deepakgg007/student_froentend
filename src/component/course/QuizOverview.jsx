@@ -6,7 +6,7 @@ import api from '../../services/api';
  * QuizOverview - Modern landing page before starting quiz
  * Shows quiz info, attempt status, and start/view results button
  */
-const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReattempt, refreshKey, hasAttemptProp, submissions }) => {
+const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReattempt, refreshKey, hasAttemptProp, submissions, isDarkMode = false }) => {
     const [loading, setLoading] = useState(false);
     const [attemptStatus, setAttemptStatus] = useState({
         hasAttempt: false,
@@ -116,32 +116,36 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
         <div className="container py-4" style={{ maxWidth: '900px' }}>
             {/* Header Section */}
             <div className="mb-5">
-                <h3 className="mb-2" style={{ fontSize: '24px', fontWeight: '600', color: '#212529' }}>
+                <h3 className="mb-2" style={{ fontSize: '24px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529' }}>
                     {task?.title || 'Quiz Assessment'}
                 </h3>
-                <p className="mb-0" style={{ fontSize: '14px', color: '#6c757d' }}>
+                <p className="mb-0" style={{ fontSize: '14px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>
                     Multiple Choice Quiz • Test your knowledge
                 </p>
             </div>
 
             {/* Quiz Info Cards */}
             <div className="row g-3 mb-4">
-                <div className="col-md-4">
-                    <div style={{ padding: '20px', border: '1px solid #e9ecef', borderRadius: '8px', background: '#ffffff' }}>
-                        <div style={{ fontSize: '13px', color: '#6c757d', marginBottom: '8px' }}>Total Questions</div>
-                        <div style={{ fontSize: '28px', fontWeight: '600', color: '#212529' }}>{totalQuestions}</div>
+                <div className="col-md-6">
+                    <div style={{
+                        padding: '20px',
+                        border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                        borderRadius: '8px',
+                        background: isDarkMode ? 'transparent' : '#ffffff'
+                    }}>
+                        <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginBottom: '8px' }}>Total Questions</div>
+                        <div style={{ fontSize: '28px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529' }}>{totalQuestions}</div>
                     </div>
                 </div>
-                <div className="col-md-4">
-                    <div style={{ padding: '20px', border: '1px solid #e9ecef', borderRadius: '8px', background: '#ffffff' }}>
-                        <div style={{ fontSize: '13px', color: '#6c757d', marginBottom: '8px' }}>Max Score</div>
-                        <div style={{ fontSize: '28px', fontWeight: '600', color: '#212529' }}>{task?.max_score || 'N/A'}</div>
-                    </div>
-                </div>
-                <div className="col-md-4">
-                    <div style={{ padding: '20px', border: '1px solid #e9ecef', borderRadius: '8px', background: '#ffffff' }}>
-                        <div style={{ fontSize: '13px', color: '#6c757d', marginBottom: '8px' }}>Passing Score</div>
-                        <div style={{ fontSize: '28px', fontWeight: '600', color: '#212529' }}>{task?.passing_score || 'N/A'}</div>
+                <div className="col-md-6">
+                    <div style={{
+                        padding: '20px',
+                        border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                        borderRadius: '8px',
+                        background: isDarkMode ? 'transparent' : '#ffffff'
+                    }}>
+                        <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginBottom: '8px' }}>Passing Score</div>
+                        <div style={{ fontSize: '28px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529' }}>{task?.passing_score || 'N/A'}</div>
                     </div>
                 </div>
             </div>
@@ -150,9 +154,15 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
             {hasAttempt ? (
                 <>
                     {/* Results Card */}
-                    <div style={{ padding: '32px', border: '1px solid #e9ecef', borderRadius: '8px', background: '#ffffff', marginBottom: '24px' }}>
+                    <div style={{
+                        padding: '32px',
+                        border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                        borderRadius: '8px',
+                        background: isDarkMode ? 'transparent' : '#ffffff',
+                        marginBottom: '24px'
+                    }}>
                         <div className="d-flex align-items-center justify-content-between mb-4">
-                            <h5 className="mb-0" style={{ fontSize: '18px', fontWeight: '600', color: '#212529' }}>Quiz Completed</h5>
+                            <h5 className="mb-0" style={{ fontSize: '18px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529' }}>Quiz Completed</h5>
                             <span style={{
                                 padding: '6px 16px',
                                 borderRadius: '20px',
@@ -170,33 +180,48 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
                             <div style={{ fontSize: '48px', fontWeight: '700', color: percentage >= 60 ? '#28a745' : '#dc3545', marginBottom: '8px' }}>
                                 {percentage}%
                             </div>
-                            <div style={{ fontSize: '14px', color: '#6c757d' }}>Final Score</div>
+                            <div style={{ fontSize: '14px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>Final Score</div>
                         </div>
 
                         {/* Stats Grid */}
                         <div className="row g-3 text-center">
                             <div className="col-4">
-                                <div style={{ padding: '16px', border: '1px solid #e9ecef', borderRadius: '6px' }}>
+                                <div style={{
+                                    padding: '16px',
+                                    border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                                    borderRadius: '6px',
+                                    background: isDarkMode ? 'transparent' : 'transparent'
+                                }}>
                                     <div style={{ fontSize: '24px', fontWeight: '600', color: '#28a745', marginBottom: '4px' }}>
                                         {correctAnswers}
                                     </div>
-                                    <div style={{ fontSize: '13px', color: '#6c757d' }}>Correct</div>
+                                    <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>Correct</div>
                                 </div>
                             </div>
                             <div className="col-4">
-                                <div style={{ padding: '16px', border: '1px solid #e9ecef', borderRadius: '6px' }}>
+                                <div style={{
+                                    padding: '16px',
+                                    border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                                    borderRadius: '6px',
+                                    background: isDarkMode ? 'transparent' : 'transparent'
+                                }}>
                                     <div style={{ fontSize: '24px', fontWeight: '600', color: '#dc3545', marginBottom: '4px' }}>
                                         {wrongAnswers}
                                     </div>
-                                    <div style={{ fontSize: '13px', color: '#6c757d' }}>Wrong</div>
+                                    <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>Wrong</div>
                                 </div>
                             </div>
                             <div className="col-4">
-                                <div style={{ padding: '16px', border: '1px solid #e9ecef', borderRadius: '6px' }}>
+                                <div style={{
+                                    padding: '16px',
+                                    border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                                    borderRadius: '6px',
+                                    background: isDarkMode ? 'transparent' : 'transparent'
+                                }}>
                                     <div style={{ fontSize: '24px', fontWeight: '600', color: '#17a2b8', marginBottom: '4px' }}>
                                         {score.toFixed(1)}
                                     </div>
-                                    <div style={{ fontSize: '13px', color: '#6c757d' }}>Points</div>
+                                    <div style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>Points</div>
                                 </div>
                             </div>
                         </div>
@@ -225,8 +250,8 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
                                 padding: '12px 32px',
                                 fontSize: '15px',
                                 background: 'transparent',
-                                color: '#6c757d',
-                                border: '1px solid #dee2e6',
+                                color: isDarkMode ? '#adb5bd' : '#6c757d',
+                                border: isDarkMode ? '1px solid #444' : '1px solid #dee2e6',
                                 borderRadius: '6px',
                                 fontWeight: '500',
                                 cursor: 'pointer'
@@ -239,14 +264,21 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
             ) : (
                 <>
                     {/* Not Attempted Card */}
-                    <div style={{ padding: '40px', border: '1px solid #e9ecef', borderRadius: '8px', background: '#f8f9fa', marginBottom: '32px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '48px', color: '#6c757d', marginBottom: '16px' }}>
+                    <div style={{
+                        padding: '40px',
+                        border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                        borderRadius: '8px',
+                        background: isDarkMode ? 'transparent' : '#f8f9fa',
+                        marginBottom: '32px',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ fontSize: '48px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginBottom: '16px' }}>
                             <i className="icofont-question-circle"></i>
                         </div>
-                        <h5 style={{ fontSize: '18px', fontWeight: '600', color: '#212529', marginBottom: '12px' }}>
+                        <h5 style={{ fontSize: '18px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529', marginBottom: '12px' }}>
                             Ready to Test Your Knowledge?
                         </h5>
-                        <p style={{ fontSize: '14px', color: '#6c757d', marginBottom: '0' }}>
+                        <p style={{ fontSize: '14px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginBottom: '0' }}>
                             This quiz contains {totalQuestions} multiple choice questions.<br/>
                             Take your time and answer carefully. Good luck!
                         </p>
@@ -269,7 +301,7 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
                             <i className="icofont-play me-2"></i>
                             Start Quiz
                         </button>
-                        <p style={{ fontSize: '13px', color: '#6c757d', marginTop: '16px', marginBottom: '0' }}>
+                        <p style={{ fontSize: '13px', color: isDarkMode ? '#adb5bd' : '#6c757d', marginTop: '16px', marginBottom: '0' }}>
                             You can review your answers before final submission
                         </p>
                     </div>
@@ -278,12 +310,18 @@ const QuizOverview = ({ questions = [], task, onStartQuiz, onViewResults, onReat
 
             {/* Instructions */}
             {task?.instructions && (
-                <div style={{ padding: '24px', border: '1px solid #e9ecef', borderRadius: '8px', background: '#ffffff', marginTop: '24px' }}>
-                    <h6 style={{ fontSize: '15px', fontWeight: '600', color: '#212529', marginBottom: '16px' }}>
-                        <i className="icofont-list me-2" style={{ color: '#6c757d' }}></i>
+                <div style={{
+                    padding: '24px',
+                    border: isDarkMode ? '1px solid #444' : '1px solid #e9ecef',
+                    borderRadius: '8px',
+                    background: isDarkMode ? 'transparent' : '#ffffff',
+                    marginTop: '24px'
+                }}>
+                    <h6 style={{ fontSize: '15px', fontWeight: '600', color: isDarkMode ? '#ffffff' : '#212529', marginBottom: '16px' }}>
+                        <i className="icofont-list me-2" style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}></i>
                         Instructions
                     </h6>
-                    <div style={{ fontSize: '14px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#495057' }}>
+                    <div style={{ fontSize: '14px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: isDarkMode ? '#e0e0e0' : '#495057' }}>
                         {task.instructions}
                     </div>
                 </div>
@@ -301,6 +339,7 @@ QuizOverview.propTypes = {
     refreshKey: PropTypes.number,
     hasAttemptProp: PropTypes.bool,
     submissions: PropTypes.object,
+    isDarkMode: PropTypes.bool,
 };
 
 export default QuizOverview;

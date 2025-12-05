@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 
-const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
+const DocumentContent = ({ content, onComplete, onNext, onPrev, isDarkMode = false }) => {
     const [isCompleting, setIsCompleting] = useState(false);
 
     // ✅ Manual completion with button
     const handleMarkComplete = async () => {
-        console.log('📄 DocumentContent: Mark as complete button clicked');
         setIsCompleting(true);
         try {
-            console.log('📞 DocumentContent: Calling onComplete()');
             await onComplete();
-            console.log('✅ DocumentContent: onComplete() succeeded');
             // Show success toast message (side notification)
             Swal.fire({
                 toast: true,
@@ -22,7 +19,6 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
                 timer: 1500,
                 timerProgressBar: true
             });
-            console.log('🎉 DocumentContent: Success toast shown');
             // Don't reload - let parent component handle state update
             setIsCompleting(false);
         } catch (err) {
@@ -41,7 +37,7 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
     };
 
     if (!content) {
-        return <p>No document available</p>;
+        return <p style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>No document available</p>;
     }
 
 
@@ -61,41 +57,67 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
 
     return (
         <div className="document-content">
-            <h3 className="mb-4">{content.title}</h3>
-            {content.description && <p className="text-muted mb-4">{content.description}</p>}
+            <h3 className="mb-4" style={{ color: isDarkMode ? '#ffffff' : '#212529' }}>{content.title}</h3>
+            {content.description && <p className="mb-4" style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>{content.description}</p>}
 
             {docUrl ? (
-                <div className="text-center card p-5 shadow-sm" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <div className="text-center card p-5" style={{
+                    maxWidth: '600px',
+                    margin: '0 auto',
+                    backgroundColor: isDarkMode ? 'transparent' : '#ffffff',
+                    border: isDarkMode ? '1px solid #444' : '1px solid #dee2e6',
+                    boxShadow: isDarkMode ? 'none' : '0 .125rem .25rem rgba(0,0,0,.075)'
+                }}>
                     <div className="mb-4">
                         <i className="icofont-file-document" style={{ fontSize: '80px', color: '#2196F3' }}></i>
                     </div>
-                    <h5 className="mb-3">{content.title}</h5>
+                    <h5 className="mb-3" style={{ color: isDarkMode ? '#ffffff' : '#212529' }}>{content.title}</h5>
                     <div className="mb-4">
-                        <span className="badge bg-primary" style={{ fontSize: '14px', padding: '8px 16px' }}>
+                        <span className="badge" style={{
+                            fontSize: '14px',
+                            padding: '8px 16px',
+                            backgroundColor: '#0d6efd',
+                            color: 'white'
+                        }}>
                             {docType.toUpperCase()} Document
                         </span>
                     </div>
                     <div className="d-flex gap-3 justify-content-center">
-                        <a href={docUrl} download className="btn btn-primary btn-lg">
+                        <a href={docUrl} download className="btn btn-lg" style={{
+                            backgroundColor: '#0d6efd',
+                            color: 'white',
+                            border: 'none'
+                        }}>
                             <i className="icofont-download me-2"></i> Download File
                         </a>
-                        <a href={docUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-lg">
+                        <a href={docUrl} target="_blank" rel="noopener noreferrer" className="btn btn-lg" style={{
+                            backgroundColor: 'transparent',
+                            color: isDarkMode ? '#6ec1e4' : '#0d6efd',
+                            border: isDarkMode ? '1px solid #6ec1e4' : '1px solid #0d6efd'
+                        }}>
                             <i className="icofont-external-link me-2"></i> Open in New Tab
                         </a>
                     </div>
-                   
+
                 </div>
             ) : (
-                <div className="alert alert-info">
+                <div className="alert" style={{
+                    backgroundColor: isDarkMode ? 'transparent' : '#d1ecf1',
+                    borderColor: isDarkMode ? '#444' : '#bee5eb',
+                    color: isDarkMode ? '#6ec1e4' : '#0c5460'
+                }}>
                     No document file available.
                 </div>
             )}
 
             {content.notes && (
                 <div className="notes mt-4">
-                    <h5>Notes</h5>
-                    <div className="p-3 bg-light rounded">
-                        <p style={{ whiteSpace: 'pre-wrap' }}>{content.notes}</p>
+                    <h5 style={{ color: isDarkMode ? '#ffffff' : '#212529' }}>Notes</h5>
+                    <div className="p-3 rounded" style={{
+                        backgroundColor: isDarkMode ? 'transparent' : '#f8f9fa',
+                        border: isDarkMode ? '1px solid #444' : 'none'
+                    }}>
+                        <p style={{ whiteSpace: 'pre-wrap', color: isDarkMode ? '#e0e0e0' : '#495057' }}>{content.notes}</p>
                     </div>
                 </div>
             )}
@@ -103,8 +125,13 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
             {/* Mark as Complete Button */}
             <div className="mt-4 text-center">
                 {!content.is_completed ? (
-                    <button 
-                        className="btn btn-success btn-lg"
+                    <button
+                        className="btn btn-lg"
+                        style={{
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none'
+                        }}
                         onClick={handleMarkComplete}
                         disabled={isCompleting}
                     >
@@ -121,7 +148,11 @@ const DocumentContent = ({ content, onComplete, onNext, onPrev }) => {
                         )}
                     </button>
                 ) : (
-                    <div className="alert alert-success">
+                    <div className="alert" style={{
+                        backgroundColor: isDarkMode ? 'transparent' : '#d4edda',
+                        borderColor: isDarkMode ? '#4caf50' : '#c3e6cb',
+                        color: isDarkMode ? '#4caf50' : '#155724'
+                    }}>
                         <i className="icofont-check-circled me-2"></i>
                         <strong>Completed!</strong> You have finished this document.
                     </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './CodeBlockExecutor.css';
 
-const CodeBlockExecutor = ({ code, language = 'javascript', title = '', description = '' }) => {
+const CodeBlockExecutor = ({ code, language = 'javascript', title = '', description = '', isDarkMode = false }) => {
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState('');
@@ -132,11 +132,19 @@ const CodeBlockExecutor = ({ code, language = 'javascript', title = '', descript
     };
 
     return (
-        <div className="code-block-executor">
-            <div className="code-block-header">
+        <div className="code-block-executor" style={{
+            borderColor: isDarkMode ? '#444' : '#e2e8f0'
+        }}>
+            <div className="code-block-header" style={{
+                borderBottomColor: isDarkMode ? '#444' : '#e2e8f0'
+            }}>
                 <div className="code-block-title-section">
-                    {title && <h5 className="code-block-title">{title}</h5>}
-                    {description && <p className="code-block-description">{description}</p>}
+                    {title && <h5 className="code-block-title" style={{
+                        color: isDarkMode ? '#ffffff' : '#1a202c'
+                    }}>{title}</h5>}
+                    {description && <p className="code-block-description" style={{
+                        color: isDarkMode ? '#adb5bd' : '#718096'
+                    }}>{description}</p>}
                 </div>
                 <div className="code-block-right-section">
                     <div className="code-language-badge">
@@ -148,35 +156,42 @@ const CodeBlockExecutor = ({ code, language = 'javascript', title = '', descript
                     <button
                         className={`btn-action copy-btn ${copied ? 'copied' : ''}`}
                         onClick={handleCopyCode}
-                        title="Copy code"
+                        title={copied ? 'Copied!' : 'Copy code'}
+                        style={{
+                            borderColor: isDarkMode ? '#555' : '#cbd5e0',
+                            color: isDarkMode ? '#e0e0e0' : '#4a5568',
+                            backgroundColor: 'transparent'
+                        }}
                     >
                         <i className={`icofont-${copied ? 'check' : 'copy'}`}></i>
-                        <span>{copied ? 'Copied!' : 'Copy'}</span>
                     </button>
                     <button
                         className={`btn-action edit-btn ${isEditMode ? 'active' : ''}`}
                         onClick={() => setIsEditMode(!isEditMode)}
                         title={isEditMode ? 'Exit edit mode' : 'Edit code'}
+                        style={{
+                            borderColor: isDarkMode ? '#555' : '#cbd5e0',
+                            color: isDarkMode ? '#e0e0e0' : '#4a5568',
+                            backgroundColor: 'transparent'
+                        }}
                     >
                         <i className={`icofont-${isEditMode ? 'close' : 'edit'}`}></i>
-                        <span>{isEditMode ? 'Done' : 'Edit'}</span>
                     </button>
                     <button
                         className="btn-action run-btn"
                         onClick={runCode}
                         disabled={isRunning}
-                        title="Run code"
+                        title={isRunning ? 'Running...' : 'Run code'}
+                        style={{
+                            borderColor: isDarkMode ? '#555' : '#cbd5e0',
+                            color: isDarkMode ? '#e0e0e0' : '#4a5568',
+                            backgroundColor: 'transparent'
+                        }}
                     >
                         {isRunning ? (
-                            <>
-                                <span className="spinner-small"></span>
-                                <span>Running...</span>
-                            </>
+                            <span className="spinner-small"></span>
                         ) : (
-                            <>
-                                <i className="icofont-play"></i>
-                                <span>Run</span>
-                            </>
+                            <i className="icofont-play"></i>
                         )}
                     </button>
                     </div>
@@ -196,40 +211,78 @@ const CodeBlockExecutor = ({ code, language = 'javascript', title = '', descript
                             className="btn-reset"
                             onClick={handleResetCode}
                             title="Reset to original code"
+                            style={{
+                                borderColor: isDarkMode ? '#555' : '#cbd5e0',
+                                color: isDarkMode ? '#e0e0e0' : '#4a5568',
+                                backgroundColor: 'transparent'
+                            }}
                         >
                             <i className="icofont-refresh"></i>
-                            <span>Reset</span>
                         </button>
                     </div>
                 </div>
             ) : (
                 <div className="code-block-content">
-                    <pre className={`bg-dark text-light p-3 rounded language-${language}`}>
+                    <pre className={`p-3 rounded language-${language}`} style={{
+                        backgroundColor: '#1e1e1e',
+                        color: '#e0e0e0',
+                        margin: 0
+                    }}>
                         <code>{code}</code>
                     </pre>
                 </div>
             )}
 
             {showOutput && (
-                <div className="code-output-section">
-                    <div className="output-header">
-                        <h6>Output</h6>
+                <div className="code-output-section" style={{
+                    backgroundColor: '#1e1e1e',
+                    borderTopColor: isDarkMode ? '#444' : '#e2e8f0'
+                }}>
+                    <div className="output-header" style={{
+                        backgroundColor: '#1e1e1e',
+                        borderBottomColor: isDarkMode ? '#444' : '#e2e8f0',
+                        padding: '0.5rem 0.75rem'
+                    }}>
+                        <h6 style={{
+                            color: '#e0e0e0',
+                            margin: 0,
+                            fontSize: '0.875rem'
+                        }}>Output</h6>
                         <button
                             className="btn-close-output"
                             onClick={() => setShowOutput(false)}
                             title="Close output"
+                            style={{
+                                color: '#adb5bd'
+                            }}
                         >
                             ×
                         </button>
                     </div>
 
                     {error ? (
-                        <div className="output-error">
-                            <pre>{error}</pre>
+                        <div className="output-error" style={{
+                            backgroundColor: '#1e1e1e',
+                            color: '#ff6b6b',
+                            padding: '0.75rem'
+                        }}>
+                            <pre style={{
+                                color: '#ff6b6b',
+                                margin: 0,
+                                backgroundColor: 'transparent'
+                            }}>{error}</pre>
                         </div>
                     ) : (
-                        <div className="output-success">
-                            <pre>{output || 'No output'}</pre>
+                        <div className="output-success" style={{
+                            backgroundColor: '#1e1e1e',
+                            color: '#e0e0e0',
+                            padding: '0.75rem'
+                        }}>
+                            <pre style={{
+                                color: '#e0e0e0',
+                                margin: 0,
+                                backgroundColor: 'transparent'
+                            }}>{output}</pre>
                         </div>
                     )}
                 </div>

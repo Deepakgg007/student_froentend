@@ -38,7 +38,6 @@ const SolveChallenge = () => {
   const [submitting, setSubmitting] = useState(false);
   const [starterCodes, setStarterCodes] = useState({});
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [customInput, setCustomInput] = useState('');
   const [selectedTestCase, setSelectedTestCase] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -118,7 +117,6 @@ const SolveChallenge = () => {
       const response = await api.post('/student/submissions/run/', {
         code: code,
         language: language,
-        input: customInput,
         challenge_slug: slug,
       });
 
@@ -505,17 +503,6 @@ const SolveChallenge = () => {
                           <div className="text-center py-4">
                             <i className="fas fa-play fa-2x mb-3 text-white"></i>
                             <p className="text-white">Run your code to see results</p>
-                            <div className="mt-3 px-3">
-                              <label className="form-label text-white">Custom Input (Optional):</label>
-                              <textarea
-                                className="form-control"
-                                value={customInput}
-                                onChange={(e) => setCustomInput(e.target.value)}
-                                placeholder="Enter custom input..."
-                                rows={4}
-                                style={{ fontFamily: 'monospace', fontSize: '13px' }}
-                              />
-                            </div>
                           </div>
                         )}
                       </div>

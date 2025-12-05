@@ -23,7 +23,6 @@ const Profile = () => {
     try {
       setLoading(true);
       
-      console.log('🔍 Fetching profile, userId:', userId);
       
       // Fetch profile using api service
       // Use auth/me endpoint for current user, profile endpoint for other users
@@ -93,10 +92,7 @@ const Profile = () => {
       try {
         const userIdForActivities = userId || profileData.user.id;
         const activitiesEndpoint = `/student/profile/${userIdForActivities}/activity/?limit=100`;
-
-        console.log('📋 Fetching activities from:', activitiesEndpoint);
         const activitiesRes = await api.get(activitiesEndpoint);
-        console.log('📋 Activities response:', activitiesRes.data);
 
         // Handle different response formats from backend
         let activitiesData = [];
@@ -110,7 +106,6 @@ const Profile = () => {
           activitiesData = activitiesRes.data;
         }
 
-        console.log('📋 Processed activities:', activitiesData);
         setActivities(activitiesData);
       } catch (err) {
         console.warn('⚠️ Activities not available:', err.message);

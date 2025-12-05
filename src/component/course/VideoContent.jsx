@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 
-const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
+const VideoContent = ({ content, onComplete, onNext, onPrev, isDarkMode = false }) => {
     const videoRef = useRef(null);
     const [isCompleting, setIsCompleting] = useState(false);
 
@@ -41,12 +41,9 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
 
     // Manual mark as complete
     const handleMarkComplete = async () => {
-        console.log('🎬 VideoContent: Mark as complete button clicked');
         setIsCompleting(true);
         try {
-            console.log('📞 VideoContent: Calling onComplete()');
             await onComplete();
-            console.log('✅ VideoContent: onComplete() succeeded');
             // Show success toast message (side notification)
             Swal.fire({
                 toast: true,
@@ -57,7 +54,6 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
                 timer: 1500,
                 timerProgressBar: true
             });
-            console.log('🎉 VideoContent: Success toast shown');
             // Don't reload - let parent component handle state update
             setIsCompleting(false);
         } catch (err) {
@@ -76,7 +72,7 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
     };
 
     if (!content) {
-        return <p>No video available</p>;
+        return <p style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>No video available</p>;
     }
 
 
@@ -95,8 +91,8 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
 
     return (
         <div className="video-content">
-            <h3 className="mb-4">{content.title}</h3>
-            {content.description && <p className="text-muted mb-4">{content.description}</p>}
+            <h3 className="mb-4" style={{ color: isDarkMode ? '#ffffff' : '#212529' }}>{content.title}</h3>
+            {content.description && <p className="mb-4" style={{ color: isDarkMode ? '#adb5bd' : '#6c757d' }}>{content.description}</p>}
 
             {youtubeEmbed ? (
                 <div className="ratio ratio-16x9 mb-4">
@@ -120,16 +116,23 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
                     </video>
                 </div>
             ) : (
-                <div className="alert alert-info">
+                <div className="alert" style={{
+                    backgroundColor: isDarkMode ? 'transparent' : '#d1ecf1',
+                    borderColor: isDarkMode ? '#444' : '#bee5eb',
+                    color: isDarkMode ? '#6ec1e4' : '#0c5460'
+                }}>
                     No video source available for this content.
                 </div>
             )}
 
             {content.transcript && (
                 <div className="transcript mt-4">
-                    <h5>Transcript</h5>
-                    <div className="p-3 bg-light rounded">
-                        <p style={{ whiteSpace: 'pre-wrap' }}>{content.transcript}</p>
+                    <h5 style={{ color: isDarkMode ? '#ffffff' : '#212529' }}>Transcript</h5>
+                    <div className="p-3 rounded" style={{
+                        backgroundColor: isDarkMode ? 'transparent' : '#f8f9fa',
+                        border: isDarkMode ? '1px solid #444' : 'none'
+                    }}>
+                        <p style={{ whiteSpace: 'pre-wrap', color: isDarkMode ? '#e0e0e0' : '#495057' }}>{content.transcript}</p>
                     </div>
                 </div>
             )}
@@ -137,8 +140,13 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
             {/* Mark as Complete Button */}
             <div className="mt-4 text-center">
                 {!content.is_completed ? (
-                    <button 
-                        className="btn btn-success btn-lg"
+                    <button
+                        className="btn btn-lg"
+                        style={{
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none'
+                        }}
                         onClick={handleMarkComplete}
                         disabled={isCompleting}
                     >
@@ -155,12 +163,16 @@ const VideoContent = ({ content, onComplete, onNext, onPrev }) => {
                         )}
                     </button>
                 ) : (
-                    <div className="alert alert-success">
+                    <div className="alert" style={{
+                        backgroundColor: isDarkMode ? 'transparent' : '#d4edda',
+                        borderColor: isDarkMode ? '#4caf50' : '#c3e6cb',
+                        color: isDarkMode ? '#4caf50' : '#155724'
+                    }}>
                         <i className="icofont-check-circled me-2"></i>
                         <strong>Completed!</strong> You have finished this video.
                     </div>
                 )}
-                <p className="text-muted mt-2" style={{ fontSize: '14px' }}>
+                <p className="mt-2" style={{ fontSize: '14px', color: isDarkMode ? '#adb5bd' : '#6c757d' }}>
                     <i className="icofont-info-circle me-1"></i>
                     Video will also auto-complete when you finish watching
                 </p>

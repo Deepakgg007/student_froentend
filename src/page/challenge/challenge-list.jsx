@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
-import UserStatsWidget from '../../component/sidebar/user-stats-widget';
-
 const ChallengeList = () => {
   const navigate = useNavigate();
   const [challenges, setChallenges] = useState([]);
@@ -449,9 +447,7 @@ const ChallengeList = () => {
 
             {/* Desktop Sidebar */}
             <div className="col-lg-3 d-none d-lg-block">
-              <div style={{ position: 'sticky', top: '100px' }}>
-                <UserStatsWidget />
-              </div>
+              {/* User stats removed - widget deleted */}
 
               <div className="card border-0 shadow-sm mt-4">
                 <div className="card-body">

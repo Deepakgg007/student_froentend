@@ -1,5 +1,4 @@
 import { Component, Fragment } from "react";
-import GoogleMap from "../../component/sidebar/googlemap";
 
 const subTitle = "Get in touch with us";
 const title = "We're Always Eager To Hear From You!";
@@ -60,7 +59,24 @@ const ContactPage = () => {
                                 </div>
                             </div>
                             <div className="col-xl-8 col-lg-7 col-12">
-                                <GoogleMap />
+                                <div className="google-map" style={{
+                                    width: '100%',
+                                    height: '450px',
+                                    borderRadius: '8px',
+                                    overflow: 'hidden',
+                                    border: '1px solid #e5e7eb'
+                                }}>
+                                    <iframe
+                                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3846.3764!2d75.1237!3d15.3647!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTXCsDIxJzUyLjkiTiA3NcKwMDcnMjUuMyJF!5e0!3m2!1sen!2sin!4v1234567890"
+                                        width="100%"
+                                        height="100%"
+                                        style={{ border: 0 }}
+                                        allowFullScreen=""
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        title="HAEGL Technologies Office Location"
+                                    ></iframe>
+                                </div>
                             </div>
                         </div>
                     </div>

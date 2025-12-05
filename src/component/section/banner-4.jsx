@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import SelectCatagory from "../sidebar/selectCatagory";
 import api from "../../services/api";
 
 const BannerFour = () => {
@@ -180,7 +179,25 @@ const BannerFour = () => {
         >
           {/* Category dropdown */}
           <div style={{ flex: "1 1 200px" }}>
-            <SelectCatagory select={"all"} onChange={handleCategoryChange} />
+            <select
+              onChange={handleCategoryChange}
+              defaultValue="all"
+              style={{
+                width: "100%",
+                padding: "12px 15px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+                fontSize: "16px",
+                backgroundColor: "#fff",
+                cursor: "pointer"
+              }}
+            >
+              <option value="all">All Categories</option>
+              <option value="programming">Programming</option>
+              <option value="design">Design</option>
+              <option value="business">Business</option>
+              <option value="marketing">Marketing</option>
+            </select>
           </div>
 
           {/* Search Box */}

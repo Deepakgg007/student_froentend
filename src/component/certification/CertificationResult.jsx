@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { downloadCertificate } from '../../services/api';
+import CertificateTemplate from '../certification/CertificateTemplate';
+import { downloadCertificateAsPDF } from '../certification/CertificateDownloadHelper';
 
 /**
  * CertificationResult Component
@@ -12,38 +14,76 @@ import { downloadCertificate } from '../../services/api';
  *   - attempt_id: number
  *   - course_name: string
  *   - certification_title: string
+ * @param {Object} certification - Certification details from getCertificationById
+ *   - college: College information with logo and signature
  */
-const CertificationResult = ({ result, onRetake }) => {
+const CertificationResult = ({ result, certification, onRetake }) => {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const [showCertificatePreview, setShowCertificatePreview] = useState(false);
+  const certificateRef = useRef(null);
+
+  // Get student info from localStorage or props
+  const studentName = localStorage?.getItem('student_name') || result.student_name || 'Student';
+
+  // Get college info from result first (if available), then from certification prop, then default
+  let collegeInfo = result.college;
+  if (!collegeInfo && certification?.college) {
+    collegeInfo = certification.college;
+  }
+  collegeInfo = collegeInfo || {};
+
+  const collegeName = collegeInfo.name || 'Z1 Education';
+  const collegeLogo = collegeInfo.logo || null;
+  const collegeSignature = collegeInfo.signature_display || null;
+
+  // Download frontend certificate as PDF
+  const handleDownloadFrontendCertificate = async () => {
+    try {
+      setDownloading(true);
+      setDownloadError('');
+
+      if (!certificateRef.current) {
+        throw new Error('Certificate template not available');
+      }
+
+      const certificateName = result.certification_title || 'Certificate';
+      await downloadCertificateAsPDF(certificateRef, certificateName);
+    } catch (err) {
+      console.error('Error downloading frontend certificate:', err);
+      setDownloadError(err.message || 'Failed to download certificate');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handleDownloadCertificate = async () => {
     try {
       setDownloading(true);
       setDownloadError('');
 
-      // Backend returns attempt_id, not id
+      if (!certificateRef.current) {
+        console.warn('Certificate ref is not available, waiting a moment...');
+        // Sometimes the ref isn't immediately available, give it a moment
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      const certificateName = result.certification_title || 'Certificate';
+      await downloadCertificateAsPDF(certificateRef, certificateName);
+      return;
+
+      // Old backend certificate download code (kept as fallback, not used)
       const attemptId = result.attempt_id || result.id;
 
       if (!attemptId) {
         throw new Error('Attempt ID not found in result');
       }
 
-      console.log('Downloading certificate for attempt:', attemptId);
 
       const response = await downloadCertificate(attemptId);
 
       // Axios with responseType: 'blob' returns data as Blob
       let blob = response.data;
-
-      console.log('Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        dataType: typeof blob,
-        isBlob: blob instanceof Blob,
-        blobType: blob?.type,
-        blobSize: blob?.size
-      });
 
       // Validate that we have data
       if (!blob) {
@@ -61,12 +101,7 @@ const CertificationResult = ({ result, onRetake }) => {
         throw new Error('Certificate file is empty');
       }
 
-      console.log('Blob validated:', {
-        type: blob.type,
-        size: blob.size,
-        name: `certificate-${attemptId}.pdf`
-      });
-
+     
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -83,7 +118,6 @@ const CertificationResult = ({ result, onRetake }) => {
         window.URL.revokeObjectURL(url);
       }, 100);
 
-      console.log('Certificate downloaded successfully');
     } catch (err) {
       console.error('Error downloading certificate:', err);
 
@@ -195,8 +229,36 @@ const CertificationResult = ({ result, onRetake }) => {
         )}
       </div>
 
+      {/* Certificate Preview (Hidden from view but available for rendering) */}
+      {result.passed && (
+        <div style={{
+          position: 'fixed',
+          top: '-9999px',
+          left: '-9999px',
+          width: '1200px',
+          height: '900px',
+          zIndex: '-1',
+          pointerEvents: 'none',
+          visibility: 'visible' // Ensure element is visible for html2canvas
+        }}>
+          <CertificateTemplate
+            ref={certificateRef}
+            studentName={studentName}
+            courseName={result.certification_title || 'Certification'}
+            completionDate={result.completed_at ? new Date(result.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            score={Math.round(result.score)}
+            passingScore={result.passing_score || 80}
+            collegeName={collegeName}
+            collegeLogo={collegeLogo}
+            collegeSignature={collegeSignature}
+            certificateNumber={result.certificate_number || `CERT-${result.attempt_id || result.id}`}
+            principalName={collegeInfo.principal_name || 'Director'}
+          />
+        </div>
+      )}
+
       {/* Certificate Download Section */}
-      {result.passed && result.certificate_issued && (
+      {result.passed && (
         <div style={{
           padding: '24px',
           border: '1px solid #e9ecef',
@@ -254,12 +316,75 @@ const CertificationResult = ({ result, onRetake }) => {
               fontSize: '15px',
               cursor: downloading ? 'not-allowed' : 'pointer',
               opacity: downloading ? 0.6 : 1,
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              marginRight: '8px'
             }}
           >
             <i className="icofont-download me-2"></i>
             {downloading ? 'Downloading...' : 'Download Certificate'}
           </button>
+
+          <button
+            onClick={() => setShowCertificatePreview(!showCertificatePreview)}
+            style={{
+              padding: '12px 32px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: '600',
+              fontSize: '15px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <i className="icofont-eye me-2"></i>
+            {showCertificatePreview ? 'Hide Preview' : 'View Preview'}
+          </button>
+        </div>
+      )}
+
+      {/* Certificate Preview Display */}
+      {result.passed && showCertificatePreview && (
+        <div style={{
+          padding: '24px',
+          border: '1px solid #e9ecef',
+          borderRadius: '8px',
+          backgroundColor: '#f8f9fa',
+          marginBottom: '24px'
+        }}>
+          <h5 style={{
+            margin: '0 0 16px 0',
+            color: '#212529',
+            fontSize: '16px',
+            fontWeight: '600'
+          }}>
+            Certificate Preview
+          </h5>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '20px',
+            backgroundColor: '#ffffff',
+            borderRadius: '6px',
+            border: '1px solid #e9ecef'
+          }}>
+            <div style={{ width: '100%', maxWidth: '900px' }}>
+              <CertificateTemplate
+                ref={certificateRef}
+                studentName={studentName}
+                courseName={result.certification_title || 'Certification'}
+                completionDate={result.completed_at ? new Date(result.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                score={Math.round(result.score)}
+                passingScore={result.passing_score || 80}
+                collegeName={collegeName}
+                collegeLogo={collegeLogo}
+                collegeSignature={collegeSignature}
+                certificateNumber={result.certificate_number || `CERT-${result.attempt_id || result.id}`}
+                principalName={collegeInfo.principal_name || 'Director'}
+              />
+            </div>
+          </div>
         </div>
       )}
 
