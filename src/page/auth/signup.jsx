@@ -62,31 +62,36 @@ const SignupPage = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
+  const { name, value, type, files } = e.target;
 
-    if (type === "file") {
-      const file = files[0];
-      setFormData((prev) => ({
-        ...prev,
-        [name]: file,
-      }));
+  if (type === "file") {
+    const file = files[0];
+    setFormData((prev) => ({
+      ...prev,
+      [name]: file,
+    }));
 
-      // Create preview image
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviewImage(reader.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
-    setError("");
-  };
+  } else {
+    // Restrict only letters for first_name and last_name
+    if ((name === "first_name" || name === "last_name") && /[^a-zA-Z]/.test(value)) {
+      return; // ignore non-letter input
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+  setError("");
+};
+
 
   const validateForm = () => {
     const {
@@ -190,9 +195,11 @@ const SignupPage = () => {
       );
 
       // Add profile picture if selected
-      if (formData.profile_picture) {
-        formDataWithFile.append("profile_picture", formData.profile_picture);
-      }
+      if (!formData.profile_picture) {
+  setError("Please upload your profile picture.");
+  return false;
+}
+
 
       await api.post("/auth/register/", formDataWithFile, {
         headers: {
@@ -329,8 +336,9 @@ const SignupPage = () => {
               {/* Profile Picture Upload */}
               <div className="form-row">
                 <label className="form-label">
-                  Profile Picture <span className="optional">(Optional)</span>
-                </label>
+  Profile Picture <span className="required">*</span>
+</label>
+
                 <div className="form-control-wrap">
                   <div className="file-upload-wrapper">
                     <label className="file-input-label">
@@ -439,7 +447,7 @@ const SignupPage = () => {
       <style>{`
         /* Layout with gradient background */
         .login-section {
-          background: #FFF9F1;
+          background: #f8f8f8;
           min-height: 100vh;
           padding: 120px 20px 60px 20px;
         }

@@ -191,7 +191,7 @@ const UnifiedHeader = () => {
         <>
             <style>{`
                 .active-link {
-                    color: #1d61bf !important;
+                    color: #1D61BF !important;
                     font-weight: 400;
                     transition: all 0.3s ease;
                 }
@@ -201,10 +201,10 @@ const UnifiedHeader = () => {
                     transition: color 0.3s ease;
                 }
                 .menu a:hover {
-                    color: #1d61bf;
+                    color: #1D61BF;
                 }
                 .menu-item-has-children.active-parent > a {
-                    color: #1d61bf !important;
+                    color: #1D61BF !important;
                     font-weight: 600;
                 }
 
@@ -224,17 +224,17 @@ const UnifiedHeader = () => {
                     font-weight: 600;
                     text-decoration: none;
                     transition: all 0.3s ease;
-                    border: 2px solid #1d61bf;
+                    border: 2px solid #1D61BF;
                     border-radius: 8px;
                     background: transparent;
-                    color: #1d61bf;
+                    color: #1D61BF;
                     cursor: pointer;
                     white-space: nowrap;
                     font-size: 14px;
                 }
 
                 .login-btn:hover, .logout-btn:hover {
-                    background: #1d61bf;
+                    background: #1D61BF;
                     color: white;
                     transform: translateX(5px);
                 }
@@ -260,7 +260,7 @@ const UnifiedHeader = () => {
                         transition: transform 0.3s ease;
                     }
                     .menu-item-has-children.open > a::after {
-                        color: #1d61bf;
+                        color: #1D61BF;
                     }
 
                     .mobile-auth-btn {
@@ -300,7 +300,7 @@ const UnifiedHeader = () => {
                                         {/* Home */}
                                         <li>
                                             <NavLink
-                                                to={isAuthenticated ? getCollegePath("/") : "/"}
+                                                to={isAuthenticated ? getCollegePath("/") : "/"}end
                                                 onClick={closeMenu}
                                                 className={({ isActive }) =>
                                                     isActive ? "active-link" : ""
@@ -345,7 +345,7 @@ const UnifiedHeader = () => {
                                                 {/* Challenges */}
                                                 <li
                                                     className={`menu-item-has-children ${
-                                                        ["/challenges", "/challenge"].some(path => currentPath.includes(path))
+                                                        ["/challenges", "/challenge","/companies"].some(path => currentPath.includes(path))
                                                             ? "active-parent"
                                                             : ""
                                                     } ${openDropdown === "challenges" ? "open" : ""}`}

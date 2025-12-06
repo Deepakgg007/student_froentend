@@ -37,7 +37,7 @@ const Banner = () => {
                                 alignItems: "center"
                             }}
                         >
-                            <span style={{ color: "#1d61bf" }}>
+                            <span style={{ color: "#1D61BF" }}>
                                 <Typewriter
                                     options={{
                                         // strings: ["Upskill", "Become", "Hire"],
@@ -79,7 +79,7 @@ const Banner = () => {
                             href="#" 
                             className="btn px-4 py-2"
                             style={{
-                                background: "#1d61bf",
+                                background: "#1D61BF",
                                 color: "#fff",
                                 fontSize: "clamp(14px, 1.6vw, 18px)",
                                 borderRadius: "8px",

@@ -206,7 +206,7 @@ const LoginPage = () => {
                                             />
                                             <label htmlFor="remember">Remember Me</label>
                                         </div>
-                                        <Link to="/forgetpass" className="forget-link">Forget Password?</Link>
+                                        <Link to="/forgetpass" className="forget-link">Forgot Password?</Link>
                                     </div>
                                 </div>
                             </div>

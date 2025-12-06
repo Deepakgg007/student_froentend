@@ -217,7 +217,7 @@ const CourseSingle = () => {
                                 {enrollment ? (
                                     <div className="d-flex gap-2 flex-wrap align-items-center">
                                         <Link to={`/course-view/${id}`} className="lab-btn">
-                                            <i className="icofont-play-alt-2 me-2"></i>
+                                            <i className="icofont-play-alt-2 me-2" style={{ color: "white" }}></i>
                                             <span>Continue Learning</span>
                                         </Link>
                                         <span className="badge bg-success align-self-center px-3 py-2">
@@ -261,7 +261,7 @@ const CourseSingle = () => {
         onClick={() => navigate(-1)}
         className="lab-btn mb-3"
     >
-        <i className="icofont-simple-left me-2"></i>
+        <i className="icofont-simple-left me-2" style={{ color: "white" }}></i>
         <span>Back</span>
     </button>
                                             <h3>Course Overview</h3>

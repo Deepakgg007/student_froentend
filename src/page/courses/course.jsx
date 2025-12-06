@@ -166,25 +166,25 @@ const CoursePage = () => {
                                                 </div>
                                                 <div className="course-details mt-3">
                                                     <div className="couse-count">
-                                                        <i className="icofont-signal" style={{color: "#1d61bf"}}></i> {course.difficulty_level?.toUpperCase() || 'BEGINNER'}
+                                                        <i className="icofont-signal" style={{color: "#1D61BF"}}></i> {course.difficulty_level?.toUpperCase() || 'BEGINNER'}
                                                     </div>
                                                     {course.is_featured && (
                                                         <div className="couse-count">
-                                                            <i className="icofont-star" style={{color: "#1d61bf"}}></i> Featured
+                                                            <i className="icofont-star" style={{color: "#1D61BF"}}></i> Featured
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div className="course-details mt-2">
                                                     <div className="couse-count">
-                                                        <i className="icofont-clock-time" style={{color: "#1d61bf"}}></i> {course.duration_hours || 0} Hours
+                                                        <i className="icofont-clock-time" style={{color: "#1D61BF"}}></i> {course.duration_hours || 0} Hours
                                                     </div>
                                                     <div className="couse-count">
-                                                        <i className="icofont-users-alt-3" style={{color: "#1d61bf"}}></i> {course.current_enrollments || 0} Enrolled
+                                                        <i className="icofont-users-alt-3" style={{color: "#1D61BF"}}></i> {course.current_enrollments || 0} Enrolled
                                                     </div>
                                                 </div>
                                                 
                                                 <div className="course-footer mt-3" >
-                                                    <Link to={`/course-single/${course.id}`} className="lab-btn w-100 text-center" style={{background: "#1d61bf"}}>
+                                                    <Link to={`/course-single/${course.id}`} className="lab-btn w-100 text-center" style={{background: "#1D61BF"}}>
                                                         <span >View Details</span>
                                                     </Link>
                                                 </div>

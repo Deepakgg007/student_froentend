@@ -238,7 +238,7 @@ const CourseFour = () => {
     to="/course"
     className="lab-btn"
     style={{
-      background: "#1d61bf",
+      background: "#1D61BF",
       boxShadow: "0 4px 10px rgba(0, 0, 0, 0.25)",
       borderRadius: "8px"
     }}

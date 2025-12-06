@@ -39,7 +39,7 @@ const ApprovalPendingMessage = ({ user }) => (
         </div>
         <style>{`
             .approval-section {
-                background: linear-gradient(135deg, #FFF9F1 0%, #FFF4E6 100%);
+                background: linear-gradient(135deg, #f8f8f8 0%, #FFF4E6 100%);
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
@@ -191,7 +191,7 @@ const ApprovalPendingMessage = ({ user }) => (
 
 const AccountNotVerifiedMessage = ({ user }) => (
     <div style={{
-        background: 'linear-gradient(135deg, #FFF9F1 0%, #FFF4E6 100%)',
+        background: 'linear-gradient(135deg, #f8f8f8 0%, #FFF4E6 100%)',
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
