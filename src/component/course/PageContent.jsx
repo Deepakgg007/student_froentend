@@ -26,6 +26,12 @@ const PageContent = ({ content, isDarkMode = false, onComplete, onNext, onPrev }
         });
     }
 
+    if (content.highlight_blocks) {
+        content.highlight_blocks.forEach(block => {
+            allBlocks.push({ ...block, blockType: 'highlight' });
+        });
+    }
+
     // Sort all blocks by order property
     allBlocks.sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -144,6 +150,23 @@ const PageContent = ({ content, isDarkMode = false, onComplete, onNext, onPrev }
                                         )}
                                         {block.description && <p className="mt-2">{block.description}</p>}
                                     </div>
+                                )}
+
+                                {block.blockType === 'highlight' && (
+                                    <pre style={{
+                                        backgroundColor: isDarkMode ? '#1a1a1a' : '#000000',
+                                        color: '#FFFFFF',
+                                        padding: '20px',
+                                        borderRadius: '8px',
+                                        borderLeft: '4px solid #FF8306',
+                                        margin: '15px 0',
+                                        fontFamily: 'monospace',
+                                        fontSize: '14px',
+                                        lineHeight: '1.6',
+                                        whiteSpace: 'pre',
+                                        overflowX: 'auto',
+                                        overflowY: 'auto'
+                                    }}>{block.content}</pre>
                                 )}
                             </div>
                         ))}

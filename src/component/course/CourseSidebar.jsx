@@ -207,6 +207,7 @@ const CourseSidebar = ({
                                                                                 content.type === 'page' ? 'icofont-file-text text-primary' :
                                                                                 content.type === 'video' ? 'icofont-play-alt-2 text-danger' :
                                                                                 content.type === 'document' ? 'icofont-file-pdf text-warning' :
+                                                                                content.type === 'mcq_set' ? 'icofont-question-circle text-info' :
                                                                                 content.type === 'mcq_group' ? 'icofont-question-circle text-info' :
                                                                                 content.type === 'coding_question' ? 'icofont-code text-success' :
                                                                                 'icofont-file'

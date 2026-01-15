@@ -255,6 +255,42 @@ const ContentDisplay = ({
                     />
                 );
 
+            case 'mcq_set':
+                // Transform MCQ Set questions to match the expected format
+                const transformedQuestions = (currentContent.questions || []).map(q => ({
+                    id: q.id,
+                    question_text: q.question_text,
+                    marks: q.marks,
+                    order: q.order,
+                    is_completed: q.is_completed,
+                    question_type: 'mcq',
+                    mcq_details: {
+                        choice_1_text: q.choice_1_text,
+                        choice_1_is_correct: q.choice_1_is_correct,
+                        choice_2_text: q.choice_2_text,
+                        choice_2_is_correct: q.choice_2_is_correct,
+                        choice_3_text: q.choice_3_text,
+                        choice_3_is_correct: q.choice_3_is_correct,
+                        choice_4_text: q.choice_4_text,
+                        choice_4_is_correct: q.choice_4_is_correct,
+                        solution_explanation: q.solution_explanation
+                    }
+                }));
+
+                return (
+                    <MCQContent
+                        questions={transformedQuestions}
+                        task={task}
+                        isDarkMode={isDarkMode}
+                        onComplete={(contentId, contentType) => onContentComplete(contentId || currentContent.id, contentType || 'mcq_set')}
+                        onRefresh={refreshCourse}
+                        onNext={handleNextContent}
+                        onPrev={handlePrevContent}
+                        mcqSetTitle={currentContent.title}
+                        mcqSetDescription={currentContent.description}
+                    />
+                );
+
             case 'coding_question':
                 return (
                     <CodingQuestionContent
@@ -328,44 +364,124 @@ const ContentDisplay = ({
                     </div>
 
                      {/* Enhanced Navigation Bar */}
-                    <div className="mb-4 p-2 rounded shadow-sm" style={{
+                    <div className="mb-4 p-3 rounded shadow-sm content-navigation-bar" style={{
                         backgroundColor: isDarkMode ? '#2d2d2d' : '#fff'
                     }}>
-                        <div className="d-flex justify-content-between align-items-center">
-                            <div className="d-flex align-items-center">
-                                <button
-                                    className="btn me-3"
-                                    onClick={handlePrevContent}
-                                    disabled={!hasPrev}
-                                    style={{
-                                        minWidth: '100px',
-                                        backgroundColor: isDarkMode ? '#1e1e1e' : '#fff',
-                                        color: isDarkMode ? '#adb5bd' : '#6c757d',
-                                        borderColor: isDarkMode ? '#444' : '#6c757d'
-                                    }}
-                                >
-                                    <i className="icofont-arrow-left me-2"></i>
-                                    Previous
-                                </button>
-                            </div>
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <button
-                                className="btn"
+                                className="btn content-nav-btn content-nav-prev"
+                                onClick={handlePrevContent}
+                                disabled={!hasPrev}
+                                style={{
+                                    minWidth: '120px',
+                                    padding: '12px 20px',
+                                    fontSize: '15px',
+                                    fontWeight: '600',
+                                    backgroundColor: isDarkMode ? '#1e1e1e' : '#fff',
+                                    color: isDarkMode ? '#adb5bd' : '#6c757d',
+                                    borderColor: isDarkMode ? '#444' : '#6c757d',
+                                    border: '2px solid'
+                                }}
+                            >
+                                <i className="icofont-arrow-left me-2"></i>
+                                <span className="btn-text">Previous</span>
+                            </button>
+                            <button
+                                className="btn content-nav-btn content-nav-next"
                                 onClick={handleNextContent}
                                 disabled={!hasNext}
                                 style={{
-                                    minWidth: '100px',
+                                    minWidth: '120px',
+                                    padding: '12px 20px',
+                                    fontSize: '15px',
+                                    fontWeight: '600',
                                     backgroundColor: isDarkMode ? '#1a3a4a' : '#0d6efd',
                                     color: '#fff',
-                                    borderColor: isDarkMode ? '#6ec1e4' : '#0d6efd'
+                                    borderColor: isDarkMode ? '#6ec1e4' : '#0d6efd',
+                                    border: '2px solid'
                                 }}
                             >
-                                Next
+                                <span className="btn-text">Next</span>
                                 <i className="icofont-arrow-right ms-2"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Mobile-Responsive Styles */}
+            <style>{`
+                /* Mobile responsive navigation */
+                @media (max-width: 768px) {
+                    .content-navigation-bar {
+                        padding: 16px !important;
+                        position: fixed;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        z-index: 1000;
+                        margin: 0 !important;
+                        border-radius: 0 !important;
+                        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15) !important;
+                    }
+
+                    .content-navigation-bar .d-flex {
+                        width: 100%;
+                        gap: 12px !important;
+                    }
+
+                    .content-nav-btn {
+                        flex: 1 !important;
+                        min-width: auto !important;
+                        max-width: 50% !important;
+                        padding: 14px 16px !important;
+                        font-size: 14px !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        white-space: nowrap !important;
+                    }
+
+                    .content-nav-btn i {
+                        font-size: 16px !important;
+                    }
+
+                    .content-nav-btn .btn-text {
+                        display: inline !important;
+                    }
+
+                    /* Add padding to content area to prevent overlap with fixed navigation */
+                    .content-area {
+                        margin-bottom: 80px !important;
+                    }
+                }
+
+                /* Tablet responsive */
+                @media (min-width: 769px) and (max-width: 1024px) {
+                    .content-nav-btn {
+                        min-width: 140px !important;
+                        padding: 12px 24px !important;
+                    }
+                }
+
+                /* Ensure buttons are visible on small screens */
+                @media (max-width: 400px) {
+                    .content-nav-btn {
+                        font-size: 13px !important;
+                        padding: 12px 12px !important;
+                    }
+
+                    .content-nav-btn i {
+                        margin: 0 4px !important;
+                    }
+                }
+
+                /* Disabled button styles */
+                .content-nav-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            `}</style>
         </div>
     );
 };

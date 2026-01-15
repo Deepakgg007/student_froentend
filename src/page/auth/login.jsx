@@ -34,10 +34,17 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [touchedFields, setTouchedFields] = useState({});
 
     useEffect(() => {
+        // Load remembered credentials
         const rememberedEmail = localStorage.getItem('student_remembered_email');
         const rememberedPassword = localStorage.getItem('student_remembered_password');
+
+        // Load saved login form data (for refresh persistence)
+        const savedFormData = localStorage.getItem('login_form_data');
+
         if (rememberedEmail) {
             setFormData(prev => ({
                 ...prev,
@@ -45,15 +52,75 @@ const LoginPage = () => {
                 password: rememberedPassword || '',
                 rememberMe: true
             }));
+        } else if (savedFormData) {
+            try {
+                const parsedData = JSON.parse(savedFormData);
+                setFormData(prev => ({
+                    ...prev,
+                    ...parsedData
+                }));
+            } catch (err) {
+                console.error('Failed to load saved form data:', err);
+            }
         }
     }, []);
 
+    // Validate individual field
+    const validateField = (name, value) => {
+        let error = "";
+
+        switch (name) {
+            case "email":
+                if (!value.trim()) {
+                    error = "Email is required.";
+                } else {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(value)) {
+                        error = "Please enter a valid email address.";
+                    }
+                }
+                break;
+
+            case "password":
+                if (!value) {
+                    error = "Password is required.";
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        return error;
+    };
+
+    const handleBlur = (e) => {
+        const { name, value } = e.target;
+        setTouchedFields(prev => ({ ...prev, [name]: true }));
+
+        const error = validateField(name, value);
+        setFieldErrors(prev => ({ ...prev, [name]: error }));
+    };
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
+        const updatedFormData = {
+            ...formData,
             [name]: type === 'checkbox' ? checked : value
-        }));
+        };
+        setFormData(updatedFormData);
+
+        // Validate field in real-time if already touched
+        if (touchedFields[name] && type !== 'checkbox') {
+            const error = validateField(name, value);
+            setFieldErrors(prev => ({ ...prev, [name]: error }));
+        }
+
+        // Save to localStorage for refresh persistence (if not using remember me)
+        if (!formData.rememberMe) {
+            localStorage.setItem('login_form_data', JSON.stringify(updatedFormData));
+        }
+
         setError('');
     };
 
@@ -96,6 +163,9 @@ const LoginPage = () => {
                 localStorage.removeItem('student_remembered_password');
             }
 
+            // Clear saved form data on successful login
+            localStorage.removeItem('login_form_data');
+
             navigate('/');
         } catch (err) {
             console.error('Login error:', err.response?.data);
@@ -124,7 +194,31 @@ const LoginPage = () => {
                 }
             }
 
+            // Handle field-specific backend errors
+            if (err.response?.data && typeof err.response.data === "object") {
+                const backendFieldErrors = {};
+                const responseData = err.response.data;
+
+                // Check for field-specific errors (email, password)
+                if (responseData.email) {
+                    backendFieldErrors.email = Array.isArray(responseData.email)
+                        ? responseData.email[0]
+                        : responseData.email;
+                }
+                if (responseData.password) {
+                    backendFieldErrors.password = Array.isArray(responseData.password)
+                        ? responseData.password[0]
+                        : responseData.password;
+                }
+
+                if (Object.keys(backendFieldErrors).length > 0) {
+                    setFieldErrors(prev => ({ ...prev, ...backendFieldErrors }));
+                }
+            }
+
             setError(errorMessage);
+            // Scroll to error message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } finally {
             setLoading(false);
         }
@@ -155,10 +249,17 @@ const LoginPage = () => {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleChange}
+                                        onBlur={handleBlur}
                                         placeholder="Enter your email"
                                         required
-                                        className="text-input"
+                                        maxLength={254}
+                                        className={`text-input ${fieldErrors.email ? 'is-invalid' : ''}`}
                                     />
+                                    {fieldErrors.email && (
+                                        <div className="invalid-feedback" style={{ display: 'block' }}>
+                                            {fieldErrors.email}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -174,9 +275,11 @@ const LoginPage = () => {
                                             name="password"
                                             value={formData.password}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="Enter password"
                                             required
-                                            className="text-input input-with-icon"
+                                            maxLength={128}
+                                            className={`text-input input-with-icon ${fieldErrors.password ? 'is-invalid' : ''}`}
                                             aria-label="Password"
                                         />
                                         <button
@@ -188,6 +291,11 @@ const LoginPage = () => {
                                             {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                                         </button>
                                     </div>
+                                    {fieldErrors.password && (
+                                        <div className="invalid-feedback" style={{ display: 'block' }}>
+                                            {fieldErrors.password}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -449,6 +557,32 @@ const LoginPage = () => {
                     background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
                     color: #c53030;
                     border: 2px solid #fc8181;
+                }
+
+                /* Field validation error styles */
+                .text-input.is-invalid {
+                    border-color: #fc8181;
+                    background-color: #fff5f5;
+                }
+
+                .text-input.is-invalid:focus {
+                    border-color: #f56565;
+                    box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+                }
+
+                .invalid-feedback {
+                    color: #c53030;
+                    font-size: 13px;
+                    margin-top: 6px;
+                    display: flex;
+                    align-items: flex-start;
+                    line-height: 1.4;
+                }
+
+                .invalid-feedback::before {
+                    content: '⚠';
+                    margin-right: 6px;
+                    font-size: 14px;
                 }
 
                 /* Checkbox styling with custom design */

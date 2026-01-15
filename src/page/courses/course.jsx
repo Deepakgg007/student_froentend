@@ -18,13 +18,24 @@ const CoursePage = () => {
         try {
             setLoading(true);
             setError('');
+
+            // Debug: Check authentication
+            const token = localStorage.getItem('student_access_token');
+            console.log('Authentication token exists:', !!token);
+
             // Fetch courses and order by updated_at from backend (oldest first)
-            const response = await api.get('/courses/?ordering=-updated_at');
+            // Add status=published to show all published courses
+            const response = await api.get('/courses/?ordering=-updated_at&status=published');
+
+            console.log('Courses API response:', response.data);
 
             const data = response.data;
             let coursesData = Array.isArray(data)
                 ? data
                 : data.results || data.data || [];
+
+            console.log('Parsed courses data:', coursesData);
+            console.log('Number of courses:', coursesData.length);
 
             // Sort courses by updated_at (oldest first) - backup sort if backend doesn't do it
             coursesData = coursesData.sort((a, b) => {
@@ -36,6 +47,7 @@ const CoursePage = () => {
             setCourses(coursesData);
         } catch (err) {
             console.error('Failed to fetch courses:', err);
+            console.error('Error response:', err.response?.data);
             setError('Failed to load courses. Please try again later.');
             setCourses([]);
         } finally {

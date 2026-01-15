@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useParams } from "react-router-dom";
 import api from "../../services/api";
-import { markContentComplete } from "../../services/contentProgressService";
 import QuizOverview from "./QuizOverview";
 import Swal from "sweetalert2";
 
 /**
- * MCQContent – renders MCQ questions with backend persistence
+ * MCQContent – renders MCQ Set questions with backend persistence
  * - Shows overview page first with attempt status
  * - Fetches previous submissions on load
  * - Saves answers to backend
  * - Shows correct/incorrect answers and explanations
+ * - Only supports MCQ Sets (old MCQ question system is deprecated)
  */
-const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPrev, isDarkMode = false }) => {
-  const { courseId } = useParams();
+const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPrev, isDarkMode = false, mcqSetTitle, mcqSetDescription }) => {
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
   const [submissions, setSubmissions] = useState({});
@@ -52,16 +50,13 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
 
       if (Array.isArray(submissionData)) {
         submissionData.forEach((sub) => {
-          // Check if this is an MCQ submission
-          if (sub.submission_type === 'question' && sub.mcq_selected_choice) {
-            // Get question ID (handle both 'question' and 'question_id' field names)
-            const questionId = sub.question || sub.question_id;
+          // Check if this is an MCQ Set submission (only MCQ Sets are supported now)
+          if (sub.submission_type === 'question' && sub.mcq_selected_choice && sub.mcq_set_question) {
+            const questionId = sub.mcq_set_question;
 
-            if (questionId) {
-              submissionsMap[questionId] = sub;
-              answersMap[questionId] = sub.mcq_selected_choice;
-              hasSubmissions = true;
-            }
+            submissionsMap[questionId] = sub;
+            answersMap[questionId] = sub.mcq_selected_choice;
+            hasSubmissions = true;
           }
         });
       }
@@ -94,11 +89,12 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
     setIsSubmitting(true);
 
     try {
-      // Submit each MCQ answer to backend
+      // Submit each MCQ Set answer to backend (only MCQ Sets are supported now)
       const submissionPromises = questions.map(q => {
         if (answers[q.id]) {
-          return api.post(`/student/tasks/${task.id}/submit-mcq/`, {
-            question_id: q.id,
+          // MCQ Set endpoint (old MCQ system is deprecated)
+          return api.post(`/student/tasks/${task.id}/submit-mcq-set/`, {
+            mcq_set_question_id: q.id,
             selected_choice: answers[q.id]
           });
         }
@@ -111,8 +107,9 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
       const newSubmissions = {};
       responses.forEach((response) => {
         const data = response.data.data || response.data;
-        if (data.question_id) {
-          newSubmissions[data.question_id] = data;
+        const questionId = data.mcq_set_question_id;
+        if (questionId) {
+          newSubmissions[questionId] = data;
         }
       });
 
@@ -120,18 +117,7 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
       setShowResult(true);
       setOverviewRefreshKey(prev => prev + 1); // Trigger overview refresh
 
-      // Mark each question as complete in progress tracking
-      if (markContentComplete && courseId) {
-        for (const question of questions) {
-          if (answers[question.id]) {
-            try {
-              await markContentComplete('question', question.id, task.id, parseInt(courseId));
-            } catch (err) {
-              console.warn(`Failed to mark question ${question.id} complete:`, err);
-            }
-          }
-        }
-      }
+      // Progress tracking is handled automatically by backend for MCQ Sets
 
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -154,11 +140,13 @@ const MCQContent = ({ questions = [], task, onComplete, onRefresh, onNext, onPre
         }
       }, 2100);
     } catch (err) {
+      console.error('Submission error:', err);
       Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'error',
         title: 'Submission Failed',
+        text: err.response?.data?.message || 'Please try again',
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true

@@ -185,25 +185,40 @@ const CourseView = () => {
                                 });
                             }
 
-                            // --- Questions ---
-                            if (taskDetail.questions?.length > 0) {
-                                const mcqs = taskDetail.questions.filter(q => q.question_type === 'mcq');
-                                const codingQuestions = taskDetail.questions.filter(q => q.question_type === 'coding');
+                            // --- MCQ Sets (NEW API) ---
+                            // Fetch MCQ Sets for this task
+                            let mcqSets = [];
+                            try {
+                                const mcqSetsResponse = await api.get(`/task-mcq-sets/?task=${task.id}`);
+                                mcqSets = mcqSetsResponse.data.results || mcqSetsResponse.data || [];
+                                if (!Array.isArray(mcqSets)) mcqSets = [];
+                            } catch (err) {
+                                console.warn(`Failed to fetch MCQ sets for task ${task.id}:`, err);
+                                mcqSets = [];
+                            }
 
-                                if (mcqs.length > 0) {
-                                    // Check if ALL MCQs are completed
-                                    const allMcqsCompleted = mcqs.every(q => q.is_completed === true);
+                            // Add each MCQ Set as a separate content item
+                            if (mcqSets.length > 0) {
+                                mcqSets.forEach(mcqSet => {
+                                    const allQuestionsCompleted = mcqSet.mcq_questions?.every(q => q.is_completed === true) || false;
 
                                     contentItems.push({
-                                        id: `mcq_group_${task.id}`.toString(),
-                                        type: 'mcq_group',
-                                        title: 'MCQ Quiz',
-                                        order: Math.min(...mcqs.map(q => q.order || 999)) || 999,
-                                        questions: mcqs,
+                                        id: mcqSet.id.toString(),
+                                        type: 'mcq_set',
+                                        title: mcqSet.title || 'MCQ Set',
+                                        order: mcqSet.order || 999,
+                                        questions: mcqSet.mcq_questions || [],
                                         task_id: task.id.toString(),
-                                        is_completed: allMcqsCompleted
+                                        is_completed: allQuestionsCompleted,
+                                        total_marks: mcqSet.total_marks || 0,
+                                        description: mcqSet.description || ''
                                     });
-                                }
+                                });
+                            }
+
+                            // --- Individual Questions (Coding only - MCQs are now in sets) ---
+                            if (taskDetail.questions?.length > 0) {
+                                const codingQuestions = taskDetail.questions.filter(q => q.question_type === 'coding');
 
                                 codingQuestions.forEach(question => {
                                     contentItems.push({
