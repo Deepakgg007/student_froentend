@@ -1,11 +1,8 @@
-import { useState, useRef } from 'react';
-import { downloadCertificate } from '../../services/api';
-import CertificateTemplate from '../certification/CertificateTemplate';
-import { downloadCertificateAsPDF } from '../certification/CertificateDownloadHelper';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * CertificationResult Component
- * Displays exam results, score, and certificate download option
+ * Displays exam results and score
  *
  * @param {Object} result - Result object from submitCertificationAttempt
  *   - score: number (0-100)
@@ -17,131 +14,20 @@ import { downloadCertificateAsPDF } from '../certification/CertificateDownloadHe
  * @param {Object} certification - Certification details from getCertificationById
  *   - college: College information with logo and signature
  */
-const CertificationResult = ({ result, certification, onRetake }) => {
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState('');
-  const [showCertificatePreview, setShowCertificatePreview] = useState(false);
-  const certificateRef = useRef(null);
-
-  // Get student info from localStorage or props
-  const studentName = localStorage?.getItem('student_name') || result.student_name || 'Student';
-
-  // Get college info from result first (if available), then from certification prop, then default
-  let collegeInfo = result.college;
-  if (!collegeInfo && certification?.college) {
-    collegeInfo = certification.college;
-  }
-  collegeInfo = collegeInfo || {};
-
-  const collegeName = collegeInfo.name || 'Z1 Education';
-  const collegeLogo = collegeInfo.logo || null;
-  const collegeSignature = collegeInfo.signature_display || null;
-
-  // Download frontend certificate as PDF
-  const handleDownloadFrontendCertificate = async () => {
-    try {
-      setDownloading(true);
-      setDownloadError('');
-
-      if (!certificateRef.current) {
-        throw new Error('Certificate template not available');
-      }
-
-      const certificateName = result.certification_title || 'Certificate';
-      await downloadCertificateAsPDF(certificateRef, certificateName);
-    } catch (err) {
-      console.error('Error downloading frontend certificate:', err);
-      setDownloadError(err.message || 'Failed to download certificate');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleDownloadCertificate = async () => {
-    try {
-      setDownloading(true);
-      setDownloadError('');
-
-      if (!certificateRef.current) {
-        console.warn('Certificate ref is not available, waiting a moment...');
-        // Sometimes the ref isn't immediately available, give it a moment
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      const certificateName = result.certification_title || 'Certificate';
-      await downloadCertificateAsPDF(certificateRef, certificateName);
-      return;
-
-      // Old backend certificate download code (kept as fallback, not used)
-      const attemptId = result.attempt_id || result.id;
-
-      if (!attemptId) {
-        throw new Error('Attempt ID not found in result');
-      }
-
-
-      const response = await downloadCertificate(attemptId);
-
-      // Axios with responseType: 'blob' returns data as Blob
-      let blob = response.data;
-
-      // Validate that we have data
-      if (!blob) {
-        throw new Error('No data received from server');
-      }
-
-      // If it's not a Blob, try to convert it
-      if (!(blob instanceof Blob)) {
-        console.warn('Response is not a Blob, attempting to convert...');
-        blob = new Blob([blob], { type: 'application/pdf' });
-      }
-
-      // Validate that the blob is not empty
-      if (blob.size === 0) {
-        throw new Error('Certificate file is empty');
-      }
-
-     
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `certificate-${attemptId}.pdf`;
-
-      // Append to body, click, and remove
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 100);
-
-    } catch (err) {
-      console.error('Error downloading certificate:', err);
-
-      // Handle specific error codes
-      let errorMsg = 'Failed to download certificate. Please try again.';
-
-      if (err.response?.status === 406) {
-        errorMsg = 'Server content negotiation error. Please refresh and try again.';
-      } else if (err.response?.status === 404) {
-        errorMsg = 'Certificate not found. The exam may not have been passed.';
-      } else if (err.response?.data?.detail) {
-        errorMsg = err.response.data.detail;
-      } else if (err.message) {
-        errorMsg = err.message;
-      }
-
-      setDownloadError(errorMsg);
-    } finally {
-      setDownloading(false);
-    }
-  };
+const CertificationResult = ({ result, certification, onRetake, collegeSlug }) => {
+  const navigate = useNavigate();
 
   const scorePercentage = Math.round(result.score);
   const scoreColor = result.passed ? '#28a745' : '#dc3545';
+
+  // Navigate to profile certificates page
+  const handleGoToCertificates = () => {
+    if (collegeSlug) {
+      navigate(`/${collegeSlug}/profile?tab=certificates`);
+    } else {
+      navigate('/profile?tab=certificates');
+    }
+  };
 
   return (
     <>
@@ -229,41 +115,13 @@ const CertificationResult = ({ result, certification, onRetake }) => {
         )}
       </div>
 
-      {/* Certificate Preview (Hidden from view but available for rendering) */}
-      {result.passed && (
-        <div style={{
-          position: 'fixed',
-          top: '-9999px',
-          left: '-9999px',
-          width: '1200px',
-          height: '900px',
-          zIndex: '-1',
-          pointerEvents: 'none',
-          visibility: 'visible' // Ensure element is visible for html2canvas
-        }}>
-          <CertificateTemplate
-            ref={certificateRef}
-            studentName={studentName}
-            courseName={result.certification_title || 'Certification'}
-            completionDate={result.completed_at ? new Date(result.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            score={Math.round(result.score)}
-            passingScore={result.passing_score || 80}
-            collegeName={collegeName}
-            collegeLogo={collegeLogo}
-            collegeSignature={collegeSignature}
-            certificateNumber={result.certificate_number || `CERT-${result.attempt_id || result.id}`}
-            principalName={collegeInfo.principal_name || 'Director'}
-          />
-        </div>
-      )}
-
-      {/* Certificate Download Section */}
+      {/* Certificate Success Message - Redirect to Profile */}
       {result.passed && (
         <div style={{
           padding: '24px',
-          border: '1px solid #e9ecef',
+          border: '1px solid #d4edda',
           borderRadius: '8px',
-          backgroundColor: '#ffffff',
+          backgroundColor: '#d4edda',
           marginBottom: '24px',
           textAlign: 'center'
         }}>
@@ -275,37 +133,22 @@ const CertificationResult = ({ result, certification, onRetake }) => {
           </div>
           <h5 style={{
             margin: '0 0 8px 0',
-            color: '#212529',
+            color: '#155724',
             fontSize: '16px',
             fontWeight: '600'
           }}>
-            Your Certificate is Ready
+            Certificate Generated Successfully!
           </h5>
           <p style={{
-            color: '#6c757d',
+            color: '#155724',
             fontSize: '14px',
             margin: '0 0 16px 0'
           }}>
-            Download your official certificate of completion
+            Your certificate has been saved to your profile. You can download it anytime from your certificates page.
           </p>
 
-          {downloadError && (
-            <div style={{
-              padding: '12px',
-              backgroundColor: '#f8d7da',
-              border: '1px solid #f5c2c7',
-              borderRadius: '6px',
-              color: '#842029',
-              fontSize: '13px',
-              marginBottom: '16px'
-            }}>
-              {downloadError}
-            </div>
-          )}
-
           <button
-            onClick={handleDownloadCertificate}
-            disabled={downloading}
+            onClick={handleGoToCertificates}
             style={{
               padding: '12px 32px',
               backgroundColor: '#28a745',
@@ -314,77 +157,19 @@ const CertificationResult = ({ result, certification, onRetake }) => {
               borderRadius: '6px',
               fontWeight: '600',
               fontSize: '15px',
-              cursor: downloading ? 'not-allowed' : 'pointer',
-              opacity: downloading ? 0.6 : 1,
-              transition: 'all 0.3s ease',
-              marginRight: '8px'
-            }}
-          >
-            <i className="icofont-download me-2"></i>
-            {downloading ? 'Downloading...' : 'Download Certificate'}
-          </button>
-
-          <button
-            onClick={() => setShowCertificatePreview(!showCertificatePreview)}
-            style={{
-              padding: '12px 32px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: '600',
-              fontSize: '15px',
               cursor: 'pointer',
               transition: 'all 0.3s ease'
             }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#218838';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#28a745';
+            }}
           >
-            <i className="icofont-eye me-2"></i>
-            {showCertificatePreview ? 'Hide Preview' : 'View Preview'}
+            <i className="icofont-certificate me-2"></i>
+            View & Download Certificate
           </button>
-        </div>
-      )}
-
-      {/* Certificate Preview Display */}
-      {result.passed && showCertificatePreview && (
-        <div style={{
-          padding: '24px',
-          border: '1px solid #e9ecef',
-          borderRadius: '8px',
-          backgroundColor: '#f8f9fa',
-          marginBottom: '24px'
-        }}>
-          <h5 style={{
-            margin: '0 0 16px 0',
-            color: '#212529',
-            fontSize: '16px',
-            fontWeight: '600'
-          }}>
-            Certificate Preview
-          </h5>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '20px',
-            backgroundColor: '#ffffff',
-            borderRadius: '6px',
-            border: '1px solid #e9ecef'
-          }}>
-            <div style={{ width: '100%', maxWidth: '900px' }}>
-              <CertificateTemplate
-                ref={certificateRef}
-                studentName={studentName}
-                courseName={result.certification_title || 'Certification'}
-                completionDate={result.completed_at ? new Date(result.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                score={Math.round(result.score)}
-                passingScore={result.passing_score || 80}
-                collegeName={collegeName}
-                collegeLogo={collegeLogo}
-                collegeSignature={collegeSignature}
-                certificateNumber={result.certificate_number || `CERT-${result.attempt_id || result.id}`}
-                principalName={collegeInfo.principal_name || 'Director'}
-              />
-            </div>
-          </div>
         </div>
       )}
 

@@ -507,7 +507,7 @@ const UserCertificates = ({ collegeSlug }) => {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
                     {!passedAttempt && remainingAttempts > 0 && (
                       <Link
                         to={collegeSlug ? `/${collegeSlug}/certification/${cert.id}` : `/certification/${cert.id}`}
@@ -541,16 +541,44 @@ const UserCertificates = ({ collegeSlug }) => {
                       </div>
                     )}
                     {passedAttempt && (
-                      <div style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#d4edda',
-                        color: '#155724',
-                        borderRadius: '6px',
-                        fontWeight: 'bold',
-                        fontSize: '14px'
-                      }}>
-                        ✅ Certification Completed
-                      </div>
+                      <>
+                        <div style={{
+                          padding: '10px 20px',
+                          backgroundColor: '#d4edda',
+                          color: '#155724',
+                          borderRadius: '6px',
+                          fontWeight: 'bold',
+                          fontSize: '14px'
+                        }}>
+                          ✅ Certification Completed
+                        </div>
+
+                        {/* Reattempt button for testing (even after passing) */}
+                        <Link
+                          to={collegeSlug ? `/${collegeSlug}/certification/${cert.id}` : `/certification/${cert.id}`}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#007bff',
+                            color: 'white',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            border: 'none',
+                            display: 'inline-block'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = '#0056b3';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = '#007bff';
+                          }}
+                        >
+                          📹 Test Camera / Reattempt
+                        </Link>
+                      </>
                     )}
                   </div>
                 </div>

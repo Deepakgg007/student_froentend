@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import CertificationExam from '../../component/certification/CertificationExam';
 import CertificationResult from '../../component/certification/CertificationResult';
 import { getCertificationById } from '../../services/api';
 
 const CertificationPage = () => {
-  const { certificationId } = useParams();
+  const { certificationId, collegeSlug } = useParams();
   const navigate = useNavigate();
   const [certification, setCertification] = useState(null);
   const [examState, setExamState] = useState('loading'); // loading, exam, result
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [isExiting, setIsExiting] = useState(false);
 
   // Load certification details
   useEffect(() => {
@@ -44,6 +46,79 @@ const CertificationPage = () => {
     }
   }, [certificationId]);
 
+  // Prevent browser back button and show confirmation during exam
+  useEffect(() => {
+    if (examState !== 'exam') return;
+
+    const handleBeforeUnload = (e) => {
+      if (isExiting) return; // Don't block if exiting
+      e.preventDefault();
+      e.returnValue = 'Your exam is in progress. Are you sure you want to leave?';
+      return e.returnValue;
+    };
+
+    const handlePopState = async () => {
+      // Prevent multiple dialogs
+      if (isExiting) return;
+
+      // Push state back immediately to prevent navigation
+      window.history.pushState(null, '', window.location.pathname);
+
+      // Show confirmation dialog
+      const result = await Swal.fire({
+        title: 'Exit Exam?',
+        html: `
+          <div style="text-align: left; padding: 10px;">
+            <p style="margin-bottom: 15px; font-weight: 600; color: #dc3545;">⚠️ Warning: Leaving this page will:</p>
+            <ul style="margin-left: 20px; color: #6c757d;">
+              <li>End your current exam session</li>
+              <li>Stop the camera monitoring</li>
+              <li>Your progress will be lost</li>
+              <li>This attempt may be counted</li>
+            </ul>
+            <p style="margin-top: 15px; font-weight: 600; color: #212529;">Are you sure you want to exit?</p>
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Exit Exam',
+        cancelButtonText: 'Stay on Exam',
+        reverseButtons: true,
+        focusCancel: true
+      });
+
+      if (result.isConfirmed) {
+        setIsExiting(true);
+      }
+    };
+
+    // Add initial history state
+    window.history.pushState(null, '', window.location.pathname);
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [examState, isExiting]);
+
+  // Handle navigation when isExiting becomes true - redirect to certificates page
+  useEffect(() => {
+    if (isExiting) {
+      if (collegeSlug) {
+        navigate(`/${collegeSlug}/profile?tab=certificates`);
+      } else {
+        navigate('/profile?tab=certificates');
+      }
+    }
+  }, [isExiting, navigate, collegeSlug]);
+
   const handleExamComplete = (examResult) => {
     setResult(examResult);
     setExamState('result');
@@ -52,6 +127,47 @@ const CertificationPage = () => {
   const handleRetake = () => {
     setResult(null);
     setExamState('exam');
+  };
+
+  // Handle back button with confirmation
+  const handleBackButton = async () => {
+    // Only show confirmation if exam is in progress and not already exiting
+    if (examState === 'exam' && !isExiting) {
+      const result = await Swal.fire({
+        title: 'Exit Exam?',
+        html: `
+          <div style="text-align: left; padding: 10px;">
+            <p style="margin-bottom: 15px; font-weight: 600; color: #dc3545;">⚠️ Warning: Leaving this page will:</p>
+            <ul style="margin-left: 20px; color: #6c757d;">
+              <li>End your current exam session</li>
+              <li>Stop the camera monitoring</li>
+              <li>Your progress will be lost</li>
+              <li>This attempt may be counted</li>
+            </ul>
+            <p style="margin-top: 15px; font-weight: 600; color: #212529;">Are you sure you want to exit?</p>
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Exit Exam',
+        cancelButtonText: 'Stay on Exam',
+        reverseButtons: true,
+        focusCancel: true
+      });
+
+      if (result.isConfirmed) {
+        setIsExiting(true);
+      }
+    } else {
+      // If not in exam state, redirect to certificates page
+      if (collegeSlug) {
+        navigate(`/${collegeSlug}/profile?tab=certificates`);
+      } else {
+        navigate('/profile?tab=certificates');
+      }
+    }
   };
 
   // Get student USN for page watermark
@@ -89,7 +205,7 @@ const CertificationPage = () => {
         zIndex: '1000'
       }}>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackButton}
           style={{
             padding: '8px 16px',
             backgroundColor: 'transparent',
@@ -170,6 +286,7 @@ const CertificationPage = () => {
             result={result}
             certification={certification}
             onRetake={handleRetake}
+            collegeSlug={collegeSlug}
           />
         )}
       </div>

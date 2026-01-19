@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Timer from './Timer';
 import {
   startCertificationAttempt,
@@ -10,6 +10,7 @@ import {
  * CertificationExam Component
  * Uses the same clean card-based layout as MCQContent
  * Displays certification exam questions with timer and progress tracking
+ * Includes webcam proctoring for exam monitoring
  */
 const CertificationExam = ({
   certificationId,
@@ -27,6 +28,13 @@ const CertificationExam = ({
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [timeExpired, setTimeExpired] = useState(false);
+
+  // Webcam proctoring states
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   // Initialize exam on mount
   useEffect(() => {
@@ -92,6 +100,75 @@ const CertificationExam = ({
 
     initializeExam();
   }, [certificationId, attemptData]);
+
+  // Initialize webcam for proctoring
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        setCameraError('');
+        setCameraPermissionDenied(false);
+
+        // Request camera permission
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 160 },
+            height: { ideal: 120 },
+            facingMode: 'user'
+          },
+          audio: false
+        });
+
+        // Store stream reference
+        streamRef.current = stream;
+
+        // Attach stream to video element
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+
+        setCameraEnabled(true);
+      } catch (err) {
+        console.error('Camera access error:', err);
+        setCameraEnabled(false);
+
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setCameraPermissionDenied(true);
+          setCameraError('Camera access denied. Please enable your camera to continue the exam.');
+        } else if (err.name === 'NotFoundError') {
+          setCameraError('No camera found. Please connect a camera to continue the exam.');
+        } else {
+          setCameraError('Unable to access camera. Please check your camera settings.');
+        }
+      }
+    };
+
+    startCamera();
+
+    // Cleanup: Stop camera when component unmounts
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  // Monitor camera status periodically
+  useEffect(() => {
+    if (!cameraEnabled || !streamRef.current) return;
+
+    const checkCameraStatus = setInterval(() => {
+      const tracks = streamRef.current?.getTracks();
+      if (tracks && tracks.length > 0) {
+        const videoTrack = tracks[0];
+        if (videoTrack.readyState === 'ended' || !videoTrack.enabled) {
+          setCameraError('⚠️ Camera has been disabled. Please enable it to continue.');
+          setCameraEnabled(false);
+        }
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(checkCameraStatus);
+  }, [cameraEnabled]);
 
   // Handle answer change
   const handleAnswerChange = (questionId, selectedOptionId) => {
@@ -220,6 +297,147 @@ const CertificationExam = ({
           </div>
         </div>
       </div>
+
+      {/* Webcam Proctoring Section */}
+      <div style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 1000,
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        overflow: 'hidden',
+        border: cameraEnabled ? '2px solid #28a745' : '2px solid #dc3545'
+      }}>
+        {/* Camera Video Feed */}
+        <div style={{ position: 'relative' }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: '160px',
+              height: '120px',
+              objectFit: 'cover',
+              display: cameraEnabled ? 'block' : 'none',
+              backgroundColor: '#000'
+            }}
+          />
+
+          {/* Camera Status Overlay */}
+          {!cameraEnabled && (
+            <div style={{
+              width: '160px',
+              height: '120px',
+              backgroundColor: '#f8d7da',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'column',
+              padding: '8px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '24px', marginBottom: '4px' }}>📹</div>
+              <div style={{ fontSize: '10px', color: '#842029', fontWeight: '600' }}>
+                Camera Disabled
+              </div>
+            </div>
+          )}
+
+          {/* Status Label */}
+          <div style={{
+            position: 'absolute',
+            top: '6px',
+            left: '6px',
+            backgroundColor: cameraEnabled ? 'rgba(40, 167, 69, 0.9)' : 'rgba(220, 53, 69, 0.9)',
+            color: '#ffffff',
+            padding: '3px 6px',
+            borderRadius: '3px',
+            fontSize: '9px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px'
+          }}>
+            <span style={{
+              width: '6px',
+              height: '6px',
+              backgroundColor: cameraEnabled ? '#fff' : '#fff',
+              borderRadius: '50%',
+              display: 'inline-block',
+              animation: cameraEnabled ? 'pulse 2s infinite' : 'none'
+            }}></span>
+            {cameraEnabled ? 'LIVE' : 'OFF'}
+          </div>
+        </div>
+
+        {/* Camera Label */}
+        <div style={{
+          padding: '4px 8px',
+          backgroundColor: '#f8f9fa',
+          borderTop: '1px solid #dee2e6',
+          fontSize: '9px',
+          color: '#6c757d',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}>
+          PROCTORING
+        </div>
+      </div>
+
+      {/* Pulse Animation for Recording Indicator */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+
+      {/* Camera Error Warning */}
+      {cameraError && (
+        <div style={{
+          padding: '16px',
+          backgroundColor: cameraPermissionDenied ? '#f8d7da' : '#fff3cd',
+          border: `2px solid ${cameraPermissionDenied ? '#dc3545' : '#ffc107'}`,
+          borderRadius: '8px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'start',
+          gap: '12px'
+        }}>
+          <div style={{ fontSize: '24px' }}>
+            {cameraPermissionDenied ? '🚫' : '⚠️'}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontWeight: '600',
+              color: cameraPermissionDenied ? '#842029' : '#856404',
+              marginBottom: '4px',
+              fontSize: '14px'
+            }}>
+              {cameraPermissionDenied ? 'Camera Access Required' : 'Camera Warning'}
+            </div>
+            <div style={{
+              color: cameraPermissionDenied ? '#842029' : '#856404',
+              fontSize: '13px',
+              lineHeight: '1.5'
+            }}>
+              {cameraError}
+            </div>
+            {cameraPermissionDenied && (
+              <div style={{
+                marginTop: '8px',
+                fontSize: '12px',
+                color: '#842029'
+              }}>
+                Please refresh the page and allow camera access to continue with the proctored exam.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (

@@ -1,6 +1,6 @@
 // edukon/src/page/profile/profile.jsx
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import UserCertificates from '../../component/certification/UserCertificates';
 import api, { API_BASE_URL } from '../../services/api';
 import './profile.css';
@@ -8,12 +8,21 @@ import './profile.css';
 const Profile = () => {
   const { userId, collegeSlug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [activities, setActivities] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Check for tab query parameter on mount
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['overview', 'courses', 'certificates', 'activity'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchProfileData();
