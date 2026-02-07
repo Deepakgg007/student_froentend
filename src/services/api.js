@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-export const API_BASE_URL = 'https://krishik-abiuasd.in';
+// export const API_BASE_URL = 'https://krishik-abiuasd.in';
 // export const API_BASE_URL = 'http://192.168.1.9:8000';
 // export const API_BASE_URL = 'http://16.16.76.74:8000';
-// export const API_BASE_URL = 'http://localhost:8000';
+export const API_BASE_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -371,10 +371,13 @@ export const getCertificationById = async (id) => {
  * Get questions for a certification (without showing correct answers)
  * @param {number} certificationId - Certification ID
  */
-export const getCertificationQuestions = async (certificationId) => {
+export const getCertificationQuestions = async (certificationId, limit = 30) => {
   try {
     // The backend routes: /api/student/certifications/certifications/{id}/questions/
-    const response = await api.get(`/student/certifications/certifications/${certificationId}/questions/`);
+    // Optional limit parameter controls how many random questions to show (default: 30)
+    const response = await api.get(`/student/certifications/certifications/${certificationId}/questions/`, {
+      params: { limit }
+    });
 
     // Handle URL responses
     if (response.data && typeof response.data === 'object') {

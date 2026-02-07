@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import UserCertificates from '../../component/certification/UserCertificates';
+import ContributionCalendar from '../../component/profile/ContributionCalendar';
 import api, { API_BASE_URL } from '../../services/api';
 import './profile.css';
 
@@ -275,6 +276,9 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Contribution Calendar */}
+      <ContributionCalendar userId={userId || profile.user.id} />
 
       {/* Tab Navigation */}
       <div className="profile-tabs">
