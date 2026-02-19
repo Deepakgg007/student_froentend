@@ -27,7 +27,11 @@ const ContributionCalendar = ({ userId }) => {
   const fetchContributionData = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/student/profile/${userId}/contributions/?year=${selectedYear}`);
+      // Use me_contributions endpoint for current user (when viewing own profile)
+      const endpoint = userId
+        ? `/student/profile/${userId}/contributions/?year=${selectedYear}`
+        : `/student/profile/me_contributions/?year=${selectedYear}`;
+      const response = await api.get(endpoint);
       setContributionData(response.data.contributions || []);
     } catch (error) {
       console.error('Error fetching contribution data:', error);

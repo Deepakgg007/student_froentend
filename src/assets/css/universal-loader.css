@@ -1,5 +1,16 @@
 /* Universal Loader Styles */
 
+/* SweetAlert Custom Styles - Add top padding to avoid navbar overlap */
+.swal-custom-popup {
+    margin-top: 80px !important;
+}
+
+@media (max-width: 768px) {
+    .swal-custom-popup {
+        margin-top: 60px !important;
+    }
+}
+
 .universal-loader-overlay {
     position: fixed;
     top: 0;

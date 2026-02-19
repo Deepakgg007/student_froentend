@@ -1,0 +1,79 @@
+/* ========================================
+   Skeleton Loader Styles
+   For smooth loading states without flash
+   ======================================== */
+
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    #e0e0e0 0%,
+    #f0f0f0 50%,
+    #e0e0e0 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Pulse animation for skeleton cards */
+.skeleton-card {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Smooth fade-in transition for content */
+.smooth-fade-in {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.smooth-fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered animation for lists */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.stagger-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line,
+  .skeleton-card {
+    animation: none;
+  }
+
+  .smooth-fade-in,
+  .stagger-item {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}

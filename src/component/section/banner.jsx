@@ -73,7 +73,7 @@ const Banner = () => {
                     {/* Buttons */}
                     <div 
                         className="d-flex flex-wrap justify-content-center gap-3"
-                        style={{ marginBottom: "60px" }}
+
                     >
                         <a 
                             href="#" 
@@ -88,21 +88,6 @@ const Banner = () => {
                         >
                             Get Started Now
                         </a>
-
-                        {/* <a 
-                            href="#" 
-                            className="btn px-4 py-2"
-                            style={{
-                                background: "#fff",
-                                color: "#000",
-                                fontSize: "clamp(14px, 1.6vw, 18px)",
-                                border: "1px solid #ccc",
-                                borderRadius: "8px",
-                                fontWeight: "400"
-                            }}
-                        >
-                            For developers
-                        </a> */}
                     </div>
 
                 </div>

@@ -105,31 +105,14 @@ const CompanyList = () => {
       <div
         className="page-header-content text-center position-relative overflow-hidden"
         style={{
-          paddingTop: '120px',
+          paddingTop: '85px',
           paddingBottom: '60px',
-          background: 'linear-gradient(135deg, #f8f8f8ff 0%, #fcf3f3ff 100%)',
         }}
       >
-        <div className="container position-relative" style={{ zIndex: 2 }}>
-          <h2 className="display-5  mb-3 fw-bold">
-            Explore Company Challenges
-          </h2>
-          <p
-            className="mb-4"
-            style={{
-              fontSize: '1.1rem',
-              opacity: 0.9,
-              maxWidth: '800px',
-              margin: '0 auto',
-            }}
-          >
-            Take on real-world coding challenges, showcase your skills, and unlock exciting career opportunities.
-          </p>
-        </div>
       </div>
 
       {/* 🟢 Mobile Filter Header (on top like JobList) */}
-      <div className="container-fluid d-md-none px-3 py-3" style={{ background: '#f8fafc' }}>
+      <div className="container-fluid d-md-none px-3" style={{ background: '#f8fafc' }}>
         <button
           className="btn w-100 d-flex justify-content-between align-items-center shadow-sm"
           style={{
@@ -311,12 +294,28 @@ const CompanyList = () => {
         </div>
       </div>
 
-      {/* 🟡 Company Results Section (unchanged) */}
+      {/* Company Results Section */}
       <div className="container-fluid px-4 pb-5" style={{ background: '#f8fafc' }}>
         {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}></div>
-            <p className="mt-3 text-muted">Loading companies...</p>
+          <div className="row g-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                <div className="card shadow-sm h-100">
+                  <div className="card-body">
+                    <div className="text-center mb-3">
+                      <div className="skeleton-line rounded-circle mx-auto" style={{ width: '80px', height: '80px' }}></div>
+                    </div>
+                    <div className="skeleton-line mx-auto mb-2" style={{ width: '70%', height: '20px' }}></div>
+                    <div className="skeleton-line mx-auto mb-3" style={{ width: '50%', height: '16px' }}></div>
+                    <div className="d-flex justify-content-center gap-2 mb-3">
+                      <div className="skeleton-line rounded" style={{ width: '60px', height: '20px' }}></div>
+                      <div className="skeleton-line rounded" style={{ width: '50px', height: '20px' }}></div>
+                    </div>
+                    <div className="skeleton-line rounded" style={{ width: '100%', height: '36px' }}></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <>

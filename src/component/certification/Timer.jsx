@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Timer Component for Certification Exams
@@ -10,6 +10,9 @@ import React, { useState, useEffect } from 'react';
  * @param {boolean} isActive - Whether timer should be running
  */
 const Timer = ({ initialMinutes, onTimeExpired, isActive = true }) => {
+  // Handle undefined/null/invalid initialMinutes - default to 60 minutes
+  const validInitialMinutes = initialMinutes && initialMinutes > 0 ? initialMinutes : 60;
+
   const [timeLeft, setTimeLeft] = useState(() => {
     // Check if we have a saved time in localStorage
     try {
@@ -21,17 +24,25 @@ const Timer = ({ initialMinutes, onTimeExpired, isActive = true }) => {
         const remaining = Math.max(0, parseInt(savedTime) - elapsed);
 
         // If more than the initial duration has passed, reset
-        if (remaining > initialMinutes * 60) {
-          return initialMinutes * 60;
+        if (remaining > validInitialMinutes * 60) {
+          return validInitialMinutes * 60;
+        }
+
+        // If remaining is 0 or very small, reset to initial duration
+        if (remaining <= 0) {
+          // Clear old localStorage
+          localStorage.removeItem('examTimeLeft');
+          localStorage.removeItem('examTimeTimestamp');
+          return validInitialMinutes * 60;
         }
 
         return remaining;
       }
     } catch (e) {
-      console.error('Error reading exam time from localStorage:', e);
+      // Silently handle localStorage errors
     }
 
-    return initialMinutes * 60; // Convert to seconds
+    return validInitialMinutes * 60; // Convert to seconds
   });
 
   const [isWarning, setIsWarning] = useState(false);
@@ -42,7 +53,7 @@ const Timer = ({ initialMinutes, onTimeExpired, isActive = true }) => {
       localStorage.setItem('examTimeLeft', timeLeft.toString());
       localStorage.setItem('examTimeTimestamp', Date.now().toString());
     } catch (e) {
-      console.error('Error saving exam time to localStorage:', e);
+      // Silently handle localStorage errors
     }
   }, []);
 
@@ -59,7 +70,7 @@ const Timer = ({ initialMinutes, onTimeExpired, isActive = true }) => {
           localStorage.setItem('examTimeLeft', newTime.toString());
           localStorage.setItem('examTimeTimestamp', Date.now().toString());
         } catch (e) {
-          console.error('Error saving exam time:', e);
+          // Silently handle localStorage errors
         }
 
         if (newTime <= 1) {
@@ -68,7 +79,7 @@ const Timer = ({ initialMinutes, onTimeExpired, isActive = true }) => {
             localStorage.removeItem('examTimeLeft');
             localStorage.removeItem('examTimeTimestamp');
           } catch (e) {
-            console.error('Error clearing exam time:', e);
+            // Silently handle localStorage errors
           }
           onTimeExpired();
           return 0;

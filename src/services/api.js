@@ -1,9 +1,35 @@
 import axios from 'axios';
 
+// export const API_BASE_URL = 'https://shobhaconsultancy.in';
 // export const API_BASE_URL = 'https://krishik-abiuasd.in';
-// export const API_BASE_URL = 'http://192.168.1.9:8000';
-// export const API_BASE_URL = 'http://16.16.76.74:8000';
 export const API_BASE_URL = 'http://localhost:8000';
+
+// ========== Simple In-Memory Cache ==========
+// Cache API responses for faster subsequent loads
+const cache = new Map();
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
+const getCacheKey = (url, params) => {
+  return `${url}?${JSON.stringify(params || {})}`;
+};
+
+const getCached = (url, params) => {
+  const key = getCacheKey(url, params);
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCached = (url, params, data) => {
+  const key = getCacheKey(url, params);
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
+// Clear cache on logout or profile update
+export const clearCache = () => cache.clear();
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -12,13 +38,29 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add token
+// Request interceptor to add token and check cache
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('student_access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Check cache for GET requests only
+    if (config.method === 'get') {
+      const cached = getCached(config.url, config.params);
+      if (cached) {
+        config.adapter = () => Promise.resolve({
+          data: cached,
+          status: 200,
+          statusText: 'OK (cached)',
+          headers: {},
+          config,
+          request: {},
+        });
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -26,15 +68,32 @@ api.interceptors.request.use(
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Cache successful GET responses
+    if (response.config.method === 'get' && response.status === 200) {
+      setCached(response.config.url, response.config.params, response.data);
+    }
+    return response;
+  },
   (error) => {
-    // Log error details for debugging
-    console.error('API Error:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-    });
+    // List of endpoints where errors are expected/handled gracefully - don't log these
+    const silentErrors = [
+      '/student/profile/me/stats/',
+      '/student/profile/',
+    ];
+
+    const url = error.config?.url;
+    const shouldSilence = silentErrors.some(path => url?.includes(path));
+
+    // Log error details for debugging (except for silent errors)
+    if (!shouldSilence) {
+      console.error('API Error:', {
+        url: error.config?.url,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+      });
+    }
 
     // Check for session invalidation error (logged in from another device)
     if (error.response?.status === 403) {
@@ -46,9 +105,16 @@ api.interceptors.response.use(
       }
     }
 
+    // Only redirect to login on 401 if the request had a token (authenticated request)
+    // This allows public pages to work without login
     if (error.response?.status === 401) {
-      localStorage.clear();
-      window.location.href = '/login';
+      const token = localStorage.getItem('student_access_token');
+      if (token) {
+        // User was logged in but token is invalid - redirect to login
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+      // If no token, let the component handle the error (public pages)
     }
     return Promise.reject(error);
   }
@@ -168,6 +234,14 @@ export const getConceptChallengesList = (params = {}) => {
  */
 export const getConceptChallengeById = (id) => {
   return api.get(`/company/concept-challenges/${id}/`);
+};
+
+/**
+ * Get companies for a specific challenge
+ * @param {number|string} challengeIdOrSlug - Challenge ID or slug
+ */
+export const getChallengeCompanies = (challengeIdOrSlug) => {
+  return api.get(`/coding/challenges/${challengeIdOrSlug}/companies/`);
 };
 
 // ========== Jobs ==========

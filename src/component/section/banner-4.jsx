@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
+import { useSmoothData } from "../../hooks/useSmoothData";
 
 const BannerFour = () => {
-  const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -24,26 +22,22 @@ const BannerFour = () => {
     { iconName: "icofont-globe", text: "Learn Anything Online" },
   ];
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
+  // Fetch courses with smooth transition
+  const { data: courses = [], loading, error } = useSmoothData(
+    async () => {
       const response = await api.get("/courses/");
       const data = response.data;
       const coursesData = Array.isArray(data)
         ? data
         : data.results || data.data || [];
-      setCourses(coursesData);
-    } catch (err) {
-      console.error("Failed to fetch courses:", err);
-      setError("Failed to load courses. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { data: coursesData };
+    },
+    []
+  );
+
+  useEffect(() => {
+    setFilteredCourses(courses);
+  }, [courses]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -316,9 +310,31 @@ const BannerFour = () => {
         {hasSearched && (
           <div style={{ marginTop: "25px" }}>
             {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border"></div>
-                <p className="mt-3">Loading...</p>
+              // Skeleton Loader
+              <div style={styles.gridContainer}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} style={styles.courseItem}>
+                    <div
+                      className="skeleton-line"
+                      style={{
+                        width: "120px",
+                        height: "90px",
+                        borderRadius: "8px",
+                        flexShrink: 0,
+                      }}
+                    ></div>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        className="skeleton-line mb-2"
+                        style={{ width: "80%", height: "18px" }}
+                      ></div>
+                      <div
+                        className="skeleton-line"
+                        style={{ width: "50%", height: "14px" }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="alert alert-danger text-center">{error}</div>
@@ -331,7 +347,14 @@ const BannerFour = () => {
                 <h5 className="text-muted mt-3">No courses found</h5>
               </div>
             ) : (
-              <div style={styles.gridContainer}>
+              <div
+                style={{
+                  ...styles.gridContainer,
+                  opacity: filteredCourses.length ? 1 : 0,
+                  transform: filteredCourses.length ? "translateY(0)" : "translateY(10px)",
+                  transition: "opacity 0.4s ease-out, transform 0.4s ease-out",
+                }}
+              >
                 {filteredCourses.map((course) => (
                   <div key={course.id} style={styles.courseItem}>
                     <img

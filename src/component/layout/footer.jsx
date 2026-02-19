@@ -23,7 +23,7 @@ const Footer = () => {
 
     const [collegeData, setCollegeData] = useState(null);
     const [description, setDescription] = useState("");
-    const [logo, setLogo] = useState("/assets/images/z1logo.png"); // default logo
+    const [logo, setLogo] = useState("/assets/images/logo/z1logo.png"); // default logo
     const linkStyle = { color: "#fff" };
 
     const { isAuthenticated } = useAuth();
@@ -34,7 +34,7 @@ const Footer = () => {
 
         if (!storedUser) {
             // Reset to default when logged out
-            setLogo("/assets/images/z1logo.png");
+            setLogo("/assets/images/logo/z1logo.png");
             setDescription("Z1 empowers students with structured learning, real-world challenges, jobs, and achievements — all in one platform.");
             setCollegeData(null);
             return;
@@ -51,14 +51,14 @@ const Footer = () => {
                         : `${API_BASE_URL}${college.logo}`
                 );
             } else {
-                setLogo("/assets/images/z1logo.png");
+                setLogo("/assets/images/logo/z1logo.png");
             }
 
             fetchCollegeDescription(college?.name);
         } catch (err) {
             console.error("Error loading college data:", err);
             // Reset to default on error
-            setLogo("/assets/images/z1logo.png");
+            setLogo("/assets/images/logo/z1logo.png");
             setDescription("Z1 empowers students with structured learning, real-world challenges, jobs, and achievements — all in one platform.");
         }
     }, [isAuthenticated]); // Add isAuthenticated as dependency

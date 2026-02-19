@@ -1,0 +1,274 @@
+/* edukon/src/page/certificates/certificates.css */
+/* Certificates Page Styles */
+
+/* ==================== Skeleton Loader ==================== */
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 50%;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==================== Certificates Page Container ==================== */
+.certificates-page {
+  min-height: 100vh;
+  padding-top: 80px;
+  background: #f5f7fa;
+  padding-bottom: 3rem;
+}
+
+/* ==================== Certificates Header ==================== */
+.certificates-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e0e7ff;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.certificates-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.certificates-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.certificates-avatar,
+.certificates-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #d4af37;
+  object-fit: cover;
+}
+
+.certificates-avatar-placeholder {
+  background: linear-gradient(135deg, #d4af37 0%, #c9a832 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+}
+
+.certificates-header-info {
+  flex: 1;
+}
+
+.certificates-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.3rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.certificates-title::before {
+  content: '📜';
+  font-size: 1.5rem;
+}
+
+.certificates-subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0 0 0.3rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.certificates-college {
+  color: #d4af37;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+/* ==================== Certificates Navigation ==================== */
+.certificates-nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 0;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  background: #8b5cf6;
+  color: white;
+  border-color: #8b5cf6;
+}
+
+/* ==================== Certificates Content ==================== */
+.certificates-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.certificates-info-banner {
+  background: linear-gradient(135deg, #d4af3710 0%, #c9a83210 100%);
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  color: #b8860b;
+  font-size: 0.95rem;
+}
+
+.certificates-info-banner i {
+  font-size: 1.2rem;
+}
+
+/* ==================== Loading & Error States ==================== */
+.certificates-loading,
+.certificates-error {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.certificates-loading p,
+.certificates-error p {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.certificates-error h2 {
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.certificates-error button {
+  padding: 0.7rem 1.5rem;
+  background: #d4af37;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.certificates-error button:hover {
+  background: #c9a832;
+}
+
+/* ==================== Empty State ==================== */
+.certificates-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 2px dashed #d4af37;
+}
+
+.certificates-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.certificates-empty h3 {
+  color: #1e293b;
+  font-size: 1.3rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.certificates-empty p {
+  color: #64748b;
+  margin: 0;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+  .certificates-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .certificates-avatar-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .certificates-avatar,
+  .certificates-avatar-placeholder {
+    width: 60px;
+    height: 60px;
+  }
+
+  .certificates-title {
+    font-size: 1.4rem;
+  }
+
+  .certificates-nav {
+    padding: 1rem 1rem 0;
+  }
+
+  .certificates-content {
+    padding: 1rem;
+  }
+
+  .certificates-info-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+}

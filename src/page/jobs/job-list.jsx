@@ -112,21 +112,21 @@ const JobList = () => {
       <div
         className="page-header-content text-center"
         style={{
-          paddingTop: '100px',
+          paddingTop: '85px',
           paddingBottom: '50px',
           background: 'linear-gradient(135deg, #f6f7f8ff 0%, #fbffffff 100%)',
         }}
       >
+
+      </div>
+
+      <div className="container-fluid px-4 py-5" style={{ background: '#f8fafc' }}>
         <div className="container">
-          <h2
-            className="text-black fw-bold mb-3"
-            style={{
-              fontSize: 'clamp(1.6rem, 4.5vw, 2.8rem)',
-              lineHeight: '1.2',
-            }}
+          <h3
+            className="text-black fw-bold mb-3 animate__animated animate__fadeInDown"
           >
             Job Opportunities
-          </h2>
+          </h3>
           <p
             className="text-black opacity-90 mb-4"
             style={{ fontSize: 'clamp(0.9rem, 3.5vw, 1.2rem)' }}
@@ -137,9 +137,6 @@ const JobList = () => {
           {/* Stats badges */}
           
         </div>
-      </div>
-
-      <div className="container-fluid px-4 py-5" style={{ background: '#f8fafc' }}>
         {/* ✅ Mobile Filter Toggle Button */}
         <div className="d-md-none text-center mb-3">
           <button
@@ -261,11 +258,31 @@ const JobList = () => {
           </div>
         </div>
 
-        {/* ✅ Job Results (unchanged logic) */}
+        {/* Job Results with skeleton loader */}
         {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary"></div>
-            <p className="mt-3 text-muted">Loading opportunities...</p>
+          <div className="row g-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="col-lg-3 col-md-6 col-sm-12">
+                <div className="card shadow-sm h-100">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="skeleton-line rounded-circle me-3" style={{ width: '50px', height: '50px' }}></div>
+                      <div className="flex-grow-1">
+                        <div className="skeleton-line mb-1" style={{ width: '70%', height: '16px' }}></div>
+                        <div className="skeleton-line" style={{ width: '50%', height: '14px' }}></div>
+                      </div>
+                    </div>
+                    <div className="skeleton-line mb-2" style={{ width: '80%', height: '14px' }}></div>
+                    <div className="skeleton-line mb-3" style={{ width: '60%', height: '14px' }}></div>
+                    <div className="d-flex gap-2 mb-3">
+                      <div className="skeleton-line rounded" style={{ width: '60px', height: '22px' }}></div>
+                      <div className="skeleton-line rounded" style={{ width: '70px', height: '22px' }}></div>
+                    </div>
+                    <div className="skeleton-line rounded" style={{ width: '100%', height: '36px' }}></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="row g-4">

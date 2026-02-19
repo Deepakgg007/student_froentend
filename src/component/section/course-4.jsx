@@ -1,59 +1,48 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
+import { useSmoothData } from "../../hooks/useSmoothData";
 
 const title = "Our Courses";
 const btnText = "Get Started Now";
 const staticCategories = [];
 
 const CourseFour = () => {
-  const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    fetchCourses();
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleResize = () => {
-    setIsMobile(window.innerWidth <= 768);
-  };
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      // Fetch courses ordered by updated_at from backend (oldest first)
+  // Fetch courses with smooth transition
+  const { data: courses = [], loading, error } = useSmoothData(
+    async () => {
       const response = await api.get("/courses/?ordering=updated_at");
       const data = response.data;
       let coursesData = Array.isArray(data)
         ? data
         : data.results || data.data || [];
 
-      // Sort courses by updated_at (oldest first) - backup sort if backend doesn't do it
+      // Sort courses by updated_at (oldest first)
       coursesData = coursesData.sort((a, b) => {
         const dateA = new Date(a.updated_at || a.created_at || 0);
         const dateB = new Date(b.updated_at || b.created_at || 0);
         return dateA - dateB;
       });
 
-      setCourses(coursesData);
-      setFilteredCourses(coursesData);
-    } catch (err) {
-      console.error("Failed to fetch courses:", err);
-      setError("Failed to load courses. Please try again later.");
-      setCourses([]);
-      setFilteredCourses([]);
-    } finally {
-      setLoading(false);
-    }
+      return { data: coursesData };
+    },
+    []
+  );
+
+  useEffect(() => {
+    setFilteredCourses(courses);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [courses]);
+
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
   };
 
   // Desktop-only filter function (hidden on mobile)
@@ -183,13 +172,42 @@ const CourseFour = () => {
         {/* Content */}
         <div className="section-wrapper">
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border" role="status"></div>
-              <p className="mt-3">Loading courses...</p>
+            // Skeleton Loader
+            <div style={styles.gridContainer}>
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    ...styles.courseItem,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <div style={styles.thumb}>
+                    <div
+                      className="skeleton-line"
+                      style={{
+                        width: "100%",
+                        height: "75px",
+                        borderRadius: "8px",
+                      }}
+                    ></div>
+                  </div>
+                  <div style={styles.content}>
+                    <div
+                      className="skeleton-line mb-2"
+                      style={{ width: "80%", height: "18px" }}
+                    ></div>
+                    <div
+                      className="skeleton-line"
+                      style={{ width: "50%", height: "14px" }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="alert alert-danger text-center">{error}</div>
-          ) : filteredCourses.length === 0 ? (
+          ) : !filteredCourses || filteredCourses.length === 0 ? (
             <div className="text-center py-5">
               <i
                 className="icofont-book-alt"
@@ -198,7 +216,14 @@ const CourseFour = () => {
               <h5 className="text-muted mt-3">No courses found</h5>
             </div>
           ) : (
-            <div style={styles.gridContainer}>
+            <div
+              style={{
+                ...styles.gridContainer,
+                opacity: (courses && courses.length) ? 1 : 0,
+                transform: (courses && courses.length) ? "translateY(0)" : "translateY(10px)",
+                transition: "opacity 0.4s ease-out, transform 0.4s ease-out",
+              }}
+            >
               {filteredCourses.map((course) => (
                 <Link 
   to={`/course-single/${course.id}`} 

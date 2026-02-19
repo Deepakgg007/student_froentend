@@ -7,45 +7,51 @@ import { getCompanyBySlug, getCompanyConcepts, getCompanyJobs } from '../../serv
 import ConceptCard from '../../component/cards/ConceptCard';
 import JobCard from '../../component/cards/JobCard';
 import Swal from 'sweetalert2';
+import { useSmoothData } from '../../hooks/useSmoothData';
 
 const CompanyDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  
-  const [company, setCompany] = useState(null);
+
+  const [activeTab, setActiveTab] = useState('concepts'); // 'concepts' or 'jobs'
   const [concepts, setConcepts] = useState([]);
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('concepts'); // 'concepts' or 'jobs'
 
-  useEffect(() => {
-    fetchCompanyData();
-  }, [slug]);
+  // Fetch company data with smooth transition
+  const { data: company, loading, error } = useSmoothData(
+    async () => {
+      const response = await getCompanyBySlug(slug);
 
-  const fetchCompanyData = async () => {
-    try {
-      setLoading(true);
+      // Fetch concepts and jobs in parallel after company loads
+      const [conceptsResponse, jobsResponse] = await Promise.allSettled([
+        getCompanyConcepts(slug),
+        response.data.id ? getCompanyJobs(response.data.id) : Promise.resolve({ data: [] })
+      ]);
 
-      // Fetch company details
-      const companyResponse = await getCompanyBySlug(slug);
-      setCompany(companyResponse.data);
+      // Set concepts
+      if (conceptsResponse.status === 'fulfilled') {
+        const conceptsData = Array.isArray(conceptsResponse.value.data)
+          ? conceptsResponse.value.data
+          : conceptsResponse.value.data?.results || [];
+        setConcepts(conceptsData);
+      }
 
-      // Fetch concepts for this company
-      const conceptsResponse = await getCompanyConcepts(slug);
-      const conceptsData = Array.isArray(conceptsResponse.data) 
-        ? conceptsResponse.data 
-        : conceptsResponse.data?.results || [];
-      setConcepts(conceptsData);
-
-      // Fetch jobs for this company
-      if (companyResponse.data.id) {
-        const jobsResponse = await getCompanyJobs(companyResponse.data.id);
-        const jobsData = Array.isArray(jobsResponse.data) 
-          ? jobsResponse.data 
-          : jobsResponse.data?.results || [];
+      // Set jobs
+      if (jobsResponse.status === 'fulfilled') {
+        const jobsData = Array.isArray(jobsResponse.value.data)
+          ? jobsResponse.value.data
+          : jobsResponse.value.data?.results || [];
         setJobs(jobsData);
       }
-    } catch (error) {
+
+      return response;
+    },
+    [slug]
+  );
+
+  // Handle error
+  useEffect(() => {
+    if (error) {
       console.error('Error fetching company data:', error);
       console.error('Error details:', error.response?.data);
       console.error('Error status:', error.response?.status);
@@ -54,10 +60,8 @@ const CompanyDetail = () => {
         title: 'Error',
         text: 'Failed to load company details. Please try again.',
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error]);
 
   if (loading) {
     return (
@@ -94,11 +98,18 @@ const CompanyDetail = () => {
 
   return (
     <Fragment>
-      
+
       {/* Page Header with proper spacing */}
       <div style={{ paddingTop: '100px' }}></div>
-      
-      <div className="container-fluid px-5 py-4">
+
+      <div
+        className="container-fluid px-5 py-4"
+        style={{
+          opacity: company ? 1 : 0,
+          transform: company ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'opacity 0.3s ease-out, transform 0.3s ease-out'
+        }}
+      >
       {/* Back Button */}
       <div className="mb-4">
         <button

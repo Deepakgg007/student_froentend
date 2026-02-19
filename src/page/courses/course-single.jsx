@@ -1,6 +1,8 @@
 import { Fragment, useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../services/api";
+import { useUserApproval, showApprovalPendingAlert, showNotVerifiedAlert, showAccountRejectedAlert } from "../../hooks/useUserApproval";
+import './course-single.css';
 
 const CourseSingle = () => {
     const { id } = useParams();
@@ -9,10 +11,30 @@ const CourseSingle = () => {
     const [syllabus, setSyllabus] = useState(null);
     const [enrollment, setEnrollment] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [ready, setReady] = useState(false);
     const [error, setError] = useState('');
     const [enrolling, setEnrolling] = useState(false);
     const [enrollError, setEnrollError] = useState('');
     const [activeTab, setActiveTab] = useState('topic0');
+    const { user, isApproved, isVerified, approvalStatus } = useUserApproval();
+
+    // Suppress YouTube embed errors caused by ad blockers
+    useEffect(() => {
+        const originalError = console.error;
+        console.error = (...args) => {
+            const message = args[0]?.toString() || '';
+            // Filter out YouTube-related errors from ad blockers
+            if (message.includes('ERR_BLOCKED_BY_CLIENT') ||
+                message.includes('youtube') ||
+                message.includes('log_event')) {
+                return; // Suppress these errors
+            }
+            originalError.apply(console, args);
+        };
+        return () => {
+            console.error = originalError;
+        };
+    }, []);
 
     useEffect(() => {
         fetchCourseDetails();
@@ -58,6 +80,9 @@ const CourseSingle = () => {
             } else {
                 setEnrollment(null);
             }
+
+            // Trigger smooth fade-in transition
+            setTimeout(() => setReady(true), 50);
         } catch (err) {
             console.error('Failed to fetch course details:', err);
             setError('Failed to load course details. Please try again later.');
@@ -67,6 +92,30 @@ const CourseSingle = () => {
     };
 
     const handleEnroll = async () => {
+        // Check if user is logged in before attempting enrollment
+        const token = localStorage.getItem('student_access_token');
+        if (!token) {
+            // Redirect to login with return URL
+            window.location.href = `/login?next=/course-single/${id}`;
+            return;
+        }
+
+        // Check approval status before allowing enrollment
+        if (!isVerified) {
+            showNotVerifiedAlert(user);
+            return;
+        }
+
+        if (approvalStatus === 'rejected') {
+            showAccountRejectedAlert(user);
+            return;
+        }
+
+        if (!isApproved) {
+            showApprovalPendingAlert(user);
+            return;
+        }
+
         try {
             setEnrolling(true);
             setEnrollError('');
@@ -76,6 +125,13 @@ const CourseSingle = () => {
             setEnrollError('');
         } catch (err) {
             console.error('Enrollment error:', err.response?.data);
+
+            // If 401 (not authenticated), redirect to login
+            if (err.response?.status === 401) {
+                window.location.href = `/login?next=/course-single/${id}`;
+                return;
+            }
+
             let errorMessage = 'Failed to enroll in course';
 
             if (err.response?.data) {
@@ -104,16 +160,72 @@ const CourseSingle = () => {
         }
     };
 
+    // Convert YouTube watch URL to embed URL with privacy-enhanced parameters
+    const getYouTubeEmbedUrl = (url) => {
+        if (!url) return '';
+        // Convert watch URL to embed URL
+        let embedUrl = url.replace('watch?v=', 'embed/');
+        // Use youtube-nocookie.com for better privacy
+        embedUrl = embedUrl.replace('youtube.com', 'youtube-nocookie.com');
+        // Add parameters to reduce tracking
+        const separator = embedUrl.includes('?') ? '&' : '?';
+        return `${embedUrl}${separator}rel=0&modestbranding=1`;
+    };
+
     if (loading) {
         return (
             <Fragment>
+                <div className="pageheader-section style-2" style={{paddingTop: '100px'}}>
+                    <div className="container">
+                        <div className="row justify-content-center justify-content-lg-between align-items-center flex-row-reverse">
+                            <div className="col-lg-7 col-12">
+                                <div className="pageheader-thumb">
+                                    <div className="ratio ratio-16x9 skeleton-pulse" style={{
+                                        background: '#e0e0e0',
+                                        borderRadius: '8px',
+                                        minHeight: '400px'
+                                    }}></div>
+                                </div>
+                            </div>
+                            <div className="col-lg-5 col-12">
+                                <div className="pageheader-content">
+                                    <div className="course-category mb-3">
+                                        <div className="skeleton-pulse" style={{ width: '120px', height: '30px', borderRadius: '4px', display: 'inline-block' }}></div>
+                                    </div>
+                                    <h2 className="phs-title">
+                                        <div className="skeleton-pulse" style={{ width: '80%', height: '40px', borderRadius: '4px', marginBottom: '10px' }}></div>
+                                    </h2>
+                                    <p className="phs-desc">
+                                        <div className="skeleton-pulse" style={{ width: '100%', height: '20px', borderRadius: '4px', marginBottom: '8px' }}></div>
+                                        <div className="skeleton-pulse" style={{ width: '60%', height: '20px', borderRadius: '4px' }}></div>
+                                    </p>
+                                    <div className="phs-thumb mb-3">
+                                        <div className="skeleton-pulse" style={{ width: '150px', height: '24px', borderRadius: '4px' }}></div>
+                                    </div>
+                                    <div className="skeleton-pulse" style={{ width: '180px', height: '50px', borderRadius: '4px' }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="course-single-section padding-tb section-bg">
                     <div className="container">
-                        <div className="text-center py-5">
-                            <div className="spinner-border" role="status">
-                                <span className="sr-only">Loading...</span>
+                        <div className="row justify-content-center">
+                            <div className="col-lg-8">
+                                <div className="main-part">
+                                    <div className="skeleton-pulse mb-3" style={{ width: '80px', height: '40px', borderRadius: '4px' }}></div>
+                                    <div className="skeleton-pulse mb-4" style={{ width: '200px', height: '32px', borderRadius: '4px' }}></div>
+                                    <div className="skeleton-pulse mb-2" style={{ width: '100%', height: '16px', borderRadius: '4px' }}></div>
+                                    <div className="skeleton-pulse mb-2" style={{ width: '100%', height: '16px', borderRadius: '4px' }}></div>
+                                    <div className="skeleton-pulse mb-4" style={{ width: '70%', height: '16px', borderRadius: '4px' }}></div>
+                                    <div className="skeleton-pulse mb-2" style={{ width: '100%', height: '16px', borderRadius: '4px' }}></div>
+                                    <div className="skeleton-pulse" style={{ width: '50%', height: '16px', borderRadius: '4px' }}></div>
+                                </div>
                             </div>
-                            <p>Loading course details...</p>
+                            <div className="col-lg-4">
+                                <div className="skeleton-pulse" style={{ width: '100%', height: '200px', borderRadius: '8px' }}></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -157,7 +269,11 @@ const CourseSingle = () => {
 
     return (
         <Fragment>
-            <div className="pageheader-section style-2" style={{paddingTop: '100px'}}>
+            <div className="pageheader-section style-2" style={{
+                paddingTop: '100px',
+                opacity: ready ? 1 : 0,
+                transition: 'opacity 0.3s ease-out'
+            }}>
                 <div className="container">
                     <div className="row justify-content-center justify-content-lg-between align-items-center flex-row-reverse">
                         <div className="col-lg-7 col-12">
@@ -166,7 +282,7 @@ const CourseSingle = () => {
                                     <div className="ratio ratio-16x9">
                                         {course.video_intro_url ? (
                                             <iframe
-                                                src={course.video_intro_url.replace('watch?v=', 'embed/')}
+                                                src={getYouTubeEmbedUrl(course.video_intro_url)}
                                                 title="Course Introduction Video"
                                                 allowFullScreen
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -224,6 +340,16 @@ const CourseSingle = () => {
                                             <i className="icofont-check-circled me-1"></i> Enrolled
                                         </span>
                                     </div>
+                                ) : user && !isApproved ? (
+                                    // Show approval pending button for logged-in but not approved users
+                                    <button
+                                        className="lab-btn"
+                                        disabled={true}
+                                        style={{ opacity: '0.7', cursor: 'not-allowed' }}
+                                    >
+                                        <i className="icofont-lock me-2"></i>
+                                        <span>{approvalStatus === 'rejected' ? 'Account Rejected' : 'Approval Pending'}</span>
+                                    </button>
                                 ) : (
                                     <button
                                         onClick={handleEnroll}
@@ -249,7 +375,10 @@ const CourseSingle = () => {
                 </div>
             </div>
 
-            <div className="course-single-section padding-tb section-bg">
+            <div className="course-single-section padding-tb section-bg" style={{
+                opacity: ready ? 1 : 0,
+                transition: 'opacity 0.3s ease-out 0.1s'
+            }}>
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-lg-8">

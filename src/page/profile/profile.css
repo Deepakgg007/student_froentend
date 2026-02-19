@@ -4,16 +4,16 @@
 /* ==================== Profile Page Container ==================== */
 .profile-page {
   min-height: 100vh;
-  padding-top: 80px;
+  padding-top: 85px;
   background: #f5f7fa;
-  padding-bottom: 3rem;
+  padding-bottom: 2rem;
 }
 
 /* ==================== Profile Header ==================== */
 .profile-header {
   background: #ffffff;
   border-bottom: 1px solid #e0e7ff;
-  padding: 2.5rem 2rem;
+  padding: 1.5rem 2rem 1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -25,8 +25,8 @@
 .profile-avatar-section {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .profile-avatar,

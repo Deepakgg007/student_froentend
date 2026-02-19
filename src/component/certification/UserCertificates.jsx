@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getCertifications, getCertificationAttempts, getCertificationById, getCertificationAttemptById, getCurrentUserProfile, API_BASE_URL } from '../../services/api';
 import { downloadCertificateAsPDF } from './CertificateDownloadHelper';
+import { useSmoothData } from '../../hooks/useSmoothData';
 
 /**
  * UserCertificates Component
@@ -12,26 +13,16 @@ import { downloadCertificateAsPDF } from './CertificateDownloadHelper';
 const UserCertificates = ({ collegeSlug }) => {
   const [certifications, setCertifications] = useState([]);
   const [attempts, setAttempts] = useState({});
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(null);
   const certificateRefs = useRef({});
 
-  useEffect(() => {
-    loadCertifications();
-  }, []);
-
-  const loadCertifications = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
+  // Fetch certifications with smooth transition
+  const { data: fetchedData, loading } = useSmoothData(
+    async () => {
       const certsResponse = await getCertifications();
-
       const certsData = certsResponse.data.data || certsResponse.data;
       const certsList = Array.isArray(certsData) ? certsData : certsData.results || [];
-
-      setCertifications(certsList);
 
       const allAttempts = {};
       for (const cert of certsList) {
@@ -45,14 +36,18 @@ const UserCertificates = ({ collegeSlug }) => {
           allAttempts[cert.id] = [];
         }
       }
-      setAttempts(allAttempts);
-    } catch (err) {
-      console.error('Error loading certifications:', err);
-      setError('Failed to load certifications. Please try again.');
-    } finally {
-      setLoading(false);
+
+      return { data: { certifications: certsList, attempts: allAttempts } };
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (fetchedData) {
+      setCertifications(fetchedData.certifications);
+      setAttempts(fetchedData.attempts);
     }
-  };
+  }, [fetchedData]);
 
   const handleDownloadCertificate = async (attemptId, certificationId) => {
     try {
@@ -89,7 +84,7 @@ const UserCertificates = ({ collegeSlug }) => {
 
       // PRIORITY 1: Extract college from attempt object (should have full college details)
       let collegeInfo = {};
-      
+
       // Check all possible paths where college data might be in the attempt
       if (attempt?.college) {
         collegeInfo = attempt.college;
@@ -128,7 +123,7 @@ const UserCertificates = ({ collegeSlug }) => {
 
 
       const collegeName = collegeInfo?.name || cert?.college_name || attempt?.college_name || 'Z1 Education';
-      
+
       // Extract college logo - check all possible field names
       let collegeLogo = collegeInfo?.logo || collegeInfo?.college_logo || null;
 
@@ -328,20 +323,46 @@ const UserCertificates = ({ collegeSlug }) => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ fontSize: '16px', color: '#666', marginBottom: '15px' }}>
-          Loading certificates...
-        </div>
+      <div style={{ display: 'grid', gap: '20px' }}>
+        {/* Skeleton card 1 */}
         <div style={{
-          width: '30px',
-          height: '30px',
-          border: '3px solid #e0e0e0',
-          borderTop: '3px solid #2196f3',
-          borderRadius: '50%',
-          margin: '0 auto',
-          animation: 'spin 1s linear infinite'
+          backgroundColor: 'white',
+          border: '1px solid #e0e0e0',
+          borderRadius: '8px',
+          overflow: 'hidden',
         }}>
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+          <div style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div className="skeleton-line" style={{ width: '60%', height: '24px' }}></div>
+              <div className="skeleton-line" style={{ width: '80px', height: '28px', borderRadius: '20px' }}></div>
+            </div>
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
+              <div className="skeleton-line" style={{ width: '100px', height: '16px' }}></div>
+              <div className="skeleton-line" style={{ width: '100px', height: '16px' }}></div>
+              <div className="skeleton-line" style={{ width: '100px', height: '16px' }}></div>
+            </div>
+            <div className="skeleton-line" style={{ width: '100%', height: '80px', borderRadius: '8px' }}></div>
+          </div>
+        </div>
+        {/* Skeleton card 2 */}
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #e0e0e0',
+          borderRadius: '8px',
+          overflow: 'hidden',
+        }}>
+          <div style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div className="skeleton-line" style={{ width: '50%', height: '24px' }}></div>
+              <div className="skeleton-line" style={{ width: '80px', height: '28px', borderRadius: '20px' }}></div>
+            </div>
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
+              <div className="skeleton-line" style={{ width: '100px', height: '16px' }}></div>
+              <div className="skeleton-line" style={{ width: '100px', height: '16px' }}></div>
+              <div className="skeleton-line" style={{ width: '100px', height: '16px' }}></div>
+            </div>
+            <div className="skeleton-line" style={{ width: '100%', height: '80px', borderRadius: '8px' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -379,7 +400,14 @@ const UserCertificates = ({ collegeSlug }) => {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '20px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gap: '20px',
+            opacity: certifications.length ? 1 : 0,
+            transition: 'opacity 0.4s ease-out',
+          }}
+        >
           {certifications.map((cert) => {
             const certAttempts = attempts[cert.id] || [];
             const passedAttempt = certAttempts.find(a => a.passed);
@@ -402,9 +430,9 @@ const UserCertificates = ({ collegeSlug }) => {
                   padding: '20px',
                   borderLeft: `4px solid ${passedAttempt ? '#28a745' : '#ff9800'}`
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                      <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>
+                      <h4 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '1.1rem', fontWeight: '700' }}>
                         {cert.title}
                       </h4>
                       {cert.course_name && (
@@ -418,87 +446,151 @@ const UserCertificates = ({ collegeSlug }) => {
                         backgroundColor: '#d4edda',
                         color: '#155724',
                         padding: '6px 12px',
-                        borderRadius: '4px',
+                        borderRadius: '20px',
                         fontSize: '12px',
-                        fontWeight: 'bold'
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
                       }}>
-                        ✅ Passed
+                        <i className="fas fa-check-circle"></i>
+                        Passed
                       </div>
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '15px', fontSize: '14px' }}>
-                    <div>
-                      <span style={{ color: '#666' }}>Total Attempts: </span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '15px', fontSize: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <i className="fas fa-redo" style={{ color: '#667eea', fontSize: '12px' }}></i>
+                      <span style={{ color: '#666' }}>Attempts: </span>
                       <span style={{ fontWeight: 'bold', color: '#333' }}>{allAttempts}/{cert.max_attempts}</span>
                     </div>
-                    <div>
-                      <span style={{ color: '#666' }}>Passing Score: </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <i className="fas fa-percentage" style={{ color: '#667eea', fontSize: '12px' }}></i>
+                      <span style={{ color: '#666' }}>Passing: </span>
                       <span style={{ fontWeight: 'bold', color: '#333' }}>{cert.passing_score || 80}%</span>
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <i className="fas fa-flag-checkered" style={{ color: '#667eea', fontSize: '12px' }}></i>
                       <span style={{ color: '#666' }}>Status: </span>
                       <span style={{ fontWeight: 'bold', color: passedAttempt ? '#28a745' : '#ff9800' }}>
-                        {passedAttempt ? '✅ Completed' : '⏳ In Progress'}
+                        {passedAttempt ? 'Completed' : 'In Progress'}
                       </span>
                     </div>
                   </div>
 
                   {certAttempts.length > 0 && (
                     <div style={{ marginTop: '15px' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#333' }}>
-                        Attempts History:
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#333', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <i className="fas fa-history" style={{ color: '#667eea' }}></i>
+                        Attempts History
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {certAttempts.map((attempt) => (
+                      {/* Grid layout - 5 attempts per row */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                        gap: '12px'
+                      }}>
+                        {certAttempts.map((attempt, index) => (
                           <div
                             key={attempt.id}
                             style={{
-                              padding: '10px',
-                              backgroundColor: '#f9f9f9',
-                              borderRadius: '6px',
-                              border: '1px solid #e0e0e0',
+                              padding: '16px',
+                              backgroundColor: attempt.passed ? '#f0fdf4' : '#ffffff',
+                              borderRadius: '12px',
+                              border: `1px solid ${attempt.passed ? '#bbf7d0' : '#e9ecef'}`,
+                              boxShadow: attempt.passed ? '0 2px 8px rgba(22, 163, 74, 0.1)' : '0 2px 4px rgba(0,0,0,0.06)',
+                              transition: 'all 0.2s ease',
                               display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center'
+                              flexDirection: 'column',
+                              gap: '10px',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-3px)';
+                              e.currentTarget.style.boxShadow = attempt.passed ? '0 4px 16px rgba(22, 163, 74, 0.2)' : '0 4px 12px rgba(0,0,0,0.08)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = attempt.passed ? '0 2px 8px rgba(22, 163, 74, 0.1)' : '0 2px 4px rgba(0,0,0,0.06)';
                             }}
                           >
-                            <div>
-                              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
-                                Score: {Math.round(attempt.score)}%
-                                {attempt.passed && <span style={{ color: '#28a745', marginLeft: '10px' }}>✅ PASSED</span>}
-                              </div>
-                              <div style={{ fontSize: '12px', color: '#666', marginTop: '3px' }}>
-                                Attempted: {new Date(attempt.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                {attempt.completed_at && ` • Completed: ${new Date(attempt.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`}
-                              </div>
+                            {/* Header: Score & Status */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{
+                                fontSize: '20px',
+                                fontWeight: '700',
+                                color: attempt.passed ? '#16a34a' : '#ea580c',
+                              }}>
+                                <i className={`fas ${attempt.passed ? 'fa-check-circle' : 'fa-times-circle'}`} style={{ marginRight: '6px', fontSize: '14px' }}></i>
+                                {Math.round(attempt.score)}%
+                              </span>
+                              <span style={{
+                                fontSize: '10px',
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                backgroundColor: attempt.passed ? '#dcfce7' : '#f1f5f9',
+                                color: attempt.passed ? '#166534' : '#64748b',
+                                fontWeight: '600'
+                              }}>
+                                #{index + 1}
+                              </span>
                             </div>
+
+                            {/* Date */}
+                            <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <i className="far fa-calendar" style={{ fontSize: '11px' }}></i>
+                              {new Date(attempt.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+
+                            {/* Status Badge */}
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span style={{
+                                fontSize: '11px',
+                                padding: '4px 10px',
+                                borderRadius: '12px',
+                                backgroundColor: attempt.passed ? '#dcfce7' : '#f1f5f9',
+                                color: attempt.passed ? '#166534' : '#64748b',
+                                fontWeight: '600'
+                              }}>
+                                {attempt.passed ? 'PASSED' : 'FAILED'}
+                              </span>
+                            </div>
+
+                            {/* Download Button */}
                             {attempt.passed && (
                               <button
                                 onClick={() => handleDownloadCertificate(attempt.id, cert.id)}
                                 style={{
-                                  padding: '8px 16px',
-                                  backgroundColor: '#28a745',
+                                  padding: '8px 14px',
+                                  backgroundColor: '#16a34a',
                                   color: 'white',
                                   border: 'none',
-                                  borderRadius: '6px',
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
-                                  fontWeight: 'bold',
-                                  fontSize: '13px',
-                                  transition: 'all 0.3s ease',
-                                  opacity: downloading === attempt.id ? 0.7 : 1
+                                  fontWeight: '600',
+                                  fontSize: '12px',
+                                  transition: 'all 0.2s ease',
+                                  opacity: downloading === attempt.id ? 0.7 : 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
                                 }}
                                 disabled={downloading === attempt.id}
                                 onMouseEnter={(e) => {
                                   if (downloading !== attempt.id) {
-                                    e.target.style.backgroundColor = '#218838';
+                                    e.target.style.backgroundColor = '#15803d';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.target.style.backgroundColor = '#28a745';
+                                  e.target.style.backgroundColor = '#16a34a';
                                 }}
                               >
-                                {downloading === attempt.id ? '⏳' : '📥'} Download
+                                {downloading === attempt.id ? (
+                                  <><i className="fas fa-spinner fa-spin"></i></>
+                                ) : (
+                                  <><i className="fas fa-download"></i> PDF</>
+                                )}
                               </button>
                             )}
                           </div>
@@ -515,17 +607,31 @@ const UserCertificates = ({ collegeSlug }) => {
                           padding: '10px 20px',
                           backgroundColor: '#ff9800',
                           color: 'white',
-                          borderRadius: '6px',
+                          borderRadius: '8px',
                           textDecoration: 'none',
-                          fontWeight: 'bold',
+                          fontWeight: '600',
                           fontSize: '14px',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           border: 'none',
-                          display: 'inline-block'
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          boxShadow: '0 2px 8px rgba(255, 152, 0, 0.2)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#f57c00';
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(255, 152, 0, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#ff9800';
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 2px 8px rgba(255, 152, 0, 0.2)';
                         }}
                       >
-                        {allAttempts > 0 ? '🔄 Retry' : '📝 Start Exam'}
+                        <i className={`fas ${allAttempts > 0 ? 'fa-redo' : 'fa-play'}`}></i>
+                        {allAttempts > 0 ? 'Retry Exam' : 'Start Exam'}
                       </Link>
                     )}
                     {remainingAttempts === 0 && !passedAttempt && (
@@ -533,11 +639,15 @@ const UserCertificates = ({ collegeSlug }) => {
                         padding: '10px 20px',
                         backgroundColor: '#f0f0f0',
                         color: '#999',
-                        borderRadius: '6px',
-                        fontWeight: 'bold',
-                        fontSize: '14px'
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px'
                       }}>
-                        ❌ No Attempts Remaining
+                        <i className="fas fa-ban"></i>
+                        No Attempts Remaining
                       </div>
                     )}
                     {passedAttempt && (
@@ -546,37 +656,48 @@ const UserCertificates = ({ collegeSlug }) => {
                           padding: '10px 20px',
                           backgroundColor: '#d4edda',
                           color: '#155724',
-                          borderRadius: '6px',
-                          fontWeight: 'bold',
-                          fontSize: '14px'
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px'
                         }}>
-                          ✅ Certification Completed
+                          <i className="fas fa-trophy"></i>
+                          Certification Completed
                         </div>
 
-                        {/* Reattempt button for testing (even after passing) */}
                         <Link
                           to={collegeSlug ? `/${collegeSlug}/certification/${cert.id}` : `/certification/${cert.id}`}
                           style={{
                             padding: '10px 20px',
                             backgroundColor: '#007bff',
                             color: 'white',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             textDecoration: 'none',
-                            fontWeight: 'bold',
+                            fontWeight: '600',
                             fontSize: '14px',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
                             border: 'none',
-                            display: 'inline-block'
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 2px 8px rgba(0, 123, 255, 0.2)'
                           }}
                           onMouseEnter={(e) => {
                             e.target.style.backgroundColor = '#0056b3';
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
                           }}
                           onMouseLeave={(e) => {
                             e.target.style.backgroundColor = '#007bff';
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 2px 8px rgba(0, 123, 255, 0.2)';
                           }}
                         >
-                          📹 Test Camera / Reattempt
+                          <i className="fas fa-video"></i>
+                          Test Camera
                         </Link>
                       </>
                     )}

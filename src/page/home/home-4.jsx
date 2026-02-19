@@ -12,10 +12,10 @@ const HomeFour = () => {
     return (
         <Fragment>
             <Banner />
-            <CategoryThree />
             <BannerFour />
             <CourseFour />
             <AppSection />
+            <CategoryThree />
             <Instructor />
             <Sponsor />
         </Fragment>

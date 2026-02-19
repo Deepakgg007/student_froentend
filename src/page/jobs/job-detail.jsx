@@ -5,18 +5,19 @@ import { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobBySlug, getCompanyBySlug, formatSalary, getJobTypeDisplay, getExperienceLevelDisplay, getDaysRemaining, isDeadlinePassed } from '../../services/api';
 import Swal from 'sweetalert2';
+import { useSmoothData } from '../../hooks/useSmoothData';
 
 const JobDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [companyUrl, setCompanyUrl] = useState(null);
 
-  useEffect(() => {
-    fetchJobData();
-  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Fetch job data with smooth transition
+  const { data: job, loading, error } = useSmoothData(
+    () => getJobBySlug(slug),
+    [slug]
+  );
 
   // When job data is available, try to resolve the company's website via API
   useEffect(() => {
@@ -52,22 +53,17 @@ const JobDetail = () => {
     resolveCompanyWebsite();
   }, [job]);
 
-  const fetchJobData = async () => {
-    try {
-      setLoading(true);
-      const response = await getJobBySlug(slug);
-      setJob(response.data);
-    } catch (error) {
+  // Handle error
+  useEffect(() => {
+    if (error) {
       console.error('Error fetching job data:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'Failed to load job details. Please try again.',
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error]);
 
   const handleApply = () => {
     if (!job) return;
@@ -90,13 +86,49 @@ const JobDetail = () => {
       <Fragment>
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-            <span className="visually-hidden">Loading...</span>
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <div className="row align-items-center">
+                <div className="col-md-2 text-center">
+                  <div className="skeleton-line" style={{ width: '100px', height: '100px', margin: '0 auto' }}></div>
+                </div>
+                <div className="col-md-7">
+                  <div className="skeleton-line mb-3" style={{ width: '60%', height: '28px' }}></div>
+                  <div className="d-flex gap-2 mb-3">
+                    <div className="skeleton-line rounded" style={{ width: '100px', height: '32px' }}></div>
+                    <div className="skeleton-line rounded" style={{ width: '120px', height: '32px' }}></div>
+                  </div>
+                  <div className="skeleton-line" style={{ width: '40%', height: '24px' }}></div>
+                </div>
+                <div className="col-md-3">
+                  <div className="skeleton-line rounded" style={{ width: '100%', height: '48px' }}></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="mt-3 text-muted">Loading job details...</p>
+          <div className="row">
+            <div className="col-lg-8">
+              <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                  <div className="skeleton-line mb-2" style={{ width: '30%', height: '24px' }}></div>
+                  <div className="skeleton-line mb-2" style={{ width: '100%', height: '16px' }}></div>
+                  <div className="skeleton-line mb-2" style={{ width: '100%', height: '16px' }}></div>
+                  <div className="skeleton-line" style={{ width: '80%', height: '16px' }}></div>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-4">
+              <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                  <div className="skeleton-line mb-3" style={{ width: '40%', height: '20px' }}></div>
+                  <div className="skeleton-line mb-2" style={{ width: '100%', height: '16px' }}></div>
+                  <div className="skeleton-line mb-2" style={{ width: '90%', height: '16px' }}></div>
+                  <div className="skeleton-line" style={{ width: '70%', height: '16px' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
       </Fragment>
     );
   }
@@ -126,8 +158,15 @@ const JobDetail = () => {
       
       {/* Page Header with proper spacing */}
       <div style={{ paddingTop: '100px' }}></div>
-      
-      <div className="container-fluid px-5 py-4">
+
+      <div
+        className="container-fluid px-5 py-4"
+        style={{
+          opacity: job ? 1 : 0,
+          transform: job ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'opacity 0.3s ease-out, transform 0.3s ease-out'
+        }}
+      >
       {/* Breadcrumb Navigation */}
       <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">

@@ -16,12 +16,45 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 import './solve-challenge.css';
 import api from '../../services/api';
 
-
 // Configure Ace Editor
 ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');
 ace.config.set('modePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');
 ace.config.set('themePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');
 ace.config.set('workerPath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.23.4/src-noconflict/');
+
+// Helper component to render HTML content properly
+const HTMLContent = ({ content, className = '' }) => {
+  if (!content) return null;
+
+  // Convert common HTML entities to their symbols
+  let processedContent = content
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&le;/g, '≤')
+    .replace(/&ge;/g, '≥')
+    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&times;/g, '×')
+    .replace(/&divide;/g, '÷')
+    .replace(/&plusmn;/g, '±')
+    .replace(/&ne;/g, '≠')
+    .replace(/&equiv;/g, '≡')
+    .replace(/&infin;/g, '∞')
+    .replace(/&sum;/g, '∑')
+    .replace(/&pi;/g, 'π')
+    .replace(/&radic;/g, '√')
+    .replace(/&sup2;/g, '²')
+    .replace(/&sup3;/g, '³')
+    // Convert line breaks to <br> if not already HTML
+    .replace(/([^>])\n([^<])/g, '$1<br>$2');
+
+  return (
+    <div
+      className={className}
+      dangerouslySetInnerHTML={{ __html: processedContent }}
+    />
+  );
+};
 
 const SolveChallenge = () => {
   const { slug } = useParams();
@@ -292,20 +325,20 @@ const SolveChallenge = () => {
           <div className="problem-content-area">
             <div className="problem-section">
               <h3>Problem Statement</h3>
-              <div className="problem-content">{challenge.description}</div>
+              <HTMLContent content={challenge.description} className="problem-content" />
             </div>
 
             <div className="row">
               <div className="col-md-6">
                 <div className="problem-section">
                   <h3>Input Format</h3>
-                  <div className="problem-content">{challenge.input_format}</div>
+                  <HTMLContent content={challenge.input_format} className="problem-content" />
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="problem-section">
                   <h3>Output Format</h3>
-                  <div className="problem-content">{challenge.output_format}</div>
+                  <HTMLContent content={challenge.output_format} className="problem-content" />
                 </div>
               </div>
             </div>
@@ -313,7 +346,7 @@ const SolveChallenge = () => {
             {challenge.constraints && (
               <div className="problem-section">
                 <h3>Constraints</h3>
-                <div className="problem-content">{challenge.constraints}</div>
+                <HTMLContent content={challenge.constraints} className="problem-content" />
               </div>
             )}
 
@@ -321,13 +354,13 @@ const SolveChallenge = () => {
               <div className="col-md-6">
                 <div className="problem-section">
                   <h3>Sample Input</h3>
-                  <div className="sample-box">{challenge.sample_input}</div>
+                  <HTMLContent content={challenge.sample_input} className="sample-box" />
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="problem-section">
                   <h3>Sample Output</h3>
-                  <div className="sample-box">{challenge.sample_output}</div>
+                  <HTMLContent content={challenge.sample_output} className="sample-box" />
                 </div>
               </div>
             </div>
@@ -335,7 +368,7 @@ const SolveChallenge = () => {
             {challenge.explanation && (
               <div className="problem-section">
                 <h3>Explanation</h3>
-                <div className="problem-content">{challenge.explanation}</div>
+                <HTMLContent content={challenge.explanation} className="problem-content" />
               </div>
             )}
           </div>

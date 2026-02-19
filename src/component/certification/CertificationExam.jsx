@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Timer from './Timer';
+import ProctorMonitor from './ProctorMonitor';
+import ExamTerminated from './ExamTerminated';
 import {
   startCertificationAttempt,
   getCertificationQuestions,
@@ -8,18 +10,16 @@ import {
 
 /**
  * CertificationExam Component
- * Uses the same clean card-based layout as MCQContent
- * Displays certification exam questions with timer and progress tracking
- * Includes webcam proctoring for exam monitoring
+ * Clean, modern exam interface with question palette
  */
 const CertificationExam = ({
   certificationId,
   certificationTitle,
   duration,
-  passingScore,
-  totalQuestions,
   onComplete,
-  attemptData
+  attemptData,
+  enableProctoring = true, // New prop to enable/disable proctoring
+  collegeSlug = null, // For navigation
 }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -28,13 +28,36 @@ const CertificationExam = ({
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [timeExpired, setTimeExpired] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // Webcam proctoring states
-  const [cameraEnabled, setCameraEnabled] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  // Proctoring state
+  const [examTerminated, setExamTerminated] = useState(false);
+  const [violations, setViolations] = useState([]);
+  const [proctoringActive, setProctoringActive] = useState(false);
+
+  // Hide header and footer when exam is active
+  useEffect(() => {
+    const hideAppElements = () => {
+      const header = document.querySelector('.nk-header');
+      const footer = document.querySelector('.nk-footer');
+      const sidebar = document.querySelector('.nk-sidebar');
+      if (header) header.style.display = 'none';
+      if (footer) footer.style.display = 'none';
+      if (sidebar) sidebar.style.display = 'none';
+    };
+
+    const showAppElements = () => {
+      const header = document.querySelector('.nk-header');
+      const footer = document.querySelector('.nk-footer');
+      const sidebar = document.querySelector('.nk-sidebar');
+      if (header) header.style.display = '';
+      if (footer) footer.style.display = '';
+      if (sidebar) sidebar.style.display = '';
+    };
+
+    hideAppElements();
+    return () => showAppElements();
+  }, []);
 
   // Initialize exam on mount
   useEffect(() => {
@@ -43,7 +66,6 @@ const CertificationExam = ({
         setLoading(true);
         setError('');
 
-        // Start or resume attempt
         let attemptResponse;
         if (attemptData?.id) {
           attemptResponse = { data: { data: attemptData } };
@@ -51,43 +73,27 @@ const CertificationExam = ({
           attemptResponse = await startCertificationAttempt(certificationId);
         }
 
-
-        // Parse attempt response - handle multiple response formats
         let attemptInfo = attemptResponse.data.data || attemptResponse.data;
-
-        // If attemptInfo is still not an object or doesn't have id, log it
-        if (!attemptInfo || typeof attemptInfo !== 'object') {
-          console.error('Invalid attempt response format:', attemptInfo);
-          throw new Error('Invalid exam session response from server');
-        }
-
-        // Backend returns attempt_id, but we need id for our code to work
-        // Normalize the response to ensure we have an 'id' field
         if (attemptInfo.attempt_id && !attemptInfo.id) {
           attemptInfo.id = attemptInfo.attempt_id;
         }
 
         setAttempt(attemptInfo);
 
-        // Fetch questions
         const questionsResponse = await getCertificationQuestions(certificationId);
         const questionsData = questionsResponse.data.data || questionsResponse.data;
-
-        // Ensure questions is an array
         const questionsList = Array.isArray(questionsData)
           ? questionsData
           : questionsData.results || [];
 
         setQuestions(questionsList);
 
-        // Initialize empty answers
         const initialAnswers = {};
         questionsList.forEach(q => {
           initialAnswers[q.id] = null;
         });
         setAnswers(initialAnswers);
       } catch (err) {
-        console.error('Error initializing exam:', err);
         setError(
           err.response?.data?.detail ||
           err.response?.data?.message ||
@@ -101,74 +107,24 @@ const CertificationExam = ({
     initializeExam();
   }, [certificationId, attemptData]);
 
-  // Initialize webcam for proctoring
-  useEffect(() => {
-    const startCamera = async () => {
-      try {
-        setCameraError('');
-        setCameraPermissionDenied(false);
-
-        // Request camera permission
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 160 },
-            height: { ideal: 120 },
-            facingMode: 'user'
-          },
-          audio: false
-        });
-
-        // Store stream reference
-        streamRef.current = stream;
-
-        // Attach stream to video element
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        setCameraEnabled(true);
-      } catch (err) {
-        console.error('Camera access error:', err);
-        setCameraEnabled(false);
-
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setCameraPermissionDenied(true);
-          setCameraError('Camera access denied. Please enable your camera to continue the exam.');
-        } else if (err.name === 'NotFoundError') {
-          setCameraError('No camera found. Please connect a camera to continue the exam.');
-        } else {
-          setCameraError('Unable to access camera. Please check your camera settings.');
-        }
-      }
-    };
-
-    startCamera();
-
-    // Cleanup: Stop camera when component unmounts
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
+  // Handle violation exceeded - terminate exam
+  const handleViolationExceeded = useCallback((recordedViolations) => {
+    setProctoringActive(false);
+    setViolations(recordedViolations);
+    setExamTerminated(true);
   }, []);
 
-  // Monitor camera status periodically
+  // Handle violation count change
+  const handleViolationCountChange = useCallback(() => {
+    // Violation count updated silently
+  }, []);
+
+  // Activate proctoring after exam loads
   useEffect(() => {
-    if (!cameraEnabled || !streamRef.current) return;
-
-    const checkCameraStatus = setInterval(() => {
-      const tracks = streamRef.current?.getTracks();
-      if (tracks && tracks.length > 0) {
-        const videoTrack = tracks[0];
-        if (videoTrack.readyState === 'ended' || !videoTrack.enabled) {
-          setCameraError('⚠️ Camera has been disabled. Please enable it to continue.');
-          setCameraEnabled(false);
-        }
-      }
-    }, 3000); // Check every 3 seconds
-
-    return () => clearInterval(checkCameraStatus);
-  }, [cameraEnabled]);
+    if (!loading && questions.length > 0 && enableProctoring) {
+      setProctoringActive(true);
+    }
+  }, [loading, questions.length, enableProctoring]);
 
   // Handle answer change
   const handleAnswerChange = (questionId, selectedOptionId) => {
@@ -178,21 +134,35 @@ const CertificationExam = ({
     }));
   };
 
+  // Navigation handlers
+  const goToQuestion = (index) => {
+    if (index >= 0 && index < questions.length) {
+      setCurrentQuestionIndex(index);
+    }
+  };
+
+  const goToPrevious = () => {
+    if (currentQuestionIndex > 0) {
+      goToQuestion(currentQuestionIndex - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      goToQuestion(currentQuestionIndex + 1);
+    }
+  };
+
   // Handle time expiration
   const handleTimeExpired = () => {
     setTimeExpired(true);
-    // Delay submission to ensure attempt is loaded
-    setTimeout(() => {
-      handleSubmitExam();
-    }, 100);
+    setTimeout(() => handleSubmitExam(), 100);
   };
 
   // Submit exam
   const handleSubmitExam = async () => {
     try {
-      // Validate that attempt is loaded
       if (!attempt || !attempt.id) {
-        console.error('Attempt not initialized:', attempt);
         setError('Exam session not initialized. Please refresh and try again.');
         setSubmitting(false);
         return;
@@ -201,8 +171,6 @@ const CertificationExam = ({
       setSubmitting(true);
       setError('');
 
-      // Build answers array
-      // Backend expects "question" field (not "question_id") and "selected_options"
       const answersArray = Object.entries(answers)
         .filter(([, optionId]) => optionId !== null)
         .map(([questionId, selectedOptionId]) => ({
@@ -210,18 +178,13 @@ const CertificationExam = ({
           selected_options: [selectedOptionId]
         }));
 
-
-      // Submit attempt
       const response = await submitCertificationAttempt(attempt.id, answersArray);
       const result = response.data.data || response.data;
 
-
-      // Call completion callback
       if (onComplete) {
         onComplete(result);
       }
     } catch (err) {
-      console.error('Error submitting exam:', err);
       setError(
         err.response?.data?.detail ||
         err.response?.data?.message ||
@@ -234,18 +197,59 @@ const CertificationExam = ({
   // Calculate stats
   const totalQuestionCount = questions.length;
   const answeredQuestions = Object.values(answers).filter(a => a !== null).length;
-  const allAnswered = totalQuestionCount > 0 && answeredQuestions === totalQuestionCount;
 
-  // Get student USN from localStorage
-  const userUsn = typeof localStorage !== 'undefined' ? localStorage.getItem('student_usn') || 'STUDENT' : 'STUDENT';
+  // Get current question
+  const currentQuestion = questions[currentQuestionIndex];
+  const isCurrentAnswered = currentQuestion ? answers[currentQuestion.id] !== null : false;
+
+  // Helper function to render text - handles both inline code and multi-line code blocks
+  const renderTextWithCode = (text) => {
+    if (!text) return '';
+
+    // First, process multi-line code blocks (triple backticks)
+    let processedText = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, _code, codeContent) => {
+      // Escape HTML entities in code
+      const escapedCode = codeContent
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      // Return pre-formatted code block with line breaks preserved
+      return `<pre style="background: #1e293b; color: #e2e8f0; padding: 12px 16px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; margin: 8px 0;"><code>${escapedCode}</code></pre>`;
+    });
+
+    // Then process inline code (single backticks) - but avoid matching within pre tags
+    const inlineCodeStyle = 'font-family: monospace; color: #e11d48; background: #fef2f2; padding: 2px 6px; border-radius: 4px;';
+    processedText = processedText.replace(/`([^`]+)`/g, `<code style="${inlineCodeStyle}">$1</code>`);
+
+    // Convert remaining newlines to <br> for non-code text
+    processedText = processedText.replace(/\n/g, '<br />');
+
+    return <span dangerouslySetInnerHTML={{ __html: processedText }} />;
+  };
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="sr-only">Loading exam...</span>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#f5f7fa',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #e2e8f0',
+            borderTopColor: '#3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>Loading exam...</p>
         </div>
-        <p className="mt-3 text-muted">Loading certification exam...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -253,418 +257,435 @@ const CertificationExam = ({
   if (error && !attempt) {
     return (
       <div style={{
-        padding: '20px',
-        backgroundColor: '#ffebee',
-        border: '1px solid #ef5350',
-        borderRadius: '8px',
-        color: '#c62828'
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#f5f7fa',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
       }}>
-        <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Error Loading Exam
+        <div style={{
+          backgroundColor: '#fee2e2',
+          border: '1px solid #fecaca',
+          borderRadius: '12px',
+          padding: '24px',
+          maxWidth: '400px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+          <div style={{ fontSize: '18px', fontWeight: '600', color: '#991b1b', marginBottom: '8px' }}>
+            Error Loading Exam
+          </div>
+          <div style={{ color: '#b91c1c', fontSize: '14px' }}>{error}</div>
         </div>
-        <div>{error}</div>
       </div>
     );
   }
 
-  return (
-    <div className="certification-exam" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      {/* Header Section - Similar to MCQContent */}
-      <div className="mb-4 pb-3" style={{ borderBottom: '2px solid #e9ecef' }}>
-        <div className="d-flex align-items-center justify-content-between">
-          <div>
-            <h4 className="mb-1" style={{ fontSize: '20px', fontWeight: '600', color: '#212529', userSelect: 'none' }}>
-              {certificationTitle}
-            </h4>
-            <p className="mb-0" style={{ fontSize: '14px', color: '#6c757d' }}>
-              Certification Exam • Attempt #{attempt?.attempt_number || 1}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            {/* Progress Counter */}
-            <div className="text-end">
-              <div style={{ fontSize: '13px', color: '#6c757d', marginBottom: '4px' }}>Progress</div>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#212529' }}>
-                {answeredQuestions} / {totalQuestionCount}
-              </div>
-            </div>
-            {/* Timer */}
-            <Timer
-              initialMinutes={duration}
-              onTimeExpired={handleTimeExpired}
-              isActive={!timeExpired && !submitting}
-            />
-          </div>
-        </div>
-      </div>
+  // Show termination screen if exam was terminated due to violations
+  if (examTerminated) {
+    const returnPath = collegeSlug ? `/${collegeSlug}/profile?tab=certificates` : '/profile?tab=certificates';
+    return <ExamTerminated violations={violations} onReturn={() => window.location.href = returnPath} />;
+  }
 
-      {/* Webcam Proctoring Section */}
+  return (
+    <>
       <div style={{
         position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000,
+        top: 0,
+        left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'auto',
+      backgroundColor: '#f5f7fa',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      zIndex: 9999
+    }}>
+      {/* Top Header */}
+      <div style={{
         backgroundColor: '#ffffff',
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden',
-        border: cameraEnabled ? '2px solid #28a745' : '2px solid #dc3545'
+        borderBottom: '1px solid #e2e8f0',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100
       }}>
-        {/* Camera Video Feed */}
-        <div style={{ position: 'relative' }}>
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{
-              width: '160px',
-              height: '120px',
-              objectFit: 'cover',
-              display: cameraEnabled ? 'block' : 'none',
-              backgroundColor: '#000'
-            }}
+        <div>
+          <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', margin: 0 }}>
+            {certificationTitle}
+          </h1>
+          <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0' }}>
+            Attempt #{attempt?.attempt_number || 1}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {/* Progress */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Answered</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>
+              {answeredQuestions}<span style={{ color: '#94a3b8', fontWeight: '400' }}>/{totalQuestionCount}</span>
+            </div>
+          </div>
+
+          {/* Timer */}
+          <Timer
+            initialMinutes={duration}
+            onTimeExpired={handleTimeExpired}
+            isActive={!timeExpired && !submitting}
           />
 
-          {/* Camera Status Overlay */}
-          {!cameraEnabled && (
-            <div style={{
-              width: '160px',
-              height: '120px',
-              backgroundColor: '#f8d7da',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'column',
-              padding: '8px',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '24px', marginBottom: '4px' }}>📹</div>
-              <div style={{ fontSize: '10px', color: '#842029', fontWeight: '600' }}>
-                Camera Disabled
-              </div>
-            </div>
-          )}
+          {/* Navigation Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
+            <button
+              onClick={goToPrevious}
+              disabled={currentQuestionIndex === 0}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: currentQuestionIndex === 0 ? '#f1f5f9' : '#ffffff',
+                color: currentQuestionIndex === 0 ? '#94a3b8' : '#475569',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
+                cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Previous
+            </button>
 
-          {/* Status Label */}
-          <div style={{
-            position: 'absolute',
-            top: '6px',
-            left: '6px',
-            backgroundColor: cameraEnabled ? 'rgba(40, 167, 69, 0.9)' : 'rgba(220, 53, 69, 0.9)',
-            color: '#ffffff',
-            padding: '3px 6px',
-            borderRadius: '3px',
-            fontSize: '9px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '3px'
-          }}>
-            <span style={{
-              width: '6px',
-              height: '6px',
-              backgroundColor: cameraEnabled ? '#fff' : '#fff',
-              borderRadius: '50%',
-              display: 'inline-block',
-              animation: cameraEnabled ? 'pulse 2s infinite' : 'none'
-            }}></span>
-            {cameraEnabled ? 'LIVE' : 'OFF'}
-          </div>
-        </div>
-
-        {/* Camera Label */}
-        <div style={{
-          padding: '4px 8px',
-          backgroundColor: '#f8f9fa',
-          borderTop: '1px solid #dee2e6',
-          fontSize: '9px',
-          color: '#6c757d',
-          fontWeight: '600',
-          textAlign: 'center'
-        }}>
-          PROCTORING
-        </div>
-      </div>
-
-      {/* Pulse Animation for Recording Indicator */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
-
-      {/* Camera Error Warning */}
-      {cameraError && (
-        <div style={{
-          padding: '16px',
-          backgroundColor: cameraPermissionDenied ? '#f8d7da' : '#fff3cd',
-          border: `2px solid ${cameraPermissionDenied ? '#dc3545' : '#ffc107'}`,
-          borderRadius: '8px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'start',
-          gap: '12px'
-        }}>
-          <div style={{ fontSize: '24px' }}>
-            {cameraPermissionDenied ? '🚫' : '⚠️'}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontWeight: '600',
-              color: cameraPermissionDenied ? '#842029' : '#856404',
-              marginBottom: '4px',
-              fontSize: '14px'
-            }}>
-              {cameraPermissionDenied ? 'Camera Access Required' : 'Camera Warning'}
-            </div>
-            <div style={{
-              color: cameraPermissionDenied ? '#842029' : '#856404',
-              fontSize: '13px',
-              lineHeight: '1.5'
-            }}>
-              {cameraError}
-            </div>
-            {cameraPermissionDenied && (
-              <div style={{
-                marginTop: '8px',
-                fontSize: '12px',
-                color: '#842029'
-              }}>
-                Please refresh the page and allow camera access to continue with the proctored exam.
-              </div>
+            {currentQuestionIndex === questions.length - 1 ? (
+              <button
+                onClick={handleSubmitExam}
+                disabled={submitting || timeExpired}
+                style={{
+                  padding: '8px 20px',
+                  backgroundColor: submitting ? '#94a3b8' : '#10b981',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                {submitting ? (
+                  <>Submitting...</>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M13 5l-7 7-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Submit ({answeredQuestions}/{totalQuestionCount})
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={goToNext}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                Next
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
             )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div style={{
-          padding: '12px',
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffc107',
-          borderRadius: '6px',
-          color: '#856404',
-          marginBottom: '20px'
-        }}>
-          {error}
-        </div>
-      )}
+      {/* Main Content */}
+      <div style={{ display: 'flex', padding: '24px', gap: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+        {/* Left Sidebar */}
+        <div style={{ width: '280px', flexShrink: 0 }}>
+          {/* Proctoring Camera in Sidebar - This single instance handles both widget and warning banners */}
+          {enableProctoring && (
+            <ProctorMonitor
+              isActive={proctoringActive && !timeExpired && !submitting && !examTerminated}
+              isEnabled={true}
+              onViolationExceeded={handleViolationExceeded}
+              onViolationCountChange={handleViolationCountChange}
+              showWidget={true}
+            />
+          )}
 
-      {/* Time Expired Notice */}
-      {timeExpired && (
-        <div style={{
-          padding: '12px',
-          backgroundColor: '#f8d7da',
-          border: '1px solid #f5c2c7',
-          borderRadius: '6px',
-          color: '#842029',
-          marginBottom: '20px',
-          fontWeight: 'bold'
-        }}>
-          ⏰ Time has expired! Your exam has been submitted.
-        </div>
-      )}
-
-      {/* Questions - Card based like MCQContent */}
-      {questions.map((question, qIdx) => {
-        const isAnswered = answers[question.id] !== null;
-
-        return (
-          <div
-            key={question.id}
-            className="card mb-3"
-            style={{
-              borderRadius: '8px',
-              border: '1px solid #e0e0e0',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            {/* Watermark for this card - shows student USN */}
+          {/* Question Palette */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            overflow: 'hidden'
+          }}>
             <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%) rotate(-45deg)',
-              fontSize: '54px',
-              fontWeight: 'bold',
-              color: 'rgba(0, 0, 0, 0.12)',
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-              zIndex: 0,
-              width: '150%',
-              textAlign: 'center',
-              userSelect: 'none',
-              letterSpacing: '2px'
+              padding: '16px',
+              borderBottom: '1px solid #e2e8f0',
+              backgroundColor: '#f8fafc'
             }}>
-              {userUsn}
+              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#475569', margin: 0 }}>
+                Questions
+              </h3>
             </div>
 
-            {/* Question Header */}
-            <div
-              className="card-header"
-              style={{
-                background: '#f8f9fa',
-                borderBottom: '1px solid #e0e0e0',
-                padding: '12px 16px'
-              }}
-            >
-              <div className="d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center flex-grow-1">
-                  <span
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: '600',
-                      color: '#495057',
-                      marginRight: '12px',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Q{qIdx + 1}.
-                  </span>
-                  <h6
-                    className="mb-0"
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: '500',
-                      color: '#212529',
-                      userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      MozUserSelect: 'none'
-                    }}
-                    onContextMenu={(e) => e.preventDefault()}
-                    onCopy={(e) => e.preventDefault()}
-                    onCut={(e) => e.preventDefault()}
-                    onDrag={(e) => e.preventDefault()}
-                  >
-                    {question.text}
-                  </h6>
-                </div>
-                {isAnswered && (
-                  <span
-                    className="badge bg-success"
-                    style={{ fontSize: '11px', padding: '4px 8px', marginLeft: '12px' }}
-                  >
-                    ✓ Answered
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Question Body */}
-            <div className="card-body" style={{ padding: '16px', position: 'relative', zIndex: 1 }}>
-              {/* Options */}
-              <div className="choices-container">
-                {question.options && question.options.map((option, optIdx) => {
-                  const isSelected = answers[question.id] === option.id;
-                  const optionLabel = String.fromCharCode(65 + optIdx); // A, B, C, D
+            <div style={{ padding: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                {questions.map((question, index) => {
+                  const isAnswered = answers[question.id] !== null;
+                  const isCurrent = index === currentQuestionIndex;
 
                   return (
-                    <div
-                      key={option.id}
-                      className="form-check"
+                    <button
+                      key={question.id}
+                      onClick={() => goToQuestion(index)}
                       style={{
-                        padding: '12px',
-                        marginBottom: '12px',
-                        border: isSelected ? '2px solid #2196f3' : '1px solid #e0e0e0',
-                        borderRadius: '6px',
-                        backgroundColor: isSelected ? '#e3f2fd' : '#f8f9fa',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        border: isCurrent ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+                        backgroundColor: isAnswered ? '#10b981' : '#f1f5f9',
+                        color: isAnswered ? '#ffffff' : '#64748b',
+                        fontSize: '14px',
+                        fontWeight: '500',
                         cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none'
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
-                      onClick={() => handleAnswerChange(question.id, option.id)}
                     >
-                      <div className="d-flex align-items-start">
-                        <input
-                          className="form-check-input"
-                          type={question.is_multiple_correct ? 'checkbox' : 'radio'}
-                          name={`question-${question.id}`}
-                          id={`option-${question.id}-${option.id}`}
-                          checked={isSelected}
-                          onChange={() => handleAnswerChange(question.id, option.id)}
-                          style={{ marginTop: '4px' }}
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor={`option-${question.id}-${option.id}`}
-                          style={{
-                            marginLeft: '12px',
-                            marginBottom: '0',
-                            cursor: 'pointer',
-                            flex: 1,
-                            fontSize: '15px',
-                            color: '#212529',
-                            userSelect: 'none'
-                          }}
-                          onContextMenu={(e) => e.preventDefault()}
-                          onCopy={(e) => e.preventDefault()}
-                          onCut={(e) => e.preventDefault()}
-                          onDrag={(e) => e.preventDefault()}
-                        >
-                          <span style={{ fontWeight: '600', marginRight: '8px' }}>{optionLabel}.</span>
-                          {option.text}
-                        </label>
-                      </div>
-                    </div>
+                      {index + 1}
+                    </button>
                   );
                 })}
               </div>
 
-              {/* Multiple choice indicator */}
-              {question.is_multiple_correct && (
-                <div style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#e3f2fd',
-                  border: '1px solid #2196f3',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  color: '#1976d2',
-                  marginTop: '12px'
-                }}>
-                  ℹ️ This question has multiple correct answers
+              {/* Legend */}
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', borderRadius: '4px', backgroundColor: '#10b981' }}></div>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Answered</span>
                 </div>
-              )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', borderRadius: '4px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0' }}></div>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Not Answered</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '2px solid #3b82f6' }}></div>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Current</span>
+                </div>
+              </div>
             </div>
           </div>
-        );
-      })}
+        </div>
 
-      {/* Navigation Buttons */}
-      <div
-        className="d-flex gap-3 justify-content-center align-items-center"
-        style={{
-          paddingTop: '20px',
-          paddingBottom: '20px',
-          borderTop: '2px solid #e9ecef',
-          marginTop: '30px'
-        }}
-      >
-        <button
-          onClick={handleSubmitExam}
-          disabled={!allAnswered || submitting || timeExpired}
-          style={{
-            padding: '12px 32px',
-            backgroundColor: allAnswered ? '#28a745' : '#d0d0d0',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: '600',
-            cursor: allAnswered && !submitting ? 'pointer' : 'not-allowed',
-            opacity: allAnswered ? 1 : 0.6,
-            transition: 'all 0.3s ease',
-            fontSize: '15px'
-          }}
-        >
-          {submitting ? '⏳ Submitting...' : `✓ Submit Exam (${answeredQuestions}/${totalQuestionCount})`}
-        </button>
+        {/* Main Question Area */}
+        <div style={{ flex: 1, maxWidth: '900px' }}>
+          {error && (
+            <div style={{
+              backgroundColor: '#fef3c7',
+              border: '1px solid #fde68a',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              color: '#92400e'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {timeExpired && (
+            <div style={{
+              backgroundColor: '#fee2e2',
+              border: '1px solid #fecaca',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              color: '#991b1b',
+              fontWeight: '500'
+            }}>
+              Time expired! Your exam has been submitted.
+            </div>
+          )}
+
+          {currentQuestion && (
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0',
+              overflow: 'hidden'
+            }}>
+              {/* Question Header */}
+              <div style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid #e2e8f0',
+                backgroundColor: '#f8fafc'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <span style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      backgroundColor: '#3b82f6',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {currentQuestionIndex + 1}
+                    </span>
+                    <p style={{
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      color: '#1e293b',
+                      margin: 0,
+                      lineHeight: '1.5'
+                    }}>
+                      {renderTextWithCode(currentQuestion.text)}
+                    </p>
+                  </div>
+                  {isCurrentAnswered && (
+                    <span style={{
+                      backgroundColor: '#d1fae5',
+                      color: '#059669',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      padding: '4px 10px',
+                      borderRadius: '6px'
+                    }}>
+                      Answered
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Options */}
+              <div style={{ padding: '24px' }}>
+                {currentQuestion.options && currentQuestion.options.map((option, optIdx) => {
+                  const isSelected = answers[currentQuestion.id] === option.id;
+                  const optionLabel = String.fromCharCode(65 + optIdx);
+
+                  return (
+                    <div
+                      key={option.id}
+                      onClick={() => handleAnswerChange(currentQuestion.id, option.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '16px 20px',
+                        marginBottom: '12px',
+                        border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {/* Option Badge */}
+                      <span style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '8px',
+                        backgroundColor: isSelected ? '#3b82f6' : '#f1f5f9',
+                        color: isSelected ? '#ffffff' : '#64748b',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: '16px',
+                        flexShrink: 0
+                      }}>
+                        {optionLabel}
+                      </span>
+
+                      {/* Option Text */}
+                      <span style={{
+                        fontSize: '15px',
+                        color: '#1e293b',
+                        flex: 1,
+                        lineHeight: '1.5'
+                      }}>
+                        {renderTextWithCode(option.text)}
+                      </span>
+
+                      {/* Selection Indicator */}
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        border: isSelected ? '2px solid #3b82f6' : '2px solid #cbd5e1',
+                        backgroundColor: isSelected ? '#3b82f6' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {isSelected && (
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M11.5 3.5L5.5 9.5L2.5 6.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {currentQuestion.is_multiple_correct && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '12px 16px',
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: '#1d4ed8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M8 5v3M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    This question has multiple correct answers
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
+    </>
   );
 };
 

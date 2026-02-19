@@ -5,31 +5,24 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getCompanyBySlug, getConceptById, getConceptChallenges, getDifficultyColor } from '../../services/api';
 import Swal from 'sweetalert2';
+import { useSmoothData } from '../../hooks/useSmoothData';
 
 const ConceptDetail = () => {
   const { companySlug, conceptSlug } = useParams(); // conceptSlug is the concept's slug
   const navigate = useNavigate();
 
-  const [concept, setConcept] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [company, setCompany] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchConceptData();
-  }, [conceptSlug]);
-
-  const fetchConceptData = async () => {
-    try {
-      setLoading(true);
-
+  // Fetch concept data with smooth transition
+  const { data: concept, loading, error } = useSmoothData(
+    async () => {
       // Fetch company details
       const companyResponse = await getCompanyBySlug(companySlug);
       setCompany(companyResponse.data);
 
       // Fetch concept details by slug
       const conceptResponse = await getConceptById(conceptSlug);
-      setConcept(conceptResponse.data);
 
       // Fetch challenges for this concept using the slug
       const challengesResponse = await getConceptChallenges(conceptSlug);
@@ -37,30 +30,67 @@ const ConceptDetail = () => {
         ? challengesResponse.data
         : challengesResponse.data?.results || [];
       setChallenges(challengesData);
-    } catch (error) {
+
+      return conceptResponse;
+    },
+    [conceptSlug, companySlug]
+  );
+
+  // Handle error
+  useEffect(() => {
+    if (error) {
       console.error('Error fetching concept data:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'Failed to load concept details. Please try again.',
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error]);
 
   if (loading) {
     return (
       <Fragment>
         <div style={{ paddingTop: '100px' }}></div>
         <div className="container-fluid px-5 py-5">
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-            <span className="visually-hidden">Loading...</span>
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <div className="row align-items-center">
+                <div className="col-md-8">
+                  <div className="skeleton-line mb-3" style={{ width: '50%', height: '32px' }}></div>
+                  <div className="skeleton-line rounded mb-3" style={{ width: '120px', height: '28px' }}></div>
+                  <div className="skeleton-line mb-2" style={{ width: '100%', height: '16px' }}></div>
+                  <div className="skeleton-line" style={{ width: '70%', height: '16px' }}></div>
+                </div>
+                <div className="col-md-4">
+                  <div className="skeleton-line rounded" style={{ width: '180px', height: '48px' }}></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="mt-3 text-muted">Loading concept details...</p>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="card shadow-sm mb-3">
+              <div className="card-body">
+                <div className="row align-items-center">
+                  <div className="col-md-1">
+                    <div className="skeleton-line rounded-circle" style={{ width: '50px', height: '50px', margin: '0 auto' }}></div>
+                  </div>
+                  <div className="col-md-8">
+                    <div className="skeleton-line mb-2" style={{ width: '40%', height: '20px' }}></div>
+                    <div className="d-flex gap-2 mb-2">
+                      <div className="skeleton-line rounded" style={{ width: '80px', height: '24px' }}></div>
+                      <div className="skeleton-line rounded" style={{ width: '100px', height: '24px' }}></div>
+                    </div>
+                    <div className="skeleton-line" style={{ width: '60%', height: '14px' }}></div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="skeleton-line rounded" style={{ width: '140px', height: '38px' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
       </Fragment>
     );
   }
@@ -89,8 +119,15 @@ const ConceptDetail = () => {
       
       {/* Page Header with proper spacing */}
       <div style={{ paddingTop: '100px' }}></div>
-      
-      <div className="container-fluid px-5 py-4">
+
+      <div
+        className="container-fluid px-5 py-4"
+        style={{
+          opacity: concept ? 1 : 0,
+          transform: concept ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'opacity 0.3s ease-out, transform 0.3s ease-out'
+        }}
+      >
       {/* Breadcrumb Navigation */}
       <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">
@@ -242,6 +279,14 @@ const ConceptDetail = () => {
                                 </small>
                               )}
                             </div>
+
+                            {/* Companies using this challenge */}
+                            {challenge.companies && challenge.companies.length > 1 && (
+                              <small className="text-muted">
+                                <i className="fas fa-building me-1"></i>
+                                Also asked by: {challenge.companies.filter(c => c.slug !== companySlug).map(c => c.name).join(', ')}
+                              </small>
+                            )}
                           </div>
 
                           <div className="col-md-3 text-md-end mt-3 mt-md-0">

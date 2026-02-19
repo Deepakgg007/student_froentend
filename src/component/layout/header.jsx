@@ -310,33 +310,17 @@ const UnifiedHeader = () => {
                                             </NavLink>
                                         </li>
 
-                                        {/* Learn - Always visible */}
-                                        <li
-                                            className={`menu-item-has-children ${
-                                                ["/course", "/course-single", "/course-view"].some(path => currentPath.includes(path))
-                                                    ? "active-parent"
-                                                    : ""
-                                            } ${openDropdown === "learn" ? "open" : ""}`}
-                                        >
-                                            <a
-                                                href="#"
-                                                onClick={(e) => handleDropdownToggle("learn", e)}
+                                        {/* Courses - Always visible, direct link */}
+                                        <li>
+                                            <NavLink
+                                                to={isAuthenticated ? getCollegePath("/course") : "/course"}
+                                                onClick={closeMenu}
+                                                className={({ isActive }) =>
+                                                    isActive ? "active-link" : ""
+                                                }
                                             >
-                                                <i className="icofont-book-alt"></i> Learn
-                                            </a>
-                                            <ul className={`lab-ul dropdown-menu ${openDropdown === "learn" ? "open" : ""}`}>
-                                                <li>
-                                                    <NavLink
-                                                        to={isAuthenticated ? getCollegePath("/course") : "/course"}
-                                                        onClick={closeMenu}
-                                                        className={({ isActive }) =>
-                                                            isActive ? "active-link" : ""
-                                                        }
-                                                    >
-                                                        <i className="icofont-read-book"></i> All Courses
-                                                    </NavLink>
-                                                </li>
-                                            </ul>
+                                                <i className="icofont-book-alt"></i> Courses
+                                            </NavLink>
                                         </li>
 
                                         {/* Authenticated Only Menu Items */}
@@ -382,10 +366,10 @@ const UnifiedHeader = () => {
                                                     </ul>
                                                 </li>
 
-                                                {/* More - Contains Leaderboard & Profile */}
+                                                {/* More - Contains Leaderboard, Profile & Certificates */}
                                                 <li
                                                     className={`menu-item-has-children ${
-                                                        ["/leaderboard", "/profile"].some(path => currentPath.includes(path))
+                                                        ["/leaderboard", "/profile", "/certificates"].some(path => currentPath.includes(path))
                                                             ? "active-parent"
                                                             : ""
                                                     } ${openDropdown === "more" ? "open" : ""}`}
@@ -420,6 +404,17 @@ const UnifiedHeader = () => {
                                                             </NavLink>
                                                         </li>
                                                         <li>
+                                                            <NavLink
+                                                                to={getCollegePath("/certificates")}
+                                                                onClick={closeMenu}
+                                                                className={({ isActive }) =>
+                                                                    isActive ? "active-link" : ""
+                                                                }
+                                                            >
+                                                                <i className="icofont-certificate"></i> Certificates
+                                                            </NavLink>
+                                                        </li>
+                                                        <li>
                                                             <a
                                                                 href="https://z1-complier.haegl.in/"
                                                                 target="_blank"
@@ -428,9 +423,6 @@ const UnifiedHeader = () => {
                                                             >
                                                                 <i className="icofont-settings"></i> Online Compiler
                                                             </a>
-
-
-
                                                         </li>
                                                     </ul>
                                                 </li>

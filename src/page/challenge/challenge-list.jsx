@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { useSmoothData } from '../../hooks/useSmoothData';
 
 const ChallengeList = () => {
-  const navigate = useNavigate();
-  const [challenges, setChallenges] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     difficulty: '',
     category: '',
@@ -36,13 +34,9 @@ const ChallengeList = () => {
     { value: 'basic', label: 'Basic' },
   ];
 
-  useEffect(() => {
-    fetchChallenges();
-  }, [filters]);
-
-  const fetchChallenges = async () => {
-    try {
-      setLoading(true);
+  // Fetch challenges with smooth transition
+  const { data: challenges = [], loading, error } = useSmoothData(
+    async () => {
       const params = {};
       if (filters.difficulty) params.difficulty = filters.difficulty;
       if (filters.category) params.category = filters.category;
@@ -50,14 +44,10 @@ const ChallengeList = () => {
 
       const response = await api.get('/challenges/', { params });
       const data = response.data.results || response.data.data || response.data;
-      setChallenges(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching challenges:', error);
-      setChallenges([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { data: Array.isArray(data) ? data : [] };
+    },
+    [filters.difficulty, filters.category, filters.attempt_status]
+  );
 
   const handleFilterChange = (e) => {
     setFilters({
@@ -105,39 +95,39 @@ const ChallengeList = () => {
   return (
     <>
       {/* Page Header */}
-      <div style={{ background: '#ffffff', paddingTop: '100px', paddingBottom: '40px', borderBottom: '1px solid #e5e7eb' }}>
+      <div style={{ background: '#ffffff', paddingTop: '80px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb' }}>
         <div className="container-fluid px-3 px-md-5">
           <div className="row align-items-center">
             <div className="col-md-8">
-              <h1 style={{ fontSize: '2.5rem', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
+              <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937', marginBottom: '4px' }}>
                 <i className="fas fa-code me-3" style={{ color: '#7b61ff' }}></i>Coding Challenges
               </h1>
-              <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: 0 }}>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: 0 }}>
                 Solve real-world coding problems and improve your programming skills
               </p>
             </div>
-            <div className="col-md-4 text-md-end mt-3 mt-md-0">
+            <div className="col-md-4 text-md-end mt-2 mt-md-0">
               <div style={{
-                padding: '12px 20px',
+                padding: '8px 16px',
                 background: '#f3f4f6',
                 borderRadius: '8px',
                 display: 'inline-block'
               }}>
-                <span style={{ fontSize: '0.9rem', color: '#374151', fontWeight: 500 }}>
+                <span style={{ fontSize: '0.85rem', color: '#374151', fontWeight: 500 }}>
                   <i className="fas fa-tasks me-2" style={{ color: '#10b981' }}></i>
-                  Total Challenges: <strong>{challenges.length}</strong>
+                  Total: <strong>{(challenges || []).length}</strong>
                 </span>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div style={{ background: '#f8fafc', minHeight: '100vh', paddingTop: '80px' }}>
-        <div className="container-fluid py-4 px-3 px-md-5">
+      <div style={{ background: '#f8fafc', minHeight: '100vh', paddingTop: '20px' }}>
+        <div className="container-fluid py-2 px-3 px-md-5">
           
 
           {/* 🔹 Mobile Filter Toggle Button */}
-          <div className="d-block d-lg-none mb-3">
+          <div className="d-block d-lg-none mb-2">
             <button
               onClick={() => setShowFilter(!showFilter)}
               className="btn btn-primary w-100 fw-semibold"
@@ -161,7 +151,7 @@ const ChallengeList = () => {
 
           {/* 🔹 Mobile Filters */}
           {showFilter && (
-            <div className="d-block d-lg-none mb-4 animate__animated animate__fadeInDown">
+            <div className="d-block d-lg-none mb-3 animate__animated animate__fadeInDown">
               <div className="card border-0 shadow-sm">
                 <div className="card-body">
                   <h5 className="fw-bold mb-4">Filters</h5>
@@ -261,177 +251,74 @@ const ChallengeList = () => {
 
           <div className="row">
             <div className="col-lg-9">
-              {challenges.length > 0 ? (
-                challenges.map((challenge) => (
-                  <div
-                    key={challenge.id}
-                    className="card mb-3 border-0"
-                    style={{
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.06)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'none';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
-                    }}
-                  >
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start flex-wrap">
-                        <div className="flex-grow-1">
-                          <h5 className="mb-2 d-flex align-items-center">
-                            <Link
-                              to={`/challenge/${challenge.slug}`}
-                              className="text-dark text-decoration-none fw-bold"
-                              style={{ fontSize: '1.1rem', color: '#2d3748' }}
-                            >
-                              {challenge.title}
-                            </Link>
-                          </h5>
+              {loading ? (
+                // Skeleton Loader
+                <>
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="card mb-3 border-0"
+                      style={{
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                      }}
+                    >
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start flex-wrap">
+                          <div className="flex-grow-1">
+                            <h5 className="mb-2">
+                              <div
+                                className="skeleton-line"
+                                style={{ width: '60%', height: '22px', borderRadius: '4px' }}
+                              ></div>
+                            </h5>
 
-                          <div className="d-flex flex-wrap gap-2 mb-3">
-                            <span
-                              className={`badge px-3 py-2 rounded-pill bg-${difficultyColors[challenge.difficulty]} text-uppercase`}
-                              style={{ fontSize: '0.8rem', fontWeight: 600 }}
-                            >
-                              {challenge.difficulty}
-                            </span>
-                            <span
-                              className="badge px-3 py-2 rounded-pill bg-light text-dark"
-                              style={{ fontSize: '0.8rem', fontWeight: 500 }}
-                            >
-                              {challenge.category}
-                            </span>
-                            {getAttemptStatusBadge(challenge) && (
-                              <span
-                                className="badge px-3 py-2 rounded-pill text-uppercase"
-                                style={{
-                                  fontSize: '0.8rem',
-                                  fontWeight: 600,
-                                  backgroundColor: getAttemptStatusBadge(challenge).bgColor,
-                                  color: getAttemptStatusBadge(challenge).textColor,
-                                }}
-                              >
-                                <i className={`fas ${getAttemptStatusBadge(challenge).icon} me-1`}></i>
-                                {getAttemptStatusBadge(challenge).label}
-                              </span>
-                            )}
+                            <div className="d-flex flex-wrap gap-2 mb-3">
+                              <div
+                                className="skeleton-line rounded-pill"
+                                style={{ width: '70px', height: '30px' }}
+                              ></div>
+                              <div
+                                className="skeleton-line rounded-pill"
+                                style={{ width: '90px', height: '30px' }}
+                              ></div>
+                              <div
+                                className="skeleton-line rounded-pill"
+                                style={{ width: '80px', height: '30px' }}
+                              ></div>
+                            </div>
+
+                            <div className="d-flex align-items-center gap-3">
+                              <div className="skeleton-line" style={{ width: '70px', height: '16px' }}></div>
+                              <div className="skeleton-line" style={{ width: '80px', height: '16px' }}></div>
+                              <div className="skeleton-line" style={{ width: '75px', height: '16px' }}></div>
+                            </div>
                           </div>
 
                           <div
-                            className="d-flex align-items-center gap-3 mb-2"
-                            style={{ fontSize: '0.85rem', color: '#6c757d' }}
-                          >
-                            <span>
-                              <i className="fas fa-star-half-alt me-1"></i>
-                              {challenge.max_score} points
-                            </span>
-                            <span>
-                              <i className="fas fa-chart-line me-1"></i>
-                              {(challenge.success_rate || 0).toFixed(1)}% success
-                            </span>
-                            <span>
-                              <i className="fas fa-code-branch me-1"></i>
-                              {challenge.total_submissions} attempts
-                            </span>
-                          </div>
+                            className="skeleton-line d-none d-md-block"
+                            style={{ width: '140px', height: '42px', borderRadius: '12px' }}
+                          ></div>
                         </div>
 
-                        {/* Desktop Button */}
-                        <Link
-                          to={`/challenge/${challenge.slug}`}
-                          className="btn d-none d-md-inline-flex align-items-center"
-                          style={{
-                            background: challenge.is_solved
-                              ? '#10b981'
-                              : challenge.is_attempted && challenge.failed
-                              ? '#ef4444'
-                              : 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
-                            color: '#fff',
-                            padding: '10px 20px',
-                            borderRadius: '12px',
-                            boxShadow: challenge.is_solved
-                              ? '0 8px 24px rgba(16,185,129,0.25)'
-                              : challenge.is_attempted && challenge.failed
-                              ? '0 8px 24px rgba(239,68,68,0.25)'
-                              : '0 8px 24px rgba(123,97,255,0.25)',
-                            border: 'none',
-                            fontWeight: 600,
-                            fontSize: '0.95rem',
-                          }}
-                        >
-                          <i className={`fas ${
-                            challenge.is_solved
-                              ? 'fa-check-circle'
-                              : challenge.is_attempted && challenge.failed
-                              ? 'fa-redo'
-                              : challenge.is_attempted
-                              ? 'fa-play'
-                              : 'fa-bolt'
-                          } me-2`}></i>
-                          {challenge.is_solved
-                            ? 'View Solution'
-                            : challenge.is_attempted && challenge.failed
-                            ? 'Try Again'
-                            : challenge.is_attempted
-                            ? 'Continue'
-                            : 'Solve Challenge'}
-                        </Link>
-                      </div>
-
-                      {/* Mobile Button */}
-                      <div className="d-block d-md-none mt-3">
-                        <Link
-                          to={`/challenge/${challenge.slug}`}
-                          className="btn w-100 d-flex justify-content-center align-items-center"
-                          style={{
-                            background: challenge.is_solved
-                              ? '#10b981'
-                              : challenge.is_attempted && challenge.failed
-                              ? '#ef4444'
-                              : 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
-                            color: '#fff',
-                            padding: '10px 20px',
-                            borderRadius: '10px',
-                            fontWeight: 600,
-                            fontSize: '0.95rem',
-                          }}
-                        >
-                          <i className={`fas ${
-                            challenge.is_solved
-                              ? 'fa-check-circle'
-                              : challenge.is_attempted && challenge.failed
-                              ? 'fa-redo'
-                              : challenge.is_attempted
-                              ? 'fa-play'
-                              : 'fa-bolt'
-                          } me-2`}></i>
-                          {challenge.is_solved
-                            ? 'View Solution'
-                            : challenge.is_attempted && challenge.failed
-                            ? 'Try Again'
-                            : challenge.is_attempted
-                            ? 'Continue'
-                            : 'Solve Challenge'}
-                        </Link>
+                        <div className="d-block d-md-none mt-3">
+                          <div
+                            className="skeleton-line"
+                            style={{ width: '100%', height: '42px', borderRadius: '10px' }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : loading ? (
+                  ))}
+                </>
+              ) : error ? (
                 <div className="card text-center py-5 border-0 shadow-sm">
                   <div className="card-body">
-                    <div className="spinner-border text-primary mb-4" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <h3 className="mb-3">Loading challenges...</h3>
-                    <p className="text-muted">Please wait while we fetch your challenges</p>
+                    <i className="fas fa-exclamation-circle fa-3x text-danger mb-4"></i>
+                    <h3 className="mb-3">Error loading challenges</h3>
+                    <p className="text-muted">{error.message || 'Please try again later'}</p>
                   </div>
                 </div>
-              ) : (
+              ) : !challenges || challenges.length === 0 ? (
                 <div className="card text-center py-5 border-0 shadow-sm">
                   <div className="card-body">
                     <i className="fas fa-search fa-3x text-muted mb-4"></i>
@@ -442,6 +329,173 @@ const ChallengeList = () => {
                     </button>
                   </div>
                 </div>
+              ) : (
+                <div
+                  style={{
+                    opacity: challenges.length ? 1 : 0,
+                    transition: 'opacity 0.4s ease-out, transform 0.4s ease-out',
+                  }}
+                >
+                  {challenges.map((challenge) => (
+                    <div
+                      key={challenge.id}
+                      className="card mb-3 border-0"
+                      style={{
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.06)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
+                      }}
+                    >
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start flex-wrap">
+                          <div className="flex-grow-1">
+                            <h5 className="mb-2 d-flex align-items-center">
+                              <Link
+                                to={`/challenge/${challenge.slug}`}
+                                className="text-dark text-decoration-none fw-bold"
+                                style={{ fontSize: '1.1rem', color: '#2d3748' }}
+                              >
+                                {challenge.title}
+                              </Link>
+                            </h5>
+
+                            <div className="d-flex flex-wrap gap-2 mb-3">
+                              <span
+                                className={`badge px-3 py-2 rounded-pill bg-${difficultyColors[challenge.difficulty]} text-uppercase`}
+                                style={{ fontSize: '0.8rem', fontWeight: 600 }}
+                              >
+                                {challenge.difficulty}
+                              </span>
+                              <span
+                                className="badge px-3 py-2 rounded-pill bg-light text-dark"
+                                style={{ fontSize: '0.8rem', fontWeight: 500 }}
+                              >
+                                {challenge.category}
+                              </span>
+                              {getAttemptStatusBadge(challenge) && (
+                                <span
+                                  className="badge px-3 py-2 rounded-pill text-uppercase"
+                                  style={{
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    backgroundColor: getAttemptStatusBadge(challenge).bgColor,
+                                    color: getAttemptStatusBadge(challenge).textColor,
+                                  }}
+                                >
+                                  <i className={`fas ${getAttemptStatusBadge(challenge).icon} me-1`}></i>
+                                  {getAttemptStatusBadge(challenge).label}
+                                </span>
+                              )}
+                            </div>
+
+                            <div
+                              className="d-flex align-items-center gap-3 mb-2"
+                              style={{ fontSize: '0.85rem', color: '#6c757d' }}
+                            >
+                              <span>
+                                <i className="fas fa-star-half-alt me-1"></i>
+                                {challenge.max_score} points
+                              </span>
+                              <span>
+                                <i className="fas fa-chart-line me-1"></i>
+                                {(challenge.success_rate || 0).toFixed(1)}% success
+                              </span>
+                              <span>
+                                <i className="fas fa-code-branch me-1"></i>
+                                {challenge.total_submissions} attempts
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Desktop Button */}
+                          <Link
+                            to={`/challenge/${challenge.slug}`}
+                            className="btn d-none d-md-inline-flex align-items-center"
+                            style={{
+                              background: challenge.is_solved
+                                ? '#10b981'
+                                : challenge.is_attempted && challenge.failed
+                                ? '#ef4444'
+                                : 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
+                              color: '#fff',
+                              padding: '10px 20px',
+                              borderRadius: '12px',
+                              boxShadow: challenge.is_solved
+                                ? '0 8px 24px rgba(16,185,129,0.25)'
+                                : challenge.is_attempted && challenge.failed
+                                ? '0 8px 24px rgba(239,68,68,0.25)'
+                                : '0 8px 24px rgba(123,97,255,0.25)',
+                              border: 'none',
+                              fontWeight: 600,
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            <i className={`fas ${
+                              challenge.is_solved
+                                ? 'fa-check-circle'
+                                : challenge.is_attempted && challenge.failed
+                                ? 'fa-redo'
+                                : challenge.is_attempted
+                                ? 'fa-play'
+                                : 'fa-bolt'
+                            } me-2`}></i>
+                            {challenge.is_solved
+                              ? 'View Solution'
+                              : challenge.is_attempted && challenge.failed
+                              ? 'Try Again'
+                              : challenge.is_attempted
+                              ? 'Continue'
+                              : 'Solve Challenge'}
+                          </Link>
+                        </div>
+
+                        {/* Mobile Button */}
+                        <div className="d-block d-md-none mt-3">
+                          <Link
+                            to={`/challenge/${challenge.slug}`}
+                            className="btn w-100 d-flex justify-content-center align-items-center"
+                            style={{
+                              background: challenge.is_solved
+                                ? '#10b981'
+                                : challenge.is_attempted && challenge.failed
+                                ? '#ef4444'
+                                : 'linear-gradient(135deg, #7b61ff 0%, #00c6ff 100%)',
+                              color: '#fff',
+                              padding: '10px 20px',
+                              borderRadius: '10px',
+                              fontWeight: 600,
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            <i className={`fas ${
+                              challenge.is_solved
+                                ? 'fa-check-circle'
+                                : challenge.is_attempted && challenge.failed
+                                ? 'fa-redo'
+                                : challenge.is_attempted
+                                ? 'fa-play'
+                                : 'fa-bolt'
+                            } me-2`}></i>
+                            {challenge.is_solved
+                              ? 'View Solution'
+                              : challenge.is_attempted && challenge.failed
+                              ? 'Try Again'
+                              : challenge.is_attempted
+                              ? 'Continue'
+                              : 'Solve Challenge'}
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -449,7 +503,7 @@ const ChallengeList = () => {
             <div className="col-lg-3 d-none d-lg-block">
               {/* User stats removed - widget deleted */}
 
-              <div className="card border-0 shadow-sm mt-4">
+              <div className="card border-0 shadow-sm">
                 <div className="card-body">
                   <h5 className="fw-bold mb-4">Filters</h5>
                   <form>

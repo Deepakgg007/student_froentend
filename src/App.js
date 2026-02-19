@@ -44,6 +44,9 @@ import JobDetail from "./page/jobs/job-detail";
 import Profile from "./page/profile/profile";
 import Leaderboard from "./page/leaderboard/leaderboard";
 
+// Certificates Page
+import CertificatesPage from "./page/certificates/certificates";
+
 // Certification Pages
 import CertificationPage from "./page/certification/certification";
 
@@ -95,17 +98,13 @@ function App() {
 							<Route path="signup" element={<SignupPage />} />
 							<Route path="forgetpass" element={<ForgetPass />} />
 
-							{/* College-specific routes with slug */}
-							<Route path=":collegeSlug/course" element={
-								<ProtectedRoute>
-									<CoursePage />
-								</ProtectedRoute>
-							} />
-							<Route path=":collegeSlug/course-single/:id" element={
-								<ProtectedRoute>
-									<CourseSingle />
-								</ProtectedRoute>
-							} />
+							{/* Public Course Routes - No login required to browse */}
+							<Route path=":collegeSlug/course" element={<CoursePage />} />
+							<Route path=":collegeSlug/course-single/:id" element={<CourseSingle />} />
+							<Route path="course" element={<CoursePage />} />
+							<Route path="course-single/:id" element={<CourseSingle />} />
+
+							{/* College-specific routes with slug - Protected */}
 							<Route path=":collegeSlug/course-view/:courseId" element={
 								<ProtectedRoute>
 									<CourseView />
@@ -166,6 +165,16 @@ function App() {
 									<Leaderboard />
 								</ProtectedRoute>
 							} />
+							<Route path=":collegeSlug/certificates" element={
+								<ProtectedRoute>
+									<CertificatesPage />
+								</ProtectedRoute>
+							} />
+							<Route path="certificates" element={
+								<ProtectedRoute>
+									<CertificatesPage />
+								</ProtectedRoute>
+							} />
 							<Route path=":collegeSlug/certification/:certificationId" element={
 								<ProtectedRoute>
 									<CertificationPage />
@@ -177,17 +186,24 @@ function App() {
 								</ProtectedRoute>
 							} />
 
+							{/* Routes without college slug - backward compatibility */}
+							<Route path="companies/:slug" element={
+								<ProtectedRoute>
+									<CompanyDetail />
+								</ProtectedRoute>
+							} />
+							<Route path="companies/:companySlug/concepts/:conceptSlug" element={
+								<ProtectedRoute>
+									<ConceptDetail />
+								</ProtectedRoute>
+							} />
+							<Route path="companies/:companySlug/concepts/:conceptSlug/challenges/:challengeSlug/solve" element={
+								<ProtectedRoute>
+									<SolveCompanyChallenge />
+								</ProtectedRoute>
+							} />
+
 							{/* Backward compatibility routes without college slug - will redirect */}
-							<Route path="course" element={
-								<ProtectedRoute>
-									<CoursePage />
-								</ProtectedRoute>
-							} />
-							<Route path="course-single/:id" element={
-								<ProtectedRoute>
-									<CourseSingle />
-								</ProtectedRoute>
-							} />
 							<Route path="course-view/:courseId" element={
 								<ProtectedRoute>
 									<CourseView />
@@ -206,11 +222,6 @@ function App() {
 							<Route path="companies" element={
 								<ProtectedRoute>
 									<CompanyList />
-								</ProtectedRoute>
-							} />
-							<Route path="companies/:slug" element={
-								<ProtectedRoute>
-									<CompanyDetail />
 								</ProtectedRoute>
 							} />
 							<Route path="jobs" element={
@@ -236,6 +247,11 @@ function App() {
 							<Route path="leaderboard" element={
 								<ProtectedRoute>
 									<Leaderboard />
+								</ProtectedRoute>
+							} />
+							<Route path="certificates" element={
+								<ProtectedRoute>
+									<CertificatesPage />
 								</ProtectedRoute>
 							} />
 

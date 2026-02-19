@@ -1,144 +1,62 @@
 // edukon/src/page/profile/profile.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import UserCertificates from '../../component/certification/UserCertificates';
 import ContributionCalendar from '../../component/profile/ContributionCalendar';
-import api, { API_BASE_URL } from '../../services/api';
+import api from '../../services/api';
+import { useSmoothData } from '../../hooks/useSmoothData';
 import './profile.css';
 
 const Profile = () => {
   const { userId, collegeSlug } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [profile, setProfile] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Check for tab query parameter on mount
-  useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam && ['overview', 'courses', 'certificates', 'activity'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchProfileData();
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchProfileData = async () => {
-    try {
-      setLoading(true);
-      
-      
-      // Fetch profile using api service
-      // Use auth/me endpoint for current user, profile endpoint for other users
+  // Progressive loading: First load profile fast (critical data)
+  const { data: profileData, loading: profileLoading, error: profileError } = useSmoothData(
+    async () => {
       const profileEndpoint = userId
         ? `/student/profile/${userId}/`
         : `/student/profile/me/`;
-      
-      
+
       const profileRes = await api.get(profileEndpoint);
-            
-      const profileData = profileRes.data;
-      setProfile(profileData);
+      return { data: profileRes.data };
+    },
+    [userId]
+  );
 
-      // Fetch detailed stats (optional - don't fail if not available)
+  // Load stats in background (non-blocking)
+  const { data: statsData } = useSmoothData(
+    async () => {
+      const statsEndpoint = userId
+        ? `/student/profile/${userId}/stats/`
+        : '/student/profile/me_stats/';
+
       try {
-        const statsEndpoint = userId
-          ? `/student/profile/${userId}/stats/`
-          : `/student/profile/${profileData.user.id}/stats/`;
-        
         const statsRes = await api.get(statsEndpoint);
-        // Ensure course_stats exists
-        const s = statsRes.data || {};
-        s.course_stats = s.course_stats || {
-          total_enrollments: 0,
-          completed_enrollments: 0,
-          overall_course_completion_pct: 0,
-          total_course_hours: 0,
-          completed_course_hours: 0,
-          inprogress_completed_hours: 0,
-          hours_completed_overall: 0,
-        };
-        // Ensure difficulty_breakdown exists
-        s.difficulty_breakdown = s.difficulty_breakdown || {
-          easy: { total: 0 },
-          medium: { total: 0 },
-          hard: { total: 0 },
-        };
-        // Ensure submissions exists
-        s.submissions = s.submissions || { total: 0, accepted: 0, accuracy: 0 };
-        // Ensure recent_submissions exists
-        s.recent_submissions = s.recent_submissions || [];
-        setStats(s);
-      } catch (err) {
-        console.warn('⚠️ Stats not available:', err.message);
-        // Provide safe defaults so UI renders
-        setStats({
-          submissions: { total: 0, accepted: 0, accuracy: 0 },
-          difficulty_breakdown: {
-            easy: { total: 0 },
-            medium: { total: 0 },
-            hard: { total: 0 },
-          },
-          recent_submissions: [],
-          course_stats: {
-            total_enrollments: 0,
-            completed_enrollments: 0,
-            overall_course_completion_pct: 0,
-            total_course_hours: 0,
-            completed_course_hours: 0,
-            inprogress_completed_hours: 0,
-            hours_completed_overall: 0,
-          },
-        });
+        return { data: statsRes.data || {} };
+      } catch {
+        return { data: {} };
       }
+    },
+    [userId]
+  );
 
-      // Fetch activities (optional - don't fail if not available)
+  // Load courses in background (non-blocking, loads after profile)
+  const { data: coursesData } = useSmoothData(
+    async () => {
       try {
-        const userIdForActivities = userId || profileData.user.id;
-        const activitiesEndpoint = `/student/profile/${userIdForActivities}/activity/?limit=100`;
-        const activitiesRes = await api.get(activitiesEndpoint);
-
-        // Handle different response formats from backend
-        let activitiesData = [];
-        if (activitiesRes.data.activities && Array.isArray(activitiesRes.data.activities)) {
-          activitiesData = activitiesRes.data.activities;
-        } else if (activitiesRes.data.results && Array.isArray(activitiesRes.data.results)) {
-          activitiesData = activitiesRes.data.results;
-        } else if (activitiesRes.data.data && Array.isArray(activitiesRes.data.data)) {
-          activitiesData = activitiesRes.data.data;
-        } else if (Array.isArray(activitiesRes.data)) {
-          activitiesData = activitiesRes.data;
-        }
-
-        setActivities(activitiesData);
-      } catch (err) {
-        console.warn('⚠️ Activities not available:', err.message);
-        console.error('⚠️ Full error:', err);
-        setActivities([]);
-      }
-
-      // Fetch enrolled courses (optional)
-      try {
-        // Prefer student namespace to avoid router differences
         const coursesRes = await api.get('/student/enrollments/');
-        // Extract courses from enrollments
         const enrollments = coursesRes.data.results || coursesRes.data.data || coursesRes.data || [];
 
-        // Use progress from backend enrollment (already calculated via ContentProgress)
-        const courses = enrollments.map(enrollment => {
+        const enrolledCourses = enrollments.map(enrollment => {
           const course = enrollment.course || {};
           const courseId = course.id || enrollment.course_id;
 
           return {
             ...course,
             id: courseId,
-            progress: enrollment.progress_percentage || 0, // Use backend calculated progress
+            progress: enrollment.progress_percentage || 0,
             enrolled_at: enrollment.enrolled_at || enrollment.created_at,
             status: enrollment.status,
             completion_status: enrollment.completion_status,
@@ -148,34 +66,51 @@ const Profile = () => {
           };
         });
 
-        setEnrolledCourses(courses);
-
-        // Update stats with backend progress
-        const completedCourses = courses.filter(c => c.status === 'completed' || c.progress >= 100).length;
-        const totalProgress = courses.reduce((sum, c) => sum + (c.progress || 0), 0);
-        const avgProgress = courses.length > 0 ? totalProgress / courses.length : 0;
-
-        setStats(prevStats => ({
-          ...prevStats,
-          course_stats: {
-            ...(prevStats?.course_stats || {}),
-            total_enrollments: courses.length,
-            completed_enrollments: completedCourses,
-            overall_course_completion_pct: Math.round(avgProgress)
-          }
-        }));
-      } catch (err) {
-        console.warn('⚠️ Enrolled courses not available:', err.message);
-        setEnrolledCourses([]);
+        return { data: enrolledCourses };
+      } catch {
+        return { data: [] };
       }
+    },
+    []
+  );
 
-      setLoading(false);
-    } catch (error) {
-      console.error('❌ Error fetching profile:', error);
-      setProfile(null);
-      setLoading(false);
-    }
+  const profile = profileData;
+  const stats = statsData || {
+    submissions: { total: 0, accepted: 0, accuracy: 0 },
+    difficulty_breakdown: { easy: { total: 0 }, medium: { total: 0 }, hard: { total: 0 } },
+    recent_submissions: [],
+    course_stats: {
+      total_enrollments: 0,
+      completed_enrollments: 0,
+      overall_course_completion_pct: 0,
+    },
   };
+  const enrolledCourses = coursesData || [];
+
+  // Calculate course stats from enrolled courses
+  if (enrolledCourses.length > 0) {
+    const completedCourses = enrolledCourses.filter(c => c.status === 'completed' || c.progress >= 100).length;
+    const totalProgress = enrolledCourses.reduce((sum, c) => sum + (c.progress || 0), 0);
+    const avgProgress = enrolledCourses.length > 0 ? totalProgress / enrolledCourses.length : 0;
+
+    stats.course_stats = {
+      ...stats.course_stats,
+      total_enrollments: enrolledCourses.length,
+      completed_enrollments: completedCourses,
+      overall_course_completion_pct: Math.round(avgProgress)
+    };
+  }
+
+  const loading = profileLoading;
+  const error = profileError;
+
+  // Check for tab query parameter on mount
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['overview', 'courses'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const getRankColor = (rank) => {
     if (!rank) return '#8b5cf6';
@@ -187,16 +122,57 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <>
-        <div className="profile-loading">
-          <div className="spinner"></div>
-          <p>Loading profile...</p>
+      <div className="profile-page">
+        {/* Skeleton Header */}
+        <div className="profile-header" style={{ minHeight: '200px' }}>
+          <div className="profile-header-content">
+            <div className="profile-avatar-section">
+              <div className="skeleton-line" style={{ width: '100px', height: '100px', borderRadius: '50%' }}></div>
+              <div style={{ flex: 1 }}>
+                <div className="skeleton-line mb-2" style={{ width: '40%', height: '28px' }}></div>
+                <div className="skeleton-line mb-2" style={{ width: '60%', height: '16px' }}></div>
+                <div className="skeleton-line" style={{ width: '30%', height: '20px' }}></div>
+              </div>
+            </div>
+            <div className="profile-stats-grid">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="stat-card" style={{ pointerEvents: 'none' }}>
+                  <div className="skeleton-line" style={{ width: '55px', height: '55px', borderRadius: '10px' }}></div>
+                  <div style={{ flex: 1 }}>
+                    <div className="skeleton-line mb-1" style={{ width: '40%', height: '22px' }}></div>
+                    <div className="skeleton-line" style={{ width: '60%', height: '12px' }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </>
+
+        {/* Skeleton Tabs */}
+        <div className="profile-tabs">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="skeleton-line" style={{ width: '120px', height: '40px', borderRadius: '4px' }}></div>
+          ))}
+        </div>
+
+        {/* Skeleton Content */}
+        <div className="profile-content">
+          <div className="overview-grid">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="progress-card">
+                <div className="skeleton-line mb-3" style={{ width: '40%', height: '22px' }}></div>
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="skeleton-line mb-2" style={{ width: '100%', height: '50px', borderRadius: '8px' }}></div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <>
         <div className="profile-error">
@@ -209,7 +185,12 @@ const Profile = () => {
 
   return (
     <>
-      <div className="profile-page">
+      <div className="profile-page"
+        style={{
+          opacity: profile ? 1 : 0,
+          transition: 'opacity 0.3s ease-out'
+        }}
+      >
       {/* Header Section */}
       <div className="profile-header">
         <div className="profile-header-content">
@@ -282,45 +263,25 @@ const Profile = () => {
 
       {/* Tab Navigation */}
       <div className="profile-tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
-          style={{ 
+          style={{
             ':hover': { color: '#000' },
-            color: activeTab === 'overview' ? '#000' : undefined 
+            color: activeTab === 'overview' ? '#000' : undefined
           }}
         >
           <i className="fas fa-chart-line"></i> Overview
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`}
           onClick={() => setActiveTab('courses')}
-          style={{ 
+          style={{
             ':hover': { color: '#000' },
-            color: activeTab === 'courses' ? '#000' : undefined 
+            color: activeTab === 'courses' ? '#000' : undefined
           }}
         >
           <i className="fas fa-book"></i> Courses ({enrolledCourses.length})
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'certificates' ? 'active' : ''}`}
-          onClick={() => setActiveTab('certificates')}
-          style={{
-            ':hover': { color: '#000' },
-            color: activeTab === 'certificates' ? '#000' : undefined
-          }}
-        >
-          <i className="fas fa-certificate"></i> Certificates
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'activity' ? 'active' : ''}`}
-          onClick={() => setActiveTab('activity')}
-          style={{
-            ':hover': { color: '#000' },
-            color: activeTab === 'activity' ? '#000' : undefined
-          }}
-        >
-          <i className="fas fa-history"></i> Activity
         </button>
       </div>
 
@@ -422,15 +383,6 @@ const Profile = () => {
 
           </div>
         )}
-
-
-        {/* Certificates Tab */}
-        {activeTab === 'certificates' && (
-          <div className="certificates-tab">
-            <UserCertificates collegeSlug={collegeSlug} />
-          </div>
-        )}
-
         {/* Courses Tab */}
         {activeTab === 'courses' && (
           <div className="courses-tab">
@@ -571,38 +523,7 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Activity Tab */}
-        {activeTab === 'activity' && (
-          <div className="activity-tab">
-
-            {/* Recent Submissions */}
-            {stats?.recent_submissions && stats.recent_submissions.length > 0 && (
-              <div className="recent-submissions">
-                <h3><i className="fas fa-history"></i> Recent Submissions</h3>
-                <div className="submissions-list">
-                  {stats.recent_submissions.map((submission, index) => (
-                    <div key={index} className="submission-item">
-                      <div className="submission-title">{submission.challenge__title}</div>
-                      <div className="submission-details">
-                        <span className={`submission-status ${submission.status.toLowerCase()}`}>
-                          {submission.status}
-                        </span>
-                        <span className="submission-language">{submission.language}</span>
-                        <span className="submission-date">
-                          {new Date(submission.submitted_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            
-          </div>
-        )}
       </div>
-
     </div>
     </>
   );

@@ -30,7 +30,6 @@ const CertificationPage = () => {
         setCertification(data);
         setExamState('exam');
       } catch (err) {
-        console.error('Error loading certification:', err);
         setError(
           err.response?.data?.detail ||
           err.response?.data?.message ||
@@ -278,6 +277,7 @@ const CertificationPage = () => {
             passingScore={certification.passing_score}
             totalQuestions={certification.total_questions}
             onComplete={handleExamComplete}
+            collegeSlug={collegeSlug}
           />
         )}
 
