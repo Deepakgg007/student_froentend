@@ -409,7 +409,7 @@ const ChallengeList = () => {
                               </span>
                               <span>
                                 <i className="fas fa-code-branch me-1"></i>
-                                {challenge.total_submissions} attempts
+                                {challenge.user_attempts || 0} attempts
                               </span>
                             </div>
                           </div>

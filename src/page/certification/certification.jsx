@@ -111,9 +111,9 @@ const CertificationPage = () => {
   useEffect(() => {
     if (isExiting) {
       if (collegeSlug) {
-        navigate(`/${collegeSlug}/profile?tab=certificates`);
+        navigate(`/${collegeSlug}/certificates`);
       } else {
-        navigate('/profile?tab=certificates');
+        navigate('/certificates');
       }
     }
   }, [isExiting, navigate, collegeSlug]);
@@ -162,9 +162,9 @@ const CertificationPage = () => {
     } else {
       // If not in exam state, redirect to certificates page
       if (collegeSlug) {
-        navigate(`/${collegeSlug}/profile?tab=certificates`);
+        navigate(`/${collegeSlug}/certificates`);
       } else {
-        navigate('/profile?tab=certificates');
+        navigate('/certificates');
       }
     }
   };

@@ -9,6 +9,11 @@ const CompanyList = () => {
   const [industries, setIndustries] = useState([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Pagination states - now using backend pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 20;
+
   const [filters, setFilters] = useState({
     search: '',
     industry: '',
@@ -18,35 +23,144 @@ const CompanyList = () => {
 
   useEffect(() => {
     fetchCompanies();
-  }, [filters]);
+  }, [filters, currentPage]);
 
   useEffect(() => {
     fetchIndustries();
   }, []);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // Calculate total pages based on total items from backend
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Pagination component
+  const Pagination = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+
+    if (totalItems === 0) return null;
+
+    return (
+      <div className="mt-4">
+        {/* Page Info */}
+        <div className="text-center mb-3">
+          <p className="text-muted mb-0">
+            Showing <strong>{startIndex}-{endIndex}</strong> of <strong>{totalItems}</strong> companies
+            {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+          </p>
+        </div>
+
+        {/* Pagination Controls - Only show if more than 1 page */}
+        {totalPages > 1 && (
+          <nav aria-label="Page navigation">
+            <ul className="pagination justify-content-center">
+              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <i className="fas fa-chevron-left"></i> Previous
+                </button>
+              </li>
+
+              {/* Page Numbers */}
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                // Show first page, last page, and pages around current page
+                const showPage =
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1);
+
+                if (!showPage) {
+                  // Show ellipsis for skipped pages
+                  if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return (
+                      <li key={pageNum} className="page-item disabled">
+                        <span className="page-link">...</span>
+                      </li>
+                    );
+                  }
+                  return null;
+                }
+
+                return (
+                  <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={{
+                        background: currentPage === pageNum
+                          ? 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                          : 'white',
+                        borderColor: currentPage === pageNum ? '#6366f1' : '#dee2e6',
+                        color: currentPage === pageNum ? 'white' : '#6366f1',
+                        fontWeight: currentPage === pageNum ? 'bold' : 'normal',
+                        minWidth: '40px',
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  </li>
+                );
+              })}
+
+              <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Next <i className="fas fa-chevron-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        )}
+      </div>
+    );
+  };
+
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const params = { is_active: filters.is_active };
+      const params = {
+        is_active: filters.is_active,
+        page: currentPage,
+        page_size: itemsPerPage,
+      };
       if (filters.search) params.search = filters.search;
       if (filters.industry && filters.industry.trim() !== '') params.industry = filters.industry;
       if (filters.hiring_status === 'hiring') params.is_hiring = true;
       else if (filters.hiring_status === 'not_hiring') params.is_hiring = false;
 
       const response = await getCompanies(params);
-      const companiesData = Array.isArray(response.data)
-        ? response.data
-        : response.data?.results || response.data?.data || [];
 
-      const filteredData = filters.industry
-        ? companiesData.filter(
-            (company) =>
-              company.industry &&
-              company.industry.toLowerCase() === filters.industry.toLowerCase()
-          )
-        : companiesData;
-
-      setCompanies(filteredData);
+      // Handle paginated response
+      if (response.data?.count !== undefined) {
+        // Backend paginated response
+        const companiesData = response.data?.results || [];
+        setCompanies(companiesData);
+        setTotalItems(response.data.count);
+      } else {
+        // Fallback for non-paginated response
+        const companiesData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.results || response.data?.data || [];
+        setCompanies(companiesData);
+        setTotalItems(companiesData.length);
+      }
     } catch (error) {
       console.error('Error fetching companies:', error);
       Swal.fire({
@@ -319,24 +433,33 @@ const CompanyList = () => {
           </div>
         ) : (
           <>
-            <div className="row mb-3">
-              <div className="col-12">
-                <p className="text-muted">
-                  Found <strong>{companies.length}</strong>{' '}
-                  {companies.length === 1 ? 'company' : 'companies'}
-                </p>
-              </div>
+            {/* All Companies Section */}
+            <div>
+              {companies.length > 0 ? (
+                <>
+                  <div className="row g-4">
+                    {companies.map((company) => (
+                      <div key={company.id} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                        <CompanyCard company={company} />
+                      </div>
+                    ))}
+                  </div>
+                  <Pagination />
+                </>
+              ) : (
+                <div className="text-center py-5">
+                  <i className="fas fa-building fa-4x text-muted mb-3"></i>
+                  <h4 className="text-muted">No companies found</h4>
+                  <p className="text-muted">Try adjusting your filters or search terms</p>
+                  <button className="btn btn-primary mt-3" onClick={resetFilters}>
+                    Reset Filters
+                  </button>
+                </div>
+              )}
             </div>
 
-            {companies.length > 0 ? (
-              <div className="row g-4">
-                {companies.map((company) => (
-                  <div key={company.id} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-                    <CompanyCard company={company} />
-                  </div>
-                ))}
-              </div>
-            ) : (
+            {/* No companies at all */}
+            {companies.length === 0 && (
               <div className="text-center py-5">
                 <i className="fas fa-building fa-4x text-muted mb-3"></i>
                 <h4 className="text-muted">No companies found</h4>

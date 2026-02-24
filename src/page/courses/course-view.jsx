@@ -1,19 +1,10 @@
 import { Fragment, useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
-import api, { getCertifications } from "../../services/api";
+import api from "../../services/api";
+import { getCertifications } from "../../services/api";
 import CourseSidebar from "../../component/course/CourseSidebar";
 import ContentDisplay from "../../component/course/ContentDisplay";
 import './course-view.css';
-
-// Import progress service with error handling
-let getCourseProgress;
-try {
-    const progressService = require("../../services/contentProgressService");
-    getCourseProgress = progressService.getCourseProgress;
-} catch (err) {
-    console.warn('ContentProgress service not available:', err);
-    getCourseProgress = null;
-}
 
 // Cache for course content - survives for 10 minutes
 const courseContentCache = new Map();
@@ -71,17 +62,9 @@ const CourseView = () => {
     }, [courseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchRealProgress = async () => {
-        if (!getCourseProgress) {
-            return;
-        }
-
-        try {
-            const progressData = await getCourseProgress(courseId);
-            setProgress(progressData.percentage || 0);
-        } catch (error) {
-            console.error('Failed to fetch real progress:', error);
-            // Don't set progress on error, let the old calculation handle it
-        }
+        // Disable backend progress fetching - use local calculation only
+        // Backend progress calculation may be incorrect
+        return;
     };
 
     const fetchCourseContent = async () => {

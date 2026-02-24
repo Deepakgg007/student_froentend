@@ -101,7 +101,7 @@ const CourseSidebar = ({
             {/* -------------------------------------------------
                  Global styles – only affect this component
             ------------------------------------------------- */}
-            <style jsx>{`
+            <style>{`
                 .sidebar-wrapper {
                     position: sticky;
                     top: 0;                     /* stick to top of viewport */

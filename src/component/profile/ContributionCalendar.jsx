@@ -271,13 +271,19 @@ const ContributionCalendar = ({ userId }) => {
 
         {/* Legend */}
         <div className="legend">
-          <span className="legend-label">Less</span>
-          <div className="day level-0" />
-          <div className="day level-1" />
-          <div className="day level-2" />
-          <div className="day level-3" />
-          <div className="day level-4" />
-          <span className="legend-label">More</span>
+          <div className="legend-section">
+            <span className="legend-label">Less</span>
+          </div>
+          <div className="legend-levels">
+            <div className="day level-0" />
+            <div className="day level-1" />
+            <div className="day level-2" />
+            <div className="day level-3" />
+            <div className="day level-4" />
+          </div>
+          <div className="legend-section">
+            <span className="legend-label">More</span>
+          </div>
         </div>
       </div>
 

@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// export const API_BASE_URL = 'https://shobhaconsultancy.in';
+export const API_BASE_URL = 'https://shobhaconsultancy.in';
 // export const API_BASE_URL = 'https://krishik-abiuasd.in';
-export const API_BASE_URL = 'http://localhost:8000';
+// export const API_BASE_URL = 'http://localhost:8000';
 
 // ========== Simple In-Memory Cache ==========
 // Cache API responses for faster subsequent loads

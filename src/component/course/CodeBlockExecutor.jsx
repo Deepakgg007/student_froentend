@@ -29,67 +29,84 @@ const CodeBlockExecutor = ({ code, language = 'javascript', title = '', descript
 
         try {
             const codeToRun = isEditMode ? editedCode : code;
+            const langLower = language.toLowerCase();
 
-            // Determine language mapping for Piston API
-            const languageMap = {
-                'javascript': { language: 'javascript', version: '*' },
-                'python': { language: 'python', version: '3.10.0' },
-                'java': { language: 'java', version: '15.0.1' },
-                'cpp': { language: 'cpp', version: '10.2.0' },
-                'c': { language: 'c', version: '10.2.0' },
-                'csharp': { language: 'csharp', version: '9.0.413' },
-                'php': { language: 'php', version: '8.1.0' },
-                'ruby': { language: 'ruby', version: '3.0.1' },
-                'go': { language: 'go', version: '1.16.2' },
-                'rust': { language: 'rust', version: '1.54.0' },
-            };
+            // For JavaScript - execute directly in browser (works instantly!)
+            if (langLower === 'javascript' || langLower === 'js') {
+                try {
+                    // Capture console output
+                    const logs = [];
+                    const originalLog = console.log;
+                    const originalError = console.error;
+                    const originalWarn = console.warn;
 
-            const pistonLang = languageMap[language.toLowerCase()] || { language: language.toLowerCase(), version: '*' };
+                    console.log = (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
+                    console.error = (...args) => logs.push('ERROR: ' + args.join(' '));
+                    console.warn = (...args) => logs.push('WARN: ' + args.join(' '));
 
-            const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    language: pistonLang.language,
-                    version: pistonLang.version,
-                    files: [
-                        {
-                            name: `main.${getFileExtension(language)}`,
-                            content: codeToRun,
-                        },
-                    ],
-                }),
-            });
+                    // Execute the code
+                    const result = eval(codeToRun);
 
-            if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
-            }
+                    // Restore console
+                    console.log = originalLog;
+                    console.error = originalError;
+                    console.warn = originalWarn;
 
-            const data = await response.json();
-
-            if (data.compile) {
-                if (data.compile.stderr) {
-                    setError(`Compilation Error:\n${data.compile.stderr}`);
-                }
-                if (data.compile.stdout) {
-                    setOutput(data.compile.stdout);
+                    // Display output
+                    if (logs.length > 0) {
+                        setOutput(logs.join('\n'));
+                    } else if (result !== undefined) {
+                        setOutput(String(result));
+                    } else {
+                        setOutput('Code executed successfully with no output');
+                    }
+                    return;
+                } catch (execError) {
+                    setError(`Runtime Error:\n${execError.message}`);
+                    return;
                 }
             }
 
-            if (data.run) {
-                if (data.run.stderr) {
-                    setError(`Runtime Error:\n${data.run.stderr}`);
-                } else if (data.run.stdout) {
-                    setOutput(data.run.stdout);
+            // For other languages - use backend Docker sandbox
+            // Try backend first, then fallback to online compiler message
+            const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? 'https://shobhaconsultancy.in/api'
+                : 'https://shobhaconsultancy.in/api';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/execute-code-rich-text/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: codeToRun,
+                        language: langLower
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (data.error) {
+                            setError(data.error);
+                        } else {
+                            setOutput(data.output || 'Code executed successfully with no output');
+                        }
+                        return;
+                    } else {
+                        throw new Error(data.error || 'Execution failed');
+                    }
                 } else {
-                    setOutput('Code executed successfully with no output');
+                    throw new Error(`Backend returned HTTP ${response.status}`);
                 }
+            } catch (backendError) {
+                throw backendError;
             }
+
         } catch (err) {
-            setError(`Failed to execute code: ${err.message}`);
-            console.error('Code execution error:', err);
+            setError(err.message || 'Code execution failed');
         } finally {
             setIsRunning(false);
         }

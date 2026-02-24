@@ -191,55 +191,72 @@ const SolveChallenge = () => {
       return;
     }
 
-    // Simple confirmation - just ask if user wants to save
-    const result = await Swal.fire({
-      title: 'Save Your Code?',
-      text: 'Are you sure you want to save this code?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#11998e',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, Save',
-      cancelButtonText: 'Cancel',
-    });
+    setSubmitting(true);
+    setActiveTab('submission-results');
+    setSubmissionResults(null);
 
-    if (result.isConfirmed) {
-      setSubmitting(true);
+    try {
+      const response = await api.post('/student/submissions/submit/', {
+        challenge_slug: slug,
+        code: code,
+        language: language,
+      });
 
-      try {
-        const response = await api.post('/student/submissions/submit/', {
-          challenge_slug: slug,
-          code: code,
-          language: language,
+      const data = response.data;
+
+      if (data.success) {
+        // Set submission results
+        setSubmissionResults({
+          success: true,
+          status: data.status,
+          score: data.score,
+          passed_tests: data.passed_tests,
+          total_tests: data.total_tests,
+          runtime: data.runtime,
+          memory: data.memory,
+          results: data.results,
         });
 
-        const data = response.data;
-
-        if (data.success) {
-          // Simple success message - no details
-          await Swal.fire({
-            icon: 'success',
-            title: 'Code Saved Successfully!',
-            text: 'Your solution has been saved.',
-            confirmButtonColor: '#11998e',
-            timer: 2000,
-            showConfirmButton: false,
-          });
-
-          // Auto redirect to challenges list after 2 seconds
-          setTimeout(() => {
-            navigate('/challenges');
-          }, 2000);
-        }
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Save Failed',
-          text: error.response?.data?.error || 'Failed to save code. Please try again.',
+        // Show success message after displaying results
+        setTimeout(() => {
+          if (data.status === 'ACCEPTED') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Challenge Solved! 🎉',
+              text: `Score: ${data.score}/${challenge.max_score}`,
+              confirmButtonColor: '#11998e',
+              timer: 2000,
+              showConfirmButton: false,
+            }).then(() => {
+              navigate('/challenges');
+            });
+          } else {
+            Swal.fire({
+              icon: 'info',
+              title: 'Code Submitted',
+              text: `Status: ${data.status} | Score: ${data.score}/${challenge.max_score}`,
+              confirmButtonColor: '#11998e',
+            });
+          }
+        }, 3000);
+      } else {
+        setSubmissionResults({
+          success: false,
+          message: data.message || 'Submission failed',
         });
-      } finally {
-        setSubmitting(false);
       }
+    } catch (error) {
+      setSubmissionResults({
+        success: false,
+        message: error.response?.data?.error || 'Failed to submit code. Please try again.',
+      });
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission Failed',
+        text: error.response?.data?.error || 'Failed to submit code. Please try again.',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 

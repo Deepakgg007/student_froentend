@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import UserCertificates from '../../component/certification/UserCertificates';
-import api, { API_BASE_URL } from '../../services/api';
+import api from '../../services/api';
+import { API_BASE_URL } from '../../services/api';
 import { useSmoothData } from '../../hooks/useSmoothData';
 import './certificates.css';
 

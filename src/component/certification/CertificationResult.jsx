@@ -20,12 +20,12 @@ const CertificationResult = ({ result, certification, onRetake, collegeSlug }) =
   const scorePercentage = Math.round(result.score);
   const scoreColor = result.passed ? '#28a745' : '#dc3545';
 
-  // Navigate to profile certificates page
+  // Navigate to certificates page
   const handleGoToCertificates = () => {
     if (collegeSlug) {
-      navigate(`/${collegeSlug}/profile?tab=certificates`);
+      navigate(`/${collegeSlug}/certificates`);
     } else {
-      navigate('/profile?tab=certificates');
+      navigate('/certificates');
     }
   };
 
@@ -115,7 +115,7 @@ const CertificationResult = ({ result, certification, onRetake, collegeSlug }) =
         )}
       </div>
 
-      {/* Certificate Success Message - Redirect to Profile */}
+      {/* Certificate Success Message - Redirect to Certificates */}
       {result.passed && (
         <div style={{
           padding: '24px',
@@ -225,7 +225,7 @@ const CertificationResult = ({ result, certification, onRetake, collegeSlug }) =
         )}
 
         <button
-          onClick={() => window.history.back()}
+          onClick={handleGoToCertificates}
           style={{
             padding: '12px 32px',
             fontSize: '15px',
@@ -237,7 +237,7 @@ const CertificationResult = ({ result, certification, onRetake, collegeSlug }) =
             cursor: 'pointer'
           }}>
           <i className="icofont-arrow-left me-2"></i>
-          Back to Course
+          Back to Certificates
         </button>
       </div>
     </>

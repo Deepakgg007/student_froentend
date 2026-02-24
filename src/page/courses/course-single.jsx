@@ -40,6 +40,48 @@ const CourseSingle = () => {
         fetchCourseDetails();
     }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Refetch enrollment when user logs in or approval status changes
+    useEffect(() => {
+        // Only refetch if user is logged in and approved
+        if (user && isApproved && course) {
+            fetchEnrollmentStatus();
+        }
+    }, [user, isApproved]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Refetch enrollment when page becomes visible (mobile tab switching)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && user && isApproved && course) {
+                // Refetch enrollment status when user returns to the tab
+                fetchEnrollmentStatus();
+            }
+        };
+
+        // Add visibility change listener for mobile
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [user, isApproved, course]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Refetch enrollment when window gains focus (mobile app switching)
+    useEffect(() => {
+        const handleFocus = () => {
+            if (user && isApproved && course) {
+                // Refetch enrollment status when user switches back to the window
+                fetchEnrollmentStatus();
+            }
+        };
+
+        // Add focus listener for mobile app switching
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [user, isApproved, course]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const fetchCourseDetails = async () => {
         try {
             setLoading(true);
@@ -91,6 +133,36 @@ const CourseSingle = () => {
         }
     };
 
+    // Separate function to fetch only enrollment status (called when user logs in or gets approved)
+    const fetchEnrollmentStatus = async () => {
+        try {
+            const enrollmentResponse = await api.get(`/student/enrollments/?course=${id}`);
+
+            // Handle enrollment response - check different formats
+            let enrollmentList = [];
+            if (enrollmentResponse.data && enrollmentResponse.data.data) {
+                enrollmentList = Array.isArray(enrollmentResponse.data.data)
+                    ? enrollmentResponse.data.data
+                    : [];
+            } else if (enrollmentResponse.data && enrollmentResponse.data.results) {
+                enrollmentList = Array.isArray(enrollmentResponse.data.results)
+                    ? enrollmentResponse.data.results
+                    : [];
+            }
+
+            // Set enrollment if user is enrolled in this course
+            const enrollmentData = enrollmentList?.[0];
+            if (enrollmentData) {
+                setEnrollment(enrollmentData);
+            } else {
+                setEnrollment(null);
+            }
+        } catch (err) {
+            console.error('Failed to fetch enrollment status:', err);
+            // Don't show error for enrollment status check failure
+        }
+    };
+
     const handleEnroll = async () => {
         // Check if user is logged in before attempting enrollment
         const token = localStorage.getItem('student_access_token');
@@ -120,8 +192,24 @@ const CourseSingle = () => {
             setEnrolling(true);
             setEnrollError('');
             // Use the course enroll endpoint instead of direct enrollment creation
-            await api.post(`/courses/${course.id}/enroll/`);
-            await fetchCourseDetails();
+            const response = await api.post(`/courses/${course.id}/enroll/`);
+
+            // Immediately set enrollment from response if available
+            if (response.data) {
+                const enrollmentData = response.data.data || response.data;
+                if (enrollmentData.id || enrollmentData.enrollment_id) {
+                    setEnrollment(enrollmentData);
+                    // Show success message
+                    setEnrollError('');
+                    setEnrolling(false);
+                    // Optionally navigate to course view
+                    // navigate(`/course-view/${id}`);
+                    return;
+                }
+            }
+
+            // If enrollment data not in response, fetch it
+            await fetchEnrollmentStatus();
             setEnrollError('');
         } catch (err) {
             console.error('Enrollment error:', err.response?.data);

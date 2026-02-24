@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getCertifications, getCertificationAttempts, getCertificationById, getCertificationAttemptById, getCurrentUserProfile, API_BASE_URL } from '../../services/api';
 import { downloadCertificateAsPDF } from './CertificateDownloadHelper';
 import { useSmoothData } from '../../hooks/useSmoothData';
+import api from '../../services/api';
 
 /**
  * UserCertificates Component
@@ -82,41 +83,56 @@ const UserCertificates = ({ collegeSlug }) => {
 
       const studentName = localStorage?.getItem('student_name') || attempt?.student_name || 'Student';
 
-      // PRIORITY 1: Extract college from attempt object (should have full college details)
+      // PRIORITY 1: Always use student's profile college (the college they are enrolled in)
+      // This is the correct college for the certificate, not the certification creator's college
       let collegeInfo = {};
 
-      // Check all possible paths where college data might be in the attempt
-      if (attempt?.college) {
-        collegeInfo = attempt.college;
-      } else if (attempt?.certification?.college) {
-        collegeInfo = attempt.certification.college;
-      } else if (attempt?.certification?.course?.college) {
-        collegeInfo = attempt.certification.course.college;
+      // First, try to get from user profile (student's registered college)
+      try {
+        const profileResponse = await getCurrentUserProfile();
+        const profileData = profileResponse.data.data || profileResponse.data;
+
+        // The profile API returns college info as individual fields on the user object
+        // NOT as a college_details object
+        if (profileData?.user) {
+          // Extract college info from user object
+          collegeInfo = {
+            name: profileData.user.college_name || profileData.user.college,
+            logo: profileData.user.college_logo,
+            signature: profileData.user.college_signature,
+            id: profileData.user.college_id
+          };
+        } else if (profileData?.college_name) {
+          // Direct fields on profileData
+          collegeInfo = {
+            name: profileData.college_name,
+            logo: profileData.college_logo,
+            signature: profileData.college_signature,
+            id: profileData.college_id
+          };
+        }
+
+        console.log('📌 Student college from profile:', collegeInfo);
+        console.log('📌 College name to use:', collegeInfo?.name || collegeName);
+      } catch (err) {
+        console.warn('Failed to fetch college from profile:', err);
       }
 
-      // PRIORITY 2: Extract college from certification object
-      if ((!collegeInfo || Object.keys(collegeInfo).length === 0) && cert?.college) {
-        collegeInfo = cert.college;
-      } else if ((!collegeInfo || Object.keys(collegeInfo).length === 0) && cert?.course?.college) {
-        collegeInfo = cert.course.college;
-      }
-
-      // PRIORITY 3: Fall back to alternative fields
+      // PRIORITY 2: Fall back to attempt/certification college if profile didn't have it
+      // (This might be the certification creator's college, not ideal but as fallback)
       if (!collegeInfo || Object.keys(collegeInfo).length === 0) {
-        collegeInfo = cert?.college_data || cert?.institution || attempt?.college_data || attempt?.institution || {};
-      }
-
-      // PRIORITY 4: Fetch from user profile (student's registered college)
-      if (!collegeInfo || Object.keys(collegeInfo).length === 0) {
-        try {
-          const profileResponse = await getCurrentUserProfile();
-          const profileData = profileResponse.data.data || profileResponse.data;
-          if (profileData?.college_details) {
-            collegeInfo = profileData.college_details;
-          } else if (profileData?.college) {
-            collegeInfo = profileData.college;
-          }
-        } catch (err) {
+        if (attempt?.college) {
+          collegeInfo = attempt.college;
+        } else if (attempt?.certification?.college) {
+          collegeInfo = attempt.certification.college;
+        } else if (attempt?.certification?.course?.college) {
+          collegeInfo = attempt.certification.course.college;
+        } else if (cert?.college) {
+          collegeInfo = cert.college;
+        } else if (cert?.course?.college) {
+          collegeInfo = cert.course.college;
+        } else {
+          collegeInfo = cert?.college_data || cert?.institution || attempt?.college_data || attempt?.institution || {};
         }
       }
 
@@ -131,7 +147,8 @@ const UserCertificates = ({ collegeSlug }) => {
       if (collegeLogo && !collegeLogo.startsWith('http')) {
         collegeLogo = `${API_BASE_URL}${collegeLogo}`;
       }
-      if (collegeLogo && collegeLogo.startsWith('http:')) {
+      // Only convert to https for non-localhost URLs
+      if (collegeLogo && collegeLogo.startsWith('http:') && !collegeLogo.includes('localhost')) {
         collegeLogo = collegeLogo.replace('http:', 'https:');
       }
 
@@ -142,33 +159,39 @@ const UserCertificates = ({ collegeSlug }) => {
       if (collegeSignature && !collegeSignature.startsWith('http')) {
         collegeSignature = `${API_BASE_URL}${collegeSignature}`;
       }
-      if (collegeSignature && collegeSignature.startsWith('http:')) {
+      // Only convert to https for non-localhost URLs
+      if (collegeSignature && collegeSignature.startsWith('http:') && !collegeSignature.includes('localhost')) {
         collegeSignature = collegeSignature.replace('http:', 'https:');
       }
 
       // Convert images to base64 using backend proxy to avoid CORS issues
+      // Skip conversion for localhost URLs (same-origin, no CORS issues)
       const convertImageToBase64 = async (imageUrl) => {
         if (!imageUrl) {
           return null;
         }
 
+        // Skip base64 conversion for localhost URLs - they're same-origin and work directly
+        if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1')) {
+          console.log('⏭️ Skipping base64 conversion for localhost URL:', imageUrl);
+          return imageUrl; // Return original URL for localhost
+        }
+
         try {
           // Use backend proxy endpoint to convert image to base64
-          const proxyUrl = `${API_BASE_URL}/api/utils/image-to-base64/?url=${encodeURIComponent(imageUrl)}`;
-          const response = await fetch(proxyUrl);
+          // Note: Don't use /api prefix since api service already has baseURL with /api
+          const proxyUrl = `/utils/image-to-base64/?url=${encodeURIComponent(imageUrl)}`;
 
-          if (!response.ok) {
-            return null;
-          }
+          // Use the api service which already handles authentication
+          const response = await api.get(proxyUrl);
 
-          const data = await response.json();
-
-          if (data.success && data.base64) {
-            return data.base64;
+          if (response.data && response.data.success && response.data.base64) {
+            return response.data.base64;
           } else {
             return null;
           }
         } catch (err) {
+          console.warn('Failed to convert image to base64:', err);
           return null;
         }
       };
@@ -666,39 +689,6 @@ const UserCertificates = ({ collegeSlug }) => {
                           <i className="fas fa-trophy"></i>
                           Certification Completed
                         </div>
-
-                        <Link
-                          to={collegeSlug ? `/${collegeSlug}/certification/${cert.id}` : `/certification/${cert.id}`}
-                          style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            borderRadius: '8px',
-                            textDecoration: 'none',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            border: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            boxShadow: '0 2px 8px rgba(0, 123, 255, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.backgroundColor = '#0056b3';
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = '#007bff';
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 2px 8px rgba(0, 123, 255, 0.2)';
-                          }}
-                        >
-                          <i className="fas fa-video"></i>
-                          Test Camera
-                        </Link>
                       </>
                     )}
                   </div>

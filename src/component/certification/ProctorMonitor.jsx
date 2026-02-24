@@ -53,7 +53,6 @@ const ProctorMonitor = ({
   const [faceCount, setFaceCount] = useState(0);
   const [detectionStatus, setDetectionStatus] = useState('Initializing...');
   const [videoError, setVideoError] = useState(null);
-  const [cameraInitializationReady, setCameraInitializationReady] = useState(false);
 
   // Tracking variables
   const noFaceStartTimeRef = useRef(null);
@@ -410,11 +409,8 @@ const ProctorMonitor = ({
     let mounted = true;
 
     const initialize = async () => {
-      const modelsReady = await initializeModels();
+      await initializeModels();
       if (!mounted) return;
-      if (modelsReady) {
-        setCameraInitializationReady(true);
-      }
     };
 
     initialize();
@@ -430,21 +426,19 @@ const ProctorMonitor = ({
    * Start camera when models are loaded and video ref is available
    */
   useEffect(() => {
-    if (!isEnabled || !cameraInitializationReady) {
+    if (!isEnabled) {
       return;
     }
 
     // Use a MutationObserver to wait for the video element to be added to DOM
     if (videoRef.current) {
       startCamera();
-      setCameraInitializationReady(false); // Prevent re-triggering
     } else {
       // Poll for video ref availability
       const checkInterval = setInterval(() => {
         if (videoRef.current) {
           clearInterval(checkInterval);
           startCamera();
-          setCameraInitializationReady(false);
         }
       }, 100);
 
@@ -458,7 +452,7 @@ const ProctorMonitor = ({
 
       return () => clearInterval(checkInterval);
     }
-  }, [isEnabled, cameraInitializationReady, startCamera]);
+  }, [isEnabled, startCamera]);
 
   /**
    * Start/stop detection based on isActive
